@@ -1,0 +1,14 @@
+Package: BreedingSchemesWithAlphaSimR
+Type: Package
+Title: Functions added to AlphaSimR to simplify simulating breeding schemes
+Version: 0.1
+Date: 2019-12-31
+Author: Jean-Luc Jannink and Moshood Bakare
+Maintainer: Who to complain to <jeanluc.work@gmail.com>
+Description: A complete breeding scheme has a product development pipeline that takes new progeny through testing in different stages, and a population improvement component that uses phenotype and genotype records to determine which individuals should become parents and how they should be mated. This package contains functions that exemplify these components using the AlphaSimR package.
+License: GPL-3
+Depends:
+  R (>= 3.0.0),
+  AlphaSimR,
+  dplyr
+RoxygenNote: 7.0.2
