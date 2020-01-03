@@ -4,26 +4,33 @@
 \alias{selectAdvance}
 \title{selectAdvance function}
 \usage{
-selectAdvance(popPheno, records, checks, ids)
+selectAdvance(popPheno, records, ids, ppp)
 }
 \arguments{
-\item{popPheno}{[value]}
+\item{popPheno}{Matrix of phenotypes of the population being selected. This matrix is provided by \code{selectInd} but need not be used}
 
-\item{records}{[value]}
+\item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 
-\item{checks}{[value]}
+\item{ids}{Character vector of the ids of the individuals being selected}
 
-\item{ids}{[value]}
+\item{ppp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
 }
 \value{
-[value]
+Real vector of the selection criterion to chose which individuals to advance. \code{selectInd} will sort this vector and choose the individuals
 }
 \description{
-function to (do something)
+function to select individuals to advance in the product pipeline
 }
 \details{
-[fill in details here]
+In deciding which individuals to advance, this function enables you to use all the breeding records rather than just the phenotypes of the population being selected. \code{selectInd} calls this function
 }
 \examples{
-none
+founderPop <- quickHaplo(nInd=50, nChr=1, segSites=100)
+SP <- SimParam$new(founderPop)
+SP$addTraitA(nQtlPerChr=10)
+parents <- newPop(founderPop)
+records <- fillPipeline(parents)
+sourcePop <- last(records[[2]])
+toAdvance <- selectInd(sourcePop, nInd=ceiling(nInd(sourcePop)/2), trait=selectAdvance, records=records, ids=sourcePop@id)
+
 }

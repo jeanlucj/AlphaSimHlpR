@@ -4,20 +4,24 @@
 \alias{iidPhenoEval}
 \title{iidPhenoEval function}
 \usage{
-iidPhenoEval(phenoDF)
+iidPhenoEval(phenoDF, ppp)
 }
 \arguments{
-\item{phenoDF}{[value]}
+\item{phenoDF}{A data.frame of phenotypic observations. See \code{framePhenoRec} for details.}
+
+\item{ppp}{A list of the product pipeline parameters. See \code{runBreedingScheme} for details. Here we need the named real vector with the error variances}
 }
 \value{
-[value]
+Named real vector of the BLUPs of all individuals in phenoDF (names are the individual ids), with appropriate weights by error variance of the observation
 }
 \description{
-function to (do something)
+function to take a data.frame coming from framePhenoRec and analyze it with individuals as a random effect with an IID covariance matrix
 }
 \details{
-[fill in details here]
+Given all the phenotypic records calculate the best prediction of the genotypic value for each individual using all its records
 }
 \examples{
-none
+phenoDF <- framePhenoRec(records)
+iidBLUPs <- iidPhenoEval(phenoDF)
+
 }

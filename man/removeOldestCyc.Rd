@@ -7,17 +7,18 @@
 removeOldestCyc(records)
 }
 \arguments{
-\item{records}{[value]}
+\item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 }
 \value{
-[value]
+A \code{records} object with the first population of each list removed.
 }
 \description{
-function to (do something)
+function to remove records of the oldest cycles still in \code{records}. Useful to avoid accumulating too much data which slows simulations down and makes them bulky
 }
 \details{
-[fill in details here]
+\code{records} is a list of lists. This function deletes the first object of each list, excluding the F1 list.
 }
 \examples{
-none
+records <- removeOldestCyc(records)
+
 }

@@ -4,20 +4,26 @@
 \alias{populationImprovement}
 \title{populationImprovement function}
 \usage{
-populationImprovement(records)
+populationImprovement(records, ppp, SP)
 }
 \arguments{
-\item{records}{[value]}
+\item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
+
+\item{ppp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{initializeFunc} for details}
 }
 \value{
-[value]
+A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
 }
 \description{
-function to (do something)
+function to improve a simulated breeding population by one cycle. See Gaynor et al. 2017 for the general idea.
 }
 \details{
-[fill in details here]
+This function uses penotypic records coming out of the product pipeline to choose individuals as parents to initiate the next breeding cycle
 }
 \examples{
-none
+initList <- initializeFunc()
+SP <- initList$SP
+records <- productPipeline(initList$records, ppp=initList$ppp, selectFunc=selectAdvance)
+records <- populationImprovement(records)
+recordMeans <- mean_records(records)
 }

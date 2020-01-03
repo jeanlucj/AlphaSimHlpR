@@ -4,21 +4,21 @@
 \alias{selectParents}
 \title{selectParents function}
 \usage{
-selectParents(records, nToSelect)
+selectParents(records, ppp)
 }
 \arguments{
-\item{records}{[value]}
+\item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 
-\item{nToSelect}{[value]}
+\item{ppp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
 }
 \value{
-[value]
+Character vector of the ids of the selected individuals
 }
 \description{
 function to (do something)
 }
 \details{
-[fill in details here]
+Accesses all individuals in \code{records} to pick the highest ones
 }
 \examples{
 none

@@ -4,24 +4,29 @@
 \alias{productPipeline}
 \title{productPipeline function}
 \usage{
-productPipeline(records, checks = NULL, selectFunc = NULL)
+productPipeline(records, ppp = NULL, selectFunc = NULL, SP)
 }
 \arguments{
-\item{records}{[value]}
+\item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 
-\item{checks}{[value]. Default is checks=NULL}
+\item{ppp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
 
-\item{selectFunc}{[value]. Default is selectFunc=NULL}
+\item{selectFunc}{A function that uses the breeding programs \code{records}, \code{records}, and source population individual ids to generate a vector of selection criterion values that \code{selectInd} will select on. If NULL, \code{selectInd} will select on phenotype. Default is selectFunc=NULL}
 }
 \value{
-[value]
+A records object that has new records created by advancing by a generation
 }
 \description{
-function to (do something)
+function to advance a simulated breeding product pipeline forward by one generation. See Gaynor et al. 2017 for the general idea.
 }
 \details{
-[fill in details here]
+The breeding program product pipeline will have been set by initializeFunc. This function moves the breeding program along by one generation and saves all the resulting phenotypes to the records object.
 }
 \examples{
-none
+initList <- initializeFunc()
+SP <- initList$SP
+records <- productPipeline(initList$records, ppp=initList$ppp, selectFunc=selectAdvance)
+records <- populationImprovement(records)
+recordMeans <- mean_records(records)
+
 }
