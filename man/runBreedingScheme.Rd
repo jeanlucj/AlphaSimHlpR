@@ -10,24 +10,7 @@ runBreedingScheme(
   initializeFunc,
   productPipeline,
   populationImprovement,
-  nFounders = 50,
-  nChr = 10,
-  segSites = 200,
-  nQTL = 50,
-  genVar = 1,
-  meanDD = 0.2,
-  varDD = 0.1,
-  nSNP = 50,
-  nParents = 30,
-  nCrosses = 20,
-  nProgeny = 10,
-  nStages = 2,
-  errVars = c(4, 2),
-  nReps = c(1, 2),
-  nEntries = nCrosses * nProgeny * c(1, 0.5),
-  nChks = c(0, 0),
-  trialTypeNames = c("PYT", "AYT"),
-  nCyclesToKeepRecords = 7
+  bsp
 )
 }
 \arguments{
@@ -41,41 +24,7 @@ runBreedingScheme(
 
 \item{populationImprovement}{Function to improve the breeding population and select parents to initiate the next cycle of the breeding scheme}
 
-\item{nFounders}{Integer of the number of founders of the breeding program}
-
-\item{nChr}{Integer of the number of chromosomes the simulated species}
-
-\item{segSites}{Integer of the number of segregating sites per chromosome}
-
-\item{nQTL}{Integer of the number of causal loci per chromosome}
-
-\item{genVar}{Real of the genetic variance among founders}
-
-\item{meanDD}{Real of degree of dominance of QTL}
-
-\item{varDD}{Real of variance of degree of dominance of QTL}
-
-\item{nSNP}{Integer of number of SNPs observed per chromosome when a population is genotyped}
-
-\item{nParents}{Integer of the number of parents among which to make crosses. Default is nParents=30}
-
-\item{nCrosses}{Integer of how many crosses to make among parents. Default is nCrosses=20}
-
-\item{nProgeny}{Integer of how many progeny to make per cross. Default is nProgeny=10}
-
-\item{nStages}{Integer of how many trial stages the product pipeline has. Default is nStages=2}
-
-\item{errVars}{Real vector of length nStages: the error variances of the trials in each stage. Default is errVars=c(4, 2)}
-
-\item{nReps}{Integer vector of length nStages: the number of reps used in each trial stage. Default is nReps=c(1, 2)}
-
-\item{nEntries}{Integer vector of length nStages: the number of entries in trials in each stage. Default is nEntries=nCrosses*nProgeny*c(1, 0.5)}
-
-\item{nChks}{Integer vector of length nStages: the number of checks to include in trials in each stage. Default is nChks=c(0, 0) (no checks)}
-
-\item{trialTypeNames}{Character vector of length nStages: the names of the trial types for each stage. Default is trialTypeNames=c("PYT", "AYT")}
-
-\item{nCyclesToKeepRecords}{Integer of the number of breeding cycles over which to keep records. Simulations get slow and bulky if you keep too many cycles. Records older than nCyclesToKeepRecords will be lost completely. Default is nCyclesToKeepRecords=7 (completely arbitrary)}
+\item{bsp}{A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP}
 }
 \value{
 A \code{records} object containing the phenotypic records retained of the breeding scheme

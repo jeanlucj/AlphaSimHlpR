@@ -4,7 +4,7 @@
 \alias{framePhenoRec}
 \title{framePhenoRec function}
 \usage{
-framePhenoRec(records)
+framePhenoRec(records, bsp)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}

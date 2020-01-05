@@ -4,12 +4,10 @@
 \alias{iidPhenoEval}
 \title{iidPhenoEval function}
 \usage{
-iidPhenoEval(phenoDF, ppp)
+iidPhenoEval(phenoDF)
 }
 \arguments{
 \item{phenoDF}{A data.frame of phenotypic observations. See \code{framePhenoRec} for details.}
-
-\item{ppp}{A list of the product pipeline parameters. See \code{runBreedingScheme} for details. Here we need the named real vector with the error variances}
 }
 \value{
 Named real vector of the BLUPs of all individuals in phenoDF (names are the individual ids), with appropriate weights by error variance of the observation

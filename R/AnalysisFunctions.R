@@ -13,6 +13,7 @@
 mean_records <- function(records){
   return(sapply(records[-1], function(popList) sapply(popList, meanG)))
 }
+
 #' framePhenoRec function
 #'
 #' function to make a data.frame to be used as a source of data to analyze the phenotypic \code{records}
@@ -25,16 +26,38 @@ mean_records <- function(records){
 #' phenoDF <- framePhenoRec(records)
 #' 
 #' @export
-framePhenoRec <- function(records){
+framePhenoRec <- function(records, bsp){
   allPheno <- data.frame()
-  for (trialType in 2:length(records)){
-    for (year in 1:length(records[[trialType]])){
-      pop <- records[[trialType]][[year]]
-      thisPheno <- data.frame(id=pop@id, trialType=names(records)[trialType], year=year, pheno=c(pop@pheno))
+  for (stage in 2:length(records)){
+    errVar <- bsp$errVars[names(records)[stage]]; names(errVar) <- NULL
+    for (year in 1:length(records[[stage]])){
+      pop <- records[[stage]][[year]]
+      thisPheno <- data.frame(id=pop@id, stage=names(records)[stage], year=year, errVar=errVar, pheno=c(pop@pheno), stringsAsFactors=F)
       allPheno <- rbind(allPheno, thisPheno)
     }
   }
   return(allPheno)
+}
+
+#' makeGRM function
+#'
+#' function to make a genomic relationship matrix to be used to analyze the phenotypic \code{records}
+#'
+#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param SP The AlphaSimR SimParam object
+#' @return A genomic relationship matrix
+#' @details \code{records} maintains the phenotypic and genotypic records across years and stages. For GEBV analysis, you need the GRM of these individuals. \code{makeGRM} assumes the first phenotyping stage (records[[2]]) has all individuals that have been phenotyped. The GRM also includes the unphenotyped new F1 individuals in records[[1]]
+#' 
+#' @examples
+#' grm <- makeGRM(records)
+#' 
+#' @export
+makeGRM <- function(records, SP){
+  require(sommer)
+  allPop <- mergePops(c(records[[1]], records[[2]]))
+  allPop <- allPop[!duplicated(allPop@id)]
+  grm <- A.mat(pullSnpGeno(allPop, simParam=SP) - 1)
+  return(grm)
 }
 
 #' iidPhenoEval function
@@ -42,7 +65,6 @@ framePhenoRec <- function(records){
 #' function to take a data.frame coming from framePhenoRec and analyze it with individuals as a random effect with an IID covariance matrix
 #'
 #' @param phenoDF A data.frame of phenotypic observations. See \code{framePhenoRec} for details.
-#' @param ppp A list of the product pipeline parameters. See \code{runBreedingScheme} for details. Here we need the named real vector with the error variances
 #' @return Named real vector of the BLUPs of all individuals in phenoDF (names are the individual ids), with appropriate weights by error variance of the observation
 #' @details Given all the phenotypic records calculate the best prediction of the genotypic value for each individual using all its records
 #' 
@@ -51,13 +73,36 @@ framePhenoRec <- function(records){
 #' iidBLUPs <- iidPhenoEval(phenoDF)
 #' 
 #' @export
-iidPhenoEval <- function(phenoDF, ppp){
+iidPhenoEval <- function(phenoDF){
   require(lme4)
-  # Prepare a vector of error variances since they are heterogeneous
-  errVarVec <- numeric(nrow(phenoDF))
-  for (n in names(ppp$errVars)){
-    errVarVec[grep(n, phenoDF$trialType)] <- ppp$errVars[n]
-  }
-  fm <- lmer(pheno ~ (1 | id), weights=1/errVarVec, data=phenoDF)
-  return(ranef(fm)[[1]])
+  phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
+  fm <- lmer(pheno ~ (1 | id), weights=errVar, data=phenoDF)
+  return(as.matrix(ranef(fm)[[1]])[,1]) # Make into matrix to get names
+}
+
+#' grmPhenoEval function
+#'
+#' function to take a data.frame coming from framePhenoRec and GRM and analyze them with individuals as a random effect with a GRM covariance matrix
+#'
+#' @param phenoDF A data.frame of phenotypic observations. See \code{framePhenoRec} for details
+#' @param grm A genomic relationship matrix
+#' @return Named real vector of the BLUPs of all individuals in phenoDF (names are the individual ids), with appropriate weights by error variance of the observation
+#' @details Given all the phenotypic records calculate the GEBV for each individual using all its records
+#' 
+#' @examples
+#' phenoDF <- framePhenoRec(records)
+#' grm <- makeGRM(records)
+#' grmBLUPs <- grmPhenoEval(phenoDF, grm)
+#' 
+#' @export
+grmPhenoEval <- function(phenoDF, grm){
+  require(sommer)
+  phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
+  fm <- mmer(pheno ~ 1,
+             random= ~ vs(id, Gu=grm),
+             method="EMMA",
+             rcov= ~ units,
+             weights=errVar,
+             data=phenoDF)
+  return(fm$U[[1]][[1]])
 }

@@ -1,4 +1,4 @@
-Package: BreedingSchemesWithAlphaSimR
+Package: AlfSimHlpR
 Type: Package
 Title: Functions added to AlphaSimR to simplify simulating breeding schemes
 Version: 0.1
@@ -10,5 +10,6 @@ License: GPL-3
 Depends:
   R (>= 3.0.0),
   AlphaSimR,
-  dplyr
+  dplyr,
+  sommer
 RoxygenNote: 7.0.2

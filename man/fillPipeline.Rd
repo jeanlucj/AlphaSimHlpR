@@ -4,12 +4,12 @@
 \alias{fillPipeline}
 \title{fillPipeline function}
 \usage{
-fillPipeline(parents, ppp = NULL, SP)
+fillPipeline(founders, bsp = NULL, SP)
 }
 \arguments{
-\item{parents}{Pop-class object of the founders of the breeding program}
+\item{founders}{Pop-class object of the founders of the breeding program}
 
-\item{ppp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
+\item{bsp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
 }
 \value{
 A \code{records} object. A list of lists containing nStages+1 lists. The first list contains the F1 progeny of individuals derived from the \code{parents}. The remaining lists contain one Pop-class object each, with a number of individuals equal to nEntries for that stage. The indivduals have been phenotyped using \code{setPheno}
@@ -21,10 +21,6 @@ function to create initial records at the start of a simulation
 This is a quick and dirty way to create a records object that will be used to simulate breeding schemes
 }
 \examples{
-founderPop <- quickHaplo(nInd=50, nChr=1, segSites=100)
-SP <- SimParam$new(founderPop)
-SP$addTraitA(nQtlPerChr=10)
-parents <- newPop(founderPop)
-records <- fillPipeline(parents)
+none
 
 }

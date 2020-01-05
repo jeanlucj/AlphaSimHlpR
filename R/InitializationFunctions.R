@@ -1,8 +1,8 @@
-#' initializeFunc function
+#' initFuncSimp function
 #'
 #' function to initialize simulation of a breeding program. A single additive-dominance trait is simulated.
 #' 
-#' @param bsp A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP. 
+#' @param bsp A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP 
 #' @return A list containing: 1. The simulation parameters in \code{SP}; 2. The initial records of the breeding program in \code{records}. See \code{fillPipeline} for details; 3. A completed \code{bsp} object
 #' 
 #' @details Creates the founders and the initial records at the beginning of the simulation of a breeding program.
@@ -11,7 +11,43 @@
 #' none
 #'
 #' @export
-initializeFunc <- function(bsp){
+initFuncSimp <- function(bsp){
+  initList <- with(bsp,{
+    # Create haplotypes for founder population of outbred individuals
+    # Note: default effective population size for runMacs is 100
+    founderPop <- runMacs(nInd=nFounders, nChr=nChr, segSites=segSites)
+    
+    # New global simulation parameters from founder haplotypes
+    SP <- SimParam$new(founderPop)
+    # Additive and dominance trait architecture
+    SP$addTraitA(nQtlPerChr=nQTL, var=genVar)
+    # Observed SNPs per chromosome
+    SP$addSnpChip(nSNP)
+    
+    founders <- newPop(founderPop, simParam=SP)
+    bsp <- c(bsp, checks=list(NULL))
+    
+    records <- fillPipeline(founders, bsp, SP)
+    
+    list(SP=SP, records=records, bsp=bsp)
+  })#END with bsp
+  return(initList)
+}
+
+#' initFuncADChk function
+#'
+#' function to initialize simulation of a breeding program. A single additive-dominance trait is simulated.
+#' 
+#' @param bsp A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP 
+#' @return A list containing: 1. The simulation parameters in \code{SP}; 2. The initial records of the breeding program in \code{records}. See \code{fillPipeline} for details; 3. A completed \code{bsp} object
+#' 
+#' @details Creates the founders and the initial records at the beginning of the simulation of a breeding program.
+#' 
+#' @examples
+#' none
+#'
+#' @export
+initFuncADChk <- function(bsp){
   initList <- with(bsp,{
     # Create haplotypes for founder population of outbred individuals
     # Note: default effective population size for runMacs is 100
