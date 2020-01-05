@@ -3,7 +3,7 @@
 #' function to advance a simulated breeding product pipeline forward by one generation. See Gaynor et al. 2017 for the general idea.
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param ppp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
+#' @param bsp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
 #' @param selectFunc A function that uses the breeding programs \code{records}, \code{records}, and source population individual ids to generate a vector of selection criterion values that \code{selectInd} will select on. If NULL, \code{selectInd} will select on phenotype. Default is selectFunc=NULL
 #' @return A records object that has new records created by advancing by a generation
 #' 
@@ -12,21 +12,14 @@
 #' @examples
 #' initList <- initializeFunc()
 #' SP <- initList$SP
-#' records <- productPipeline(initList$records, ppp=initList$ppp, selectFunc=selectAdvance)
+#' records <- productPipeline(initList$records, bsp=initList$bsp, selectFunc=selectAdvance)
 #' records <- populationImprovement(records)
 #' recordMeans <- mean_records(records)
 #'
 #' @export
-productPipeline <- function(records, ppp=NULL, selectFunc=NULL, SP){
-  if (is.null(ppp)) ppp <- list(nParents=30, nCrosses=20, nProgeny=10, nStages=2, errVars=c(4, 2), nReps=c(1, 2), nEntries=nCrosses*nProgeny*c(1, 0.5), nChks=c(0, 0), trialTypeNames=c("PYT", "AYT"), nCyclesToKeepRecords=7, checks=NULL)
-  
-  records <- with(ppp,{
-    
-    if (is.null(nEntries)){ # Make meaningful number of entries if not provided
-      nEntries <- nInd(last(records[[1]]))
-      for (i in 2:nStages) nEntries <- c(nEntries, max(floor(last(nEntries) / 2), 1))
-    }
-    
+productPipeline <- function(records, bsp=NULL, selectFunc=NULL, SP){
+  records <- with(bsp,{
+
     for (stage in 1:nStages){
       sourcePop <- last(records[[stage]])
       
@@ -45,7 +38,7 @@ productPipeline <- function(records, ppp=NULL, selectFunc=NULL, SP){
       } else{ 
         # User provided a function to select individuals to advance
         # If there are checks, selectFunc will deal with them
-        entries <- selectInd(sourcePop, nInd=nEntries[stage], trait=selectFunc, records=records, ids=sourcePop@id, ppp=ppp, simParam=SP)
+        entries <- selectInd(sourcePop, nInd=nEntries[stage], trait=selectFunc, records=records, ids=sourcePop@id, bsp=bsp, simParam=SP)
       }
       # If provided, add checks to the population
       if(!is.null(checks) & nChks[stage] > 0){
@@ -58,7 +51,7 @@ productPipeline <- function(records, ppp=NULL, selectFunc=NULL, SP){
     # Remove old records if needed
     if (length(records[[2]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records)
     records
-  })#END with ppp
+  })#END with bsp
   
   return(records)
 }
@@ -70,7 +63,7 @@ productPipeline <- function(records, ppp=NULL, selectFunc=NULL, SP){
 #' @param popPheno Matrix of phenotypes of the population being selected. This matrix is provided by \code{selectInd} but need not be used
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param ids Character vector of the ids of the individuals being selected
-#' @param ppp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
+#' @param bsp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
 #' @return Real vector of the selection criterion to chose which individuals to advance. \code{selectInd} will sort this vector and choose the individuals
 #' @details In deciding which individuals to advance, this function enables you to use all the breeding records rather than just the phenotypes of the population being selected. \code{selectInd} calls this function
 #' 
@@ -84,9 +77,9 @@ productPipeline <- function(records, ppp=NULL, selectFunc=NULL, SP){
 #' toAdvance <- selectInd(sourcePop, nInd=ceiling(nInd(sourcePop)/2), trait=selectAdvance, records=records, ids=sourcePop@id)
 #' 
 #' @export
-selectAdvance <- function(popPheno, records, ids, ppp){
+selectAdvance <- function(popPheno, records, ids, bsp){
   phenoDF <- framePhenoRec(records)
-  if (sum(ids %in% phenoDF$id) == 0) return(runif(nrow(popPheno)))
-  allBLUPs <- iidPhenoEval(phenoDF, ppp)
+  if (!any(ids %in% phenoDF$id)) return(runif(nrow(popPheno)))
+  allBLUPs <- iidPhenoEval(phenoDF, bsp)
   return(allBLUPs[ids, 1])
 }

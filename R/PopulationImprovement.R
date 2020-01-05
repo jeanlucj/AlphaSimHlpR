@@ -1,9 +1,10 @@
-#' populationImprovement function
+#' popImprov1 function
 #'
-#' function to improve a simulated breeding population by one cycle. See Gaynor et al. 2017 for the general idea.
+#' Function to improve a simulated breeding population by one cycle. This version takes phenotyped individuals and crosses them to create new F1
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param ppp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{initializeFunc} for details
+#' @param bsp A list of breeding scheme parameters
+#' @param SP The AlphaSimR SimParam object
 #' @return A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
 #' 
 #' @details This function uses penotypic records coming out of the product pipeline to choose individuals as parents to initiate the next breeding cycle
@@ -11,41 +12,94 @@
 #' @examples
 #' initList <- initializeFunc()
 #' SP <- initList$SP
-#' records <- productPipeline(initList$records, ppp=initList$ppp, selectFunc=selectAdvance)
+#' records <- productPipeline(initList$records, bsp=initList$bsp, selectFunc=selectAdvance)
 #' records <- populationImprovement(records)
 #' recordMeans <- mean_records(records)
 
 #' @export
-populationImprovement <- function(records, ppp, SP){
-  if (is.null(ppp)) ppp <- list(nParents=30, nCrosses=20, nProgeny=10, nStages=2, errVars=c(4, 2), nReps=c(1, 2), nEntries=nCrosses*nProgeny*c(1, 0.5), nChks=c(0, 0), trialTypeNames=c("PYT", "AYT"), nCyclesToKeepRecords=7, checks=NULL)
-  
-  records <- with(ppp,{
-
+popImprov1 <- function(records, bsp, selectFunc, SP){
+  records <- with(bsp,{
+    
     # Make one population to select out of
     bigPop <- mergePops(records[[2]])
-    
+    candidates <- bigPop@id
     # Select parents among all individuals
-    parents <- bigPop[selectParents(records, ppp)]
+    parents <- bigPop[selectParents(records, candidates, bsp)]
     records[[1]] <- list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP))
+    
     records
-  })
+  })#END with bsp
   
   return(records)
 }
 
-#' selectParents function
+#' popImprov2 function
 #'
-#' function to (do something)
+#' Function to improve a simulated breeding population by one cycle. This version does two cycles of predicting F1 individuals and making new F1s
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param ppp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
+#' @param bsp List of breeding scheme parameters
+#' @param selectFunc Function to select parents among candidates
+#' @param SP The AlphaSimR SimParam object
+#' @return A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
+#' 
+#' @details This function uses penotypic records coming out of the product pipeline to choose individuals as parents to initiate the next breeding cycle
+#' 
+#' @examples
+#' none
+
+#' @export
+popImprov2 <- function(records, bsp, selectFunc, SP){
+  records <- with(bsp,{
+    
+    for (cycle in 1:2){
+      candidates <- records[[1]]@id
+      # Select parents among F1
+      parents <- records[[1]][selectFunc(records, candidates, bsp)]
+      records[[1]] <- list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP))
+    }
+    
+    records
+  })#END with bsp
+  
+  return(records)
+}
+
+#' selectParIID function
+#'
+#' function to select parents among individuals with phenotypes, assuming individual effects are IID
+#'
+#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param candidates Character vector of ids of the candidates to be parents
+#' @param bsp A list of product pipeline parameters
 #' @return Character vector of the ids of the selected individuals
 #' @details Accesses all individuals in \code{records} to pick the highest ones
 #' @examples none
 #' @export
-selectParents <- function(records, ppp){
+selectParIID <- function(records, candidates, bsp){
   phenoDF <- framePhenoRec(records)
-  allBLUPs <- iidPhenoEval(phenoDF, ppp)
-  nToSelect <- min(ppp$nParents, nrow(allBLUPs))
-  return(rownames(allBLUPs)[order(allBLUPs, decreasing=T)][1:nToSelect])
+  allBLUPs <- iidPhenoEval(phenoDF, bsp)[candidates]
+  nToSelect <- min(bsp$nParents, nrow(allBLUPs))
+  ids <- rownames(allBLUPs)[order(allBLUPs, decreasing=T)][1:nToSelect]
+  return(ids)
+}
+
+#' selectParGRM function
+#'
+#' function to select parents among individuals with phenotypes, assuming individual effects covary according to a GRM
+#'
+#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param candidates Character vector of ids of the candidates to be parents
+#' @param bsp A list of product pipeline parameters
+#' @return Character vector of the ids of the selected individuals
+#' @details Accesses all individuals in \code{records} to pick the highest ones
+#' @examples none
+#' @export
+selectParGRM <- function(records, candidates, bsp){
+  phenoDF <- framePhenoRec(records)
+  grm <- makeGRM(records)
+  allBLUPs <- grmPhenoEval(phenoDF, grm, bsp)[candidates]
+  nToSelect <- min(bsp$nParents, nrow(allBLUPs))
+  ids <- rownames(allBLUPs)[order(allBLUPs, decreasing=T)][1:nToSelect]
+  return(ids)
 }
