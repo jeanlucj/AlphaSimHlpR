@@ -23,7 +23,7 @@
 #' @param nReps Integer vector of length nStages: the number of reps used in each trial stage. Default is nReps=c(1, 2)
 #' @param nEntries Integer vector of length nStages: the number of entries in trials in each stage. Default is nEntries=nCrosses*nProgeny*c(1, 0.5)
 #' @param nChks Integer vector of length nStages: the number of checks to include in trials in each stage. Default is nChks=c(0, 0) (no checks)
-#' @param trialTypeNames Character vector of length nStages: the names of the trial types for each stage. Default is trialTypeNames=c("PYT", "AYT")
+#' @param stageNames Character vector of length nStages: the names of the trial types for each stage. Default is stageNames=c("PYT", "AYT")
 #' @param nCyclesToKeepRecords Integer of the number of breeding cycles over which to keep records. Simulations get slow and bulky if you keep too many cycles. Records older than nCyclesToKeepRecords will be lost completely. Default is nCyclesToKeepRecords=7 (completely arbitrary)
 #' @return A \code{records} object containing the phenotypic records retained of the breeding scheme
 #' 
@@ -32,24 +32,23 @@
 #' @examples none
 #' 
 #' @export
-runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, productPipeline, populationImprovement, nFounders=50, nChr=10, segSites=200, nQTL=50, genVar=1, meanDD=0.2, varDD=0.1, nSNP=50, nParents=30, nCrosses=20, nProgeny=10, nStages=2, errVars=c(4, 2), nReps=c(1, 2), nEntries=nCrosses*nProgeny*c(1, 0.5), nChks=c(0, 0), trialTypeNames=c("PYT", "AYT"), nCyclesToKeepRecords=7){
-  # Set up species parameters
-  spp <- list(nFounders=nFounders, nChr=nChr, segSites=segSites, nQTL=nQTL, genVar=genVar, meanDD=meanDD, varDD=varDD, nSNP=nSNP)
-  # Set up product pipeline parameters
-  names(errVars) <- names(nReps) <- names(nEntries) <- names(nChks) <- trialTypeNames
-  ppp <- list(nParents=nParents, nCrosses=nCrosses, nProgeny=nProgeny, nStages=nStages, errVars=errVars, nReps=nReps, nEntries=nEntries, nChks=nChks, trialTypeNames=trialTypeNames, nCyclesToKeepRecords=nCyclesToKeepRecords)
-  
-  cat("******", replication, "\n")
-  initList <- initializeFunc(spp, ppp)
-  SP <- initList$SP # SP has to go in the Global Environment
-  ppp <- initList$ppp
-  records <- initList$records
-  
-  for (cycle in 1:nCycles){
-    cat(cycle, " ")
-    records <- productPipeline(records, ppp, selectFunc=selectAdvance, SP)
-    records <- populationImprovement(records, ppp, SP)
-  }
-  cat("\n")
+runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, productPipeline, populationImprovement, bsp){
+  records <- with(bsp, {
+    
+    cat("******", replication, "\n")
+    initList <- initializeFunc(bsp)
+    SP <- initList$SP # SP has to go in the Global Environment
+    bsp <- initList$bsp
+    records <- initList$records
+    
+    for (cycle in 1:nCycles){
+      cat(cycle, " ")
+      records <- productPipeline(records, bsp, selectFunc=selectAdvance, SP)
+      records <- populationImprovement(records, bsp, selectFunc=selectParIID, SP)
+    }
+    cat("\n")
+    
+    records
+  })#END with bsp
   return(records)
 }

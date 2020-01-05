@@ -4,6 +4,7 @@
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp A list of breeding scheme parameters
+#' @param selectFunc Function to select parents among candidates. Default si the AlfSimHlpR function selectParIID
 #' @param SP The AlphaSimR SimParam object
 #' @return A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
 #' 
@@ -17,7 +18,7 @@
 #' recordMeans <- mean_records(records)
 
 #' @export
-popImprov1 <- function(records, bsp, selectFunc, SP){
+popImprov1 <- function(records, bsp, selectFunc=selectParIID, SP){
   records <- with(bsp,{
     
     # Make one population to select out of
@@ -39,7 +40,7 @@ popImprov1 <- function(records, bsp, selectFunc, SP){
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp List of breeding scheme parameters
-#' @param selectFunc Function to select parents among candidates
+#' @param selectFunc Function to select parents among candidates. Default si the AlfSimHlpR function selectParGRM
 #' @param SP The AlphaSimR SimParam object
 #' @return A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
 #' 
@@ -49,7 +50,7 @@ popImprov1 <- function(records, bsp, selectFunc, SP){
 #' none
 
 #' @export
-popImprov2 <- function(records, bsp, selectFunc, SP){
+popImprov2 <- function(records, bsp, selectFunc=selectParGRM, SP){
   records <- with(bsp,{
     
     for (cycle in 1:2){
