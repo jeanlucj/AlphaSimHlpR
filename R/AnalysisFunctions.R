@@ -32,7 +32,7 @@ framePhenoRec <- function(records, bsp){
     errVar <- bsp$errVars[names(records)[stage]]; names(errVar) <- NULL
     for (year in 1:length(records[[stage]])){
       pop <- records[[stage]][[year]]
-      thisPheno <- data.frame(id=pop@id, stage=names(records)[stage], year=year, errVar=errVar, pheno=c(pop@pheno), stringsAsFactors=F)
+      thisPheno <- data.frame(id=pop@id, stage=names(records)[stage], year=year, errVar=errVar, pheno=c(pop@pheno))
       allPheno <- rbind(allPheno, thisPheno)
     }
   }
@@ -97,6 +97,7 @@ iidPhenoEval <- function(phenoDF){
 #' @export
 grmPhenoEval <- function(phenoDF, grm){
   require(sommer)
+  levels(phenoDF$id) <- levels(as.factor(rownames(grm))) # Enable prediction
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
   fm <- mmer(pheno ~ 1,
              random= ~ vs(id, Gu=grm),
