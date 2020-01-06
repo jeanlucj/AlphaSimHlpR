@@ -12,8 +12,6 @@ prodPipeSimp(records, bsp, SP)
 \item{bsp}{A list of breeding scheme parameters}
 
 \item{SP}{the AlphaSimR SimParam object}
-
-\item{selectFunc}{In this case a dummy function. \code{runBreedingScheme} passes it but this simple function doesn't use it}
 }
 \value{
 A records object that has new records created by advancing by a generation
@@ -25,6 +23,13 @@ Simple function to advance a simulated breeding product pipeline forward by one 
 The breeding program product pipeline will have been set by initializeFunc. This function moves the breeding program along by one generation and saves all the resulting phenotypes to the records object.
 }
 \examples{
-none
+bsp <- specifyPipeline()
+bsp <- specifyPopulation(bsp)
+initList <- initializeFunc(bsp)
+SP <- initList$SP
+bsp <- initList$bsp
+records <- initList$records
+records <- prodPipeSimp(records, bsp, SP)
+records <- popImprov1(records, bsp, SP)
 
 }

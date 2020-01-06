@@ -4,15 +4,21 @@
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp A list of breeding scheme parameters
-#' @param selectFunc Function to select parents among candidates. Default is the AlfSimHlpR function selectParIID
 #' @param SP The AlphaSimR SimParam object
 #' @return A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
 #' 
 #' @details This function uses penotypic records coming out of the product pipeline to choose individuals as parents to initiate the next breeding cycle
 #' 
 #' @examples
-#' none
-
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' initList <- initializeFunc(bsp)
+#' SP <- initList$SP
+#' bsp <- initList$bsp
+#' records <- initList$records
+#' records <- prodPipeSimp(records, bsp, SP)
+#' records <- popImprov1(records, bsp, SP)
+#' 
 #' @export
 popImprov1 <- function(records, bsp, SP){
   records <- with(bsp,{
@@ -36,15 +42,21 @@ popImprov1 <- function(records, bsp, SP){
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp List of breeding scheme parameters
-#' @param selectFunc Function to select parents among candidates. Default is the AlfSimHlpR function selectParGRM
 #' @param SP The AlphaSimR SimParam object
 #' @return A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
 #' 
 #' @details This function uses penotypic records coming out of the product pipeline to choose individuals as parents to initiate the next breeding cycle
 #' 
 #' @examples
-#' none
-
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' initList <- initializeFunc(bsp)
+#' SP <- initList$SP
+#' bsp <- initList$bsp
+#' records <- initList$records
+#' records <- prodPipeSimp(records, bsp, SP)
+#' records <- popImprov2(records, bsp, SP)
+#' 
 #' @export
 popImprov2 <- function(records, bsp, SP){
   records <- with(bsp,{
@@ -72,7 +84,11 @@ popImprov2 <- function(records, bsp, SP){
 #' @return Character vector of the ids of the selected individuals
 #' @details Accesses all individuals in \code{records} to pick the highest among candidates. If candidates do not have records, a random sample is returned
 #' 
-#' @examples none
+#' @examples
+#' allPop <- mergePops(records[[2]])
+#' candidates <- allPop@id
+#' parents <- allPop[selectParIID(records, candidates, bsp)]
+#' 
 #' @export
 selectParIID <- function(records, candidates, bsp){
   phenoDF <- framePhenoRec(records, bsp)
@@ -94,7 +110,9 @@ selectParIID <- function(records, candidates, bsp){
 #' @return Character vector of the ids of the selected individuals
 #' @details Accesses all individuals in \code{records} to pick the highest ones
 #' @examples 
-#' none
+#' candidates <- records[[1]][[1]]@id
+#' parents <- records[[1]][[1]][selectParGRM(records, candidates, bsp, SP)]
+#' 
 #' @export
 selectParGRM <- function(records, candidates, bsp, SP){
   phenoDF <- framePhenoRec(records, bsp)

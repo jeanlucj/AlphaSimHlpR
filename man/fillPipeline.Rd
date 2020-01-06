@@ -21,6 +21,16 @@ function to create initial records at the start of a simulation
 This is a quick and dirty way to create a records object that will be used to simulate breeding schemes
 }
 \examples{
-none
+bsp <- specifyPipeline()
+bsp <- specifyPopulation(bsp)
+records <- with(bsp, {founderPop <- runMacs(nInd=nFounders, nChr=nChr, segSites=segSites)
+SP <- SimParam$new(founderPop)
+SP$addTraitA(nQtlPerChr=nQTL, var=genVar)
+SP$addSnpChip(nSNP)
+founders <- newPop(founderPop, simParam=SP)
+bsp <- c(bsp, checks=list(NULL))
+records <- fillPipeline(founders, bsp, SP)
+records
+})
 
 }

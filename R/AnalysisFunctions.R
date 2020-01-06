@@ -19,11 +19,12 @@ mean_records <- function(records){
 #' function to make a data.frame to be used as a source of data to analyze the phenotypic \code{records}
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @param bsp The breeding scheme parameter list
 #' @return A data.frame of phenotypic records with four columns: 1. The id of individuals; 2. The trial type of the phenotype record; 3. The year the observation was recorded; 4. The phenotypic value
 #' @details \code{records} is a list of lists of populations and is primarily useful for maintaining the phenotypic observations across years and stages. For analysis, you need just the phenotypes in a matrix with relevant independent values
 #' 
 #' @examples
-#' phenoDF <- framePhenoRec(records)
+#' phenoDF <- framePhenoRec(records, bsp)
 #' 
 #' @export
 framePhenoRec <- function(records, bsp){
@@ -44,12 +45,12 @@ framePhenoRec <- function(records, bsp){
 #' function to make a genomic relationship matrix to be used to analyze the phenotypic \code{records}
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param SP The AlphaSimR SimParam object
+#' @param SP The AlphaSimR SimParam object. Needed to pull the SNP genotypes
 #' @return A genomic relationship matrix
 #' @details \code{records} maintains the phenotypic and genotypic records across years and stages. For GEBV analysis, you need the GRM of these individuals. \code{makeGRM} assumes the first phenotyping stage (records[[2]]) has all individuals that have been phenotyped. The GRM also includes the unphenotyped new F1 individuals in records[[1]]
 #' 
 #' @examples
-#' grm <- makeGRM(records)
+#' grm <- makeGRM(records, SP)
 #' 
 #' @export
 makeGRM <- function(records, SP){

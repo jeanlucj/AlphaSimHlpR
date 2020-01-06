@@ -46,12 +46,12 @@ specifyPipeline <- function(bsp=NULL, big=FALSE){
   names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
   
   # How many cycles to keep records
-  nCyclesToKeepRecords=7
+  nCyclesToKeepRecords=4
   
   # Function to advance individuals from one stage to the next
   selPipeAdv <- selectAdvIID
   
-  bsp <- c(bsp, mget(setdiff(ls(), c("bsp", "big"))))
+  bsp <- c(bsp, mget(setdiff(ls(), "bsp")))
   return(bsp)
 }
 
@@ -89,6 +89,6 @@ specifyPopulation <- function(bsp=NULL, big=FALSE){
   # Mean and variance of dominance degree
   meanDD <- 0.3; varDD <- 0.01
 
-  bsp <- c(bsp, mget(setdiff(ls(), c("bsp", "big"))))
+  bsp <- c(bsp, mget(setdiff(ls(), "bsp")))
   return(bsp)
 }

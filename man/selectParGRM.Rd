@@ -23,5 +23,7 @@ function to select parents among individuals with phenotypes, assuming individua
 Accesses all individuals in \code{records} to pick the highest ones
 }
 \examples{
-none
+candidates <- records[[1]][[1]]@id
+parents <- records[[1]][[1]][selectParGRM(records, candidates, bsp, SP)]
+
 }

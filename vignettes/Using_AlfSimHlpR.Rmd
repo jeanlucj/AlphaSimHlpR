@@ -1,0 +1,57 @@
+---
+title: "Using AlfSimHlpR to simulate a breeding program with AlphaSimR"
+author: 
+- Jean-Luc Jannink
+date: "2020-01-05"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using AlfSimHlpR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.dpi=96)
+```
+
+AlphaSimR is a package with many useful functions to simulate plant and animal breeding schemes. But it is not very easy to implement. AlfSimHlpR defines functions that provide structure for a breeding scheme 
+
+## Using AlfSimHlpR
+
+```{r loadASHR}
+library(AlfSimHlpR)
+```
+
+## Define simulation settings
+
+Define the genetic architecture of the population and other breeding scheme parameters in a list `bsp`.
+
+```{r Define Population}
+bsp <- specifyPipeline(big=TRUE)
+bsp <- specifyPopulation(bsp)
+```
+
+## Run a simple breeding scheme for 6 cycles
+
+Replicate a very simple breeding program ten times. 
+
+```{r Replicate Scheme}
+nReplications <- 3
+replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=6, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1, bsp)
+```
+
+## Calculate the means of the breeding programs
+
+```{r Calculate means}
+meansList <- lapply(replicRecords, mean_records)
+meanMeans <- Reduce("+", meansList) / nReplications
+```
+
+## plot out the means
+
+```{r Make a plot}
+ylim <- range(c(meanMeans))
+plot(1:nrow(meanMeans), meanMeans[,1], type="l", ylim=ylim, xlab="Cycle", ylab="Pop mean", xlim=c(0,nrow(meanMeans)))
+for (i in 2:ncol(meanMeans)) lines(1:nrow(meanMeans), meanMeans[,i], col=i)
+legend(0, 48, bsp$stageNames, lwd=2, col=1:bsp$nStages, cex=0.6)
+```

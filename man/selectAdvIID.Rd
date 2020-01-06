@@ -13,7 +13,7 @@ selectAdvIID(popPheno, records, ids, bsp)
 
 \item{ids}{Character vector of the ids of the individuals being selected}
 
-\item{bsp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
+\item{bsp}{A list of breeding scheme parameters.}
 }
 \value{
 Real vector of the selection criterion to chose which individuals to advance. \code{selectInd} will sort this vector and choose the individuals
@@ -25,6 +25,11 @@ function to select individuals to advance in the product pipeline
 In deciding which individuals to advance, this function enables you to use all the breeding records rather than just the phenotypes of the population being selected. \code{selectInd} calls this function
 }
 \examples{
-none
+stage <- 2
+entries <- with(bsp, {
+sourcePop <- last(records[[stage]])
+entries <- selectInd(sourcePop, nInd=nEntries[stage], trait=selectAdvIID, records=records, ids=sourcePop@id, bsp=bsp, simParam=SP)
+entries
+})
  
 }

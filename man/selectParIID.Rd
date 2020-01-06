@@ -23,5 +23,8 @@ function to select parents among individuals with phenotypes, assuming individua
 Accesses all individuals in \code{records} to pick the highest among candidates. If candidates do not have records, a random sample is returned
 }
 \examples{
-none
+allPop <- mergePops(records[[2]])
+candidates <- allPop@id
+parents <- allPop[selectParIID(records, candidates, bsp)]
+
 }

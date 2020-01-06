@@ -12,8 +12,6 @@ popImprov1(records, bsp, SP)
 \item{bsp}{A list of breeding scheme parameters}
 
 \item{SP}{The AlphaSimR SimParam object}
-
-\item{selectFunc}{Function to select parents among candidates. Default is the AlfSimHlpR function selectParIID}
 }
 \value{
 A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
@@ -25,5 +23,13 @@ Function to improve a simulated breeding population by one cycle. This version t
 This function uses penotypic records coming out of the product pipeline to choose individuals as parents to initiate the next breeding cycle
 }
 \examples{
-none
+bsp <- specifyPipeline()
+bsp <- specifyPopulation(bsp)
+initList <- initializeFunc(bsp)
+SP <- initList$SP
+bsp <- initList$bsp
+records <- initList$records
+records <- prodPipeSimp(records, bsp, SP)
+records <- popImprov1(records, bsp, SP)
+
 }

@@ -4,14 +4,20 @@
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp A list of breeding scheme parameters
-#' @param selectFunc In this case a dummy function. \code{runBreedingScheme} passes it but this simple function doesn't use it
 #' @param SP the AlphaSimR SimParam object
 #' @return A records object that has new records created by advancing by a generation
 #' 
 #' @details The breeding program product pipeline will have been set by initializeFunc. This function moves the breeding program along by one generation and saves all the resulting phenotypes to the records object.
 #' 
 #' @examples
-#' none
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' initList <- initializeFunc(bsp)
+#' SP <- initList$SP
+#' bsp <- initList$bsp
+#' records <- initList$records
+#' records <- prodPipeSimp(records, bsp, SP)
+#' records <- popImprov1(records, bsp, SP)
 #'
 #' @export
 prodPipeSimp <- function(records, bsp, SP){
@@ -39,15 +45,21 @@ prodPipeSimp <- function(records, bsp, SP){
 #' function to advance a simulated breeding product pipeline forward by one generation. See Gaynor et al. 2017 for the general idea.
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param bsp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
-#' @param selectFunc A function that uses the breeding programs \code{records}, \code{records}, and source population individual ids to generate a vector of selection criterion values that \code{selectInd} will select on. If NULL, \code{selectInd} will select on phenotype. Default is selectFunc=NULL
+#' @param bsp A list of breeding scheme parameters
 #' @param SP the AlphaSimR SimParam object
 #' @return A records object that has new records created by advancing by a generation
 #' 
 #' @details The breeding program product pipeline will have been set by initializeFunc. This function moves the breeding program along by one generation and saves all the resulting phenotypes to the records object.
 #' 
 #' @examples
-#' none
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' initList <- initializeFunc(bsp)
+#' SP <- initList$SP
+#' bsp <- initList$bsp
+#' records <- initList$records
+#' records <- prodPipeFncChk(records, bsp, SP)
+#' records <- popImprov1(records, bsp, SP)
 #'
 #' @export
 prodPipeFncChk <- function(records, bsp, SP){
@@ -81,12 +93,17 @@ prodPipeFncChk <- function(records, bsp, SP){
 #' @param popPheno Matrix of phenotypes of the population being selected. This matrix is provided by \code{selectInd} but need not be used
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param ids Character vector of the ids of the individuals being selected
-#' @param bsp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
+#' @param bsp A list of breeding scheme parameters.
 #' @return Real vector of the selection criterion to chose which individuals to advance. \code{selectInd} will sort this vector and choose the individuals
 #' @details In deciding which individuals to advance, this function enables you to use all the breeding records rather than just the phenotypes of the population being selected. \code{selectInd} calls this function
 #' 
 #' @examples
-#' none
+#' stage <- 2
+#' entries <- with(bsp, {
+#' sourcePop <- last(records[[stage]])
+#' entries <- selectInd(sourcePop, nInd=nEntries[stage], trait=selectAdvIID, records=records, ids=sourcePop@id, bsp=bsp, simParam=SP)
+#' entries
+#' })
 #'  
 #' @export
 selectAdvIID <- function(popPheno, records, ids, bsp){

@@ -9,11 +9,9 @@ prodPipeFncChk(records, bsp, SP)
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}
 
-\item{bsp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, trialTypeNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
+\item{bsp}{A list of breeding scheme parameters}
 
 \item{SP}{the AlphaSimR SimParam object}
-
-\item{selectFunc}{A function that uses the breeding programs \code{records}, \code{records}, and source population individual ids to generate a vector of selection criterion values that \code{selectInd} will select on. If NULL, \code{selectInd} will select on phenotype. Default is selectFunc=NULL}
 }
 \value{
 A records object that has new records created by advancing by a generation
@@ -25,6 +23,13 @@ function to advance a simulated breeding product pipeline forward by one generat
 The breeding program product pipeline will have been set by initializeFunc. This function moves the breeding program along by one generation and saves all the resulting phenotypes to the records object.
 }
 \examples{
-none
+bsp <- specifyPipeline()
+bsp <- specifyPopulation(bsp)
+initList <- initializeFunc(bsp)
+SP <- initList$SP
+bsp <- initList$bsp
+records <- initList$records
+records <- prodPipeFncChk(records, bsp, SP)
+records <- popImprov1(records, bsp, SP)
 
 }

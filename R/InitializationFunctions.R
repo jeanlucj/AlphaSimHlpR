@@ -1,14 +1,19 @@
 #' initFuncSimp function
 #'
-#' function to initialize simulation of a breeding program. A single additive-dominance trait is simulated.
+#' Function to initialize simulation of a breeding program. A single additive trait is simulated. No checks are used in this scheme
 #' 
-#' @param bsp A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP 
+#' @param bsp A list of breeding scheme parameters.  See \code{specifyPipeline} and \code{specifyPopulation} 
 #' @return A list containing: 1. The simulation parameters in \code{SP}; 2. The initial records of the breeding program in \code{records}. See \code{fillPipeline} for details; 3. A completed \code{bsp} object
 #' 
 #' @details Creates the founders and the initial records at the beginning of the simulation of a breeding program.
 #' 
 #' @examples
-#' none
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' initList <- initializeFunc(bsp)
+#' SP <- initList$SP
+#' bsp <- initList$bsp
+#' records <- initList$records
 #'
 #' @export
 initFuncSimp <- function(bsp){
@@ -36,15 +41,20 @@ initFuncSimp <- function(bsp){
 
 #' initFuncADChk function
 #'
-#' function to initialize simulation of a breeding program. A single additive-dominance trait is simulated.
+#' function to initialize simulation of a breeding program. A single additive-dominance trait is simulated. Check are used in this scheme
 #' 
-#' @param bsp A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP 
+#' @param bsp A list of breeding scheme parameters.  See \code{specifyPipeline} and \code{specifyPopulation} 
 #' @return A list containing: 1. The simulation parameters in \code{SP}; 2. The initial records of the breeding program in \code{records}. See \code{fillPipeline} for details; 3. A completed \code{bsp} object
 #' 
 #' @details Creates the founders and the initial records at the beginning of the simulation of a breeding program.
 #' 
 #' @examples
-#' none
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' initList <- initializeFunc(bsp)
+#' SP <- initList$SP
+#' bsp <- initList$bsp
+#' records <- initList$records
 #'
 #' @export
 initFuncADChk <- function(bsp){
@@ -84,8 +94,18 @@ initFuncADChk <- function(bsp){
 #' @details This is a quick and dirty way to create a records object that will be used to simulate breeding schemes
 #' 
 #' @examples
-#' none
-#'
+#' bsp <- specifyPipeline()
+#' bsp <- specifyPopulation(bsp)
+#' records <- with(bsp, {founderPop <- runMacs(nInd=nFounders, nChr=nChr, segSites=segSites)
+#' SP <- SimParam$new(founderPop)
+#' SP$addTraitA(nQtlPerChr=nQTL, var=genVar)
+#' SP$addSnpChip(nSNP)
+#' founders <- newPop(founderPop, simParam=SP)
+#' bsp <- c(bsp, checks=list(NULL))
+#' records <- fillPipeline(founders, bsp, SP)
+#' records
+#' })
+#' 
 #' @export
 fillPipeline <- function(founders, bsp=NULL, SP){
   records <- with(bsp,{
