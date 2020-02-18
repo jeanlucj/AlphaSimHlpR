@@ -1,0 +1,31 @@
+# Species characteristics
+# Number of chromosomes
+nChr
+10
+
+# Population characteristics
+# Number of founders
+nFounders
+500
+
+# Number of segregating sites per chromosome
+segSites
+500
+
+# Number of QTL per chromosome
+nQTL
+200
+
+# Number of observed SNP per chromosome
+nSNP
+500
+
+# Initial genetic variance
+genVar
+40
+
+# Mean and variance of dominance degree
+meanDD
+0.8
+varDD
+0.01

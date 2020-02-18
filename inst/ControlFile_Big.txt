@@ -1,0 +1,41 @@
+# The number of stages simulated and retained in the records
+nStages
+6
+stageNames
+SDN CET PYT AYT UY1 UY2
+
+# Number of parents in the crossing nursery
+nParents
+30
+# Number of crosses entering the pipeline
+nCrosses
+100
+# Number of progeny per cross
+nProgeny
+30
+
+# Vector of number of number of entries in each stage
+nEntries
+3000 1000 300 60 40 40
+
+# Vector of number of checks used in each stage
+# Checks are replicated the same as experimental entries
+nChks
+150 50 15 3 2 2
+
+# Vector of number of reps used in each stage
+nReps
+1 1 2 2 3 3
+
+# Vector of error variances estimated from historical data 
+# 200 for SDN is a guess
+errVars
+200 146 82 40 37 37
+
+# How many cycles to keep records
+nCyclesToKeepRecords
+4
+
+# Name of function to advance individuals from one stage to the next
+selPipeAdv
+selectAdvIID

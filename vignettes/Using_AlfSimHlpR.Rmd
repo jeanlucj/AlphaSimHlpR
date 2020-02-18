@@ -30,17 +30,16 @@ suppressMessages(library(AlfSimHlpR))
 Define the genetic architecture of the population and other breeding scheme parameters in a list `bsp`.
 
 ```{r Define Population}
-bsp <- specifyPipeline(big=TRUE)
-bsp <- specifyPopulation(bsp)
-print(specifyPipeline)
+bsp <- specifyPipeline(ctrlFileName="../inst/ControlFile_Small.txt")
+bsp <- specifyPopulation(bsp, ctrlFileName="../inst/PopulationCtrlFile_Small.txt")
+print(bsp)
+nReplications <- 2
 ```
 
 ## Run a simple breeding scheme for 6 cycles
 
-Replicate a very simple breeding program ten times. 
-
+Replicate a very simple breeding program `r nReplications` times. 
 ```{r Replicate Scheme}
-nReplications <- 2
 replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=6, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1, bsp)
 ```
 

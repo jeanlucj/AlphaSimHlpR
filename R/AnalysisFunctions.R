@@ -98,7 +98,7 @@ iidPhenoEval <- function(phenoDF){
 #' @export
 grmPhenoEval <- function(phenoDF, grm){
   require(sommer)
-  levels(phenoDF$id) <- levels(as.factor(rownames(grm))) # Enable prediction
+  phenoDF$id<-factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
   fm <- mmer(pheno ~ 1,
              random= ~ vs(id, Gu=grm),
