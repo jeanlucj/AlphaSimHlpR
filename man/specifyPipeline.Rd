@@ -4,12 +4,12 @@
 \alias{specifyPipeline}
 \title{specifyPipeline function}
 \usage{
-specifyPipeline(bsp = NULL, big = FALSE)
+specifyPipeline(bsp = NULL, ctrlFileName = NULL)
 }
 \arguments{
 \item{bsp}{A list of objects to combine with the pipeline parameters. bsp is short for breeding sheme parameters}
 
-\item{big}{Logical TRUE for big population FALSE for toy for debugging}
+\item{ctrlFileName}{The name of the text file with parameter values controling the simulation. Must include the path to the file. If NULL a toy example simulation will be set up}
 }
 \value{
 A list containing objects that specify the product pipeline. This list will determine the number of lists in the records object

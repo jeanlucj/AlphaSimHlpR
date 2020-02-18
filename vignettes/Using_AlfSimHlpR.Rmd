@@ -33,10 +33,12 @@ Define the genetic architecture of the population and other breeding scheme para
 bsp <- specifyPipeline(ctrlFileName="../inst/ControlFile_Small.txt")
 bsp <- specifyPopulation(bsp, ctrlFileName="../inst/PopulationCtrlFile_Small.txt")
 print(bsp)
+
 nReplications <- 2
+nCycles <- 6
 ```
 
-## Run a simple breeding scheme for 6 cycles
+## Run a simple breeding scheme for `r nCycles` cycles
 
 Replicate a very simple breeding program `r nReplications` times. 
 ```{r Replicate Scheme}

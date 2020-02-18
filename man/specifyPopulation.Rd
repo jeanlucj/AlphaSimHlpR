@@ -4,12 +4,12 @@
 \alias{specifyPopulation}
 \title{specifyPopulation function}
 \usage{
-specifyPopulation(bsp = NULL, big = FALSE)
+specifyPopulation(bsp = NULL, ctrlFileName = NULL)
 }
 \arguments{
 \item{bsp}{A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters}
 
-\item{big}{Logical TRUE for big population FALSE for toy for debugging}
+\item{ctrlFileName}{The name of the text file with parameter values specifying the breeding population. Must include the path to the file. If NULL a toy example simulation will be set up}
 }
 \value{
 A list containing objects that specify the species and population characteristics.
