@@ -32,6 +32,7 @@ Define the genetic architecture of the population and other breeding scheme para
 ```{r Define Population}
 bsp <- specifyPipeline(ctrlFileName="../inst/ControlFile_Small.txt")
 bsp <- specifyPopulation(bsp, ctrlFileName="../inst/PopulationCtrlFile_Small.txt")
+bsp <- specifyCosts(bsp, ctrlFileName="../inst/CostsControlFile.txt")
 print(bsp)
 
 nReplications <- 2
@@ -56,7 +57,7 @@ meanMeans <- Reduce("+", meansList) / nReplications
 
 ```{r Make a plot}
 ylim <- range(c(meanMeans))
-plot(1:nrow(meanMeans), meanMeans[,1], type="l", ylim=ylim, xlab="Cycle", ylab="Pop mean", xlim=c(0,nrow(meanMeans)))
+plot(1:nrow(meanMeans), meanMeans[,1], type="l", ylim=ylim, xlab="Cycle", ylab="Pop mean", xlim=c(0,nrow(meanMeans)), main=paste("Annual cost:", bsp$totalCosts))
 for (i in 2:ncol(meanMeans)) lines(1:nrow(meanMeans), meanMeans[,i], col=i)
 legend(0, 48, bsp$stageNames, lwd=2, col=1:bsp$nStages, cex=0.6)
 ```

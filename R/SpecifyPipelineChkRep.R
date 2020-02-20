@@ -21,10 +21,12 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     nProgeny <- 10 # Number of progeny per cross
     # Number of number of entries in each stage
     nEntries <- c(nCrosses*nProgeny, 60, 20, 10)
+    nReps <- c(1, 1, 2, 2) # Number of reps used in each stage
     # Number of checks used in each stage
     # Checks are replicated the same as experimental entries
-    nChks <- floor(nEntries / 20)
-    nReps <- c(1, 1, 2, 2) # Number of reps used in each stage
+    nChks <- c(2, 1, 1, 1)
+    entryToChkRatio <- 20
+    minNChks <- 1
     # Error variances estimated from historical data 
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
@@ -35,10 +37,20 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bsp <- c(bsp, mget(setdiff(ls(), "bsp")))
     #END no control file
   } else{
-    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nChks", "nReps" ,"errVars", "nCyclesToKeepRecords", "selPipeAdv")
+    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nChks", "entryToChkRatio", "minNChks", "errVars", "nCyclesToKeepRecords", "selPipeAdv")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
     names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$errVars) <- ctrlParms$stageNames
     ctrlParms$selPipeAdv <- get(ctrlParms$selPipeAdv)
+    # Figure out how many checks to add to each stage
+    pairwiseComp <- function(vec1, vec2, fnc){
+      return(apply(cbind(vec1, vec2), 1, fnc))
+    }
+    nPlots <- nEntries * nReps
+    nChkPlots <- nPlots / entryToChkRatio
+    nChkPlots <- pairwiseComp(nChkPlots, nReps, min) # At least one check / rep
+    chkReps <- ceiling(nChkPlots / nChks)
+    nChkPlots <- chkReps * nChks
+    ctrlParms <- c(ctrlParms, nChkPlots=nChkPlots, chkReps=chkReps)
     bsp <- c(bsp, ctrlParms)
   }
   return(bsp)

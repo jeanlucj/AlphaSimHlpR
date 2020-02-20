@@ -22,6 +22,12 @@ nEntries
 # Checks are replicated the same as experimental entries
 nChks
 10 5 2 1 1 1
+# How many entry plots do you have per check plot
+entryToChkRatio
+20
+# If nEntries / entryToChkRatio is lower than minNChks, use minNChks
+minNChks
+1
 
 # Vector of number of reps used in each stage
 nReps
