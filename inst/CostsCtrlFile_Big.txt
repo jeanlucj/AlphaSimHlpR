@@ -1,0 +1,15 @@
+# Program costs
+# The seedling development costs are included in the SDN cost
+# SDN CET PYT AYT UY1 UY2
+plotCosts
+1 8 14 32 42 42
+
+# Crossing cost
+crossingCost
+0.2
+
+# Genotyping cost
+qcGenoCost
+1.5
+wholeGenomeCost
+10

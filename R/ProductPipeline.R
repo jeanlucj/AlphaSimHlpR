@@ -1,6 +1,6 @@
 #' prodPipeSimp function
 #'
-#' Simple function to advance a simulated breeding product pipeline forward by one generation. No use-input function, no checks. Selection on phenotype
+#' Simple function to advance a simulated breeding product pipeline forward by one generation. No selection function, no checks. Selection on phenotype
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp A list of breeding scheme parameters
@@ -22,14 +22,18 @@
 #' @export
 prodPipeSimp <- function(records, bsp, SP){
   records <- with(bsp,{
-    
+    curYr <- length(records[[1]])
     for (stage in 1:nStages){
       sourcePop <- last(records[[stage]])
-      # Stage 1 coming from untested progeny, so random selection
-      use <- if_else(stage == 1, "rand", "pheno")
-      entries <- selectInd(sourcePop, nInd=nEntries[stage], use=use, simParam=SP)
-      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage], simParam=SP)
-      records[[stage+1]] <- c(records[[stage+1]], list(entries))
+      if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
+        entries <- selectInd(sourcePop, nInd=nEntries[stage], use="rand", simParam=SP)
+      } else{ # Stage > 1: sort the matrix and make population of best
+        idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:nEntries[stage]]]
+        entries <- records[[1]][curYr + 1 - stage][idBest]
+      }
+      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
+      phenoRec <- phenoRecFromPop(entries, bsp, stage)
+      records[[stage+1]] <- c(records[[stage+1]], list(phenoRec))
     }
     
     # Remove old records if needed
@@ -64,51 +68,34 @@ prodPipeSimp <- function(records, bsp, SP){
 #' @export
 prodPipeFncChk <- function(records, bsp, SP){
   records <- with(bsp,{
-    
+    curYr <- length(records[[1]])
+    phenoDF <- framePhenoRec(records)
+    # selPipeAdv has to be given in bsp
+    selCrit <- selPipeAdv(phenoDF)
     for (stage in 1:nStages){
       sourcePop <- last(records[[stage]])
-      # selPipeAdv must be defined in bsp
-      entries <- selectInd(sourcePop, nInd=nEntries[stage], trait=selPipeAdv, records=records, ids=sourcePop@id, bsp=bsp, simParam=SP)
-
+      if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
+        idBest <- sourcePop@id
+      } else{
+        idBest <- order(selCrit[sourcePop$id,], decreasing=T)[1:nEntries[stage]]
+        idBest <- sourcePop$id[idBest]
+      }
+      entries <- records[[1]][curYr + 1 - stage][idBest]
+      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
+      phenoRec <- phenoRecFromPop(entries, bsp, stage)
       # If provided, add checks to the population
       if(!is.null(checks) & nChks[stage] > 0){
-        entries <- c(entries, checks[1:nChks[stage]])
+        chkPheno <- setPheno(checks[1:nChks[stage]], varE=errVars[stage], reps=chkReps[stage]*nLocs[stage])
+        chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
+        phenoRec <- bind_rows(phenoRec, chkRec)
       }
-      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage], simParam=SP)
-      records[[stage+1]] <- c(records[[stage+1]], list(entries))
-    }
-    
+      records[[stage+1]] <- c(records[[stage+1]], list(phenoRec))
+    }#END 1:nStages
+
     # Remove old records if needed
     if (length(records[[2]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records)
     records
   })#END with bsp
   
   return(records)
-}
-
-#' selectAdvIID function
-#'
-#' function to select individuals to advance in the product pipeline
-#'
-#' @param popPheno Matrix of phenotypes of the population being selected. This matrix is provided by \code{selectInd} but need not be used
-#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param ids Character vector of the ids of the individuals being selected
-#' @param bsp A list of breeding scheme parameters.
-#' @return Real vector of the selection criterion to chose which individuals to advance. \code{selectInd} will sort this vector and choose the individuals
-#' @details In deciding which individuals to advance, this function enables you to use all the breeding records rather than just the phenotypes of the population being selected. \code{selectInd} calls this function
-#' 
-#' @examples
-#' stage <- 2
-#' entries <- with(bsp, {
-#' sourcePop <- last(records[[stage]])
-#' entries <- selectInd(sourcePop, nInd=nEntries[stage], trait=selectAdvIID, records=records, ids=sourcePop@id, bsp=bsp, simParam=SP)
-#' entries
-#' })
-#'  
-#' @export
-selectAdvIID <- function(popPheno, records, ids, bsp){
-  phenoDF <- framePhenoRec(records, bsp)
-  if (!any(ids %in% phenoDF$id)) return(runif(nrow(popPheno)))
-  allBLUPs <- iidPhenoEval(phenoDF)
-  return(allBLUPs[ids])
 }

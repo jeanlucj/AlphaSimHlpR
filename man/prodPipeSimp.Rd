@@ -17,7 +17,7 @@ prodPipeSimp(records, bsp, SP)
 A records object that has new records created by advancing by a generation
 }
 \description{
-Simple function to advance a simulated breeding product pipeline forward by one generation. No use-input function, no checks. Selection on phenotype
+Simple function to advance a simulated breeding product pipeline forward by one generation. No selection function, no checks. Selection on phenotype
 }
 \details{
 The breeding program product pipeline will have been set by initializeFunc. This function moves the breeding program along by one generation and saves all the resulting phenotypes to the records object.

@@ -21,26 +21,45 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     nProgeny <- 10 # Number of progeny per cross
     # Number of number of entries in each stage
     nEntries <- c(nCrosses*nProgeny, 60, 20, 10)
+    nReps <- c(1, 1, 2, 2) # Number of reps used in each stage
+    nLocs <- c(1, 2, 2, 3) # Number of locations used in each stage
     # Number of checks used in each stage
     # Checks are replicated the same as experimental entries
-    nChks <- floor(nEntries / 20)
-    nReps <- c(1, 1, 2, 2) # Number of reps used in each stage
+    nChks <- c(2, 1, 1, 1)
+    entryToChkRatio <- 20
+    minNChks <- 1
     # Error variances estimated from historical data 
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
-    nCyclesToKeepRecords=4 # How many cycles to keep records
+    nCyclesToKeepRecords <- 5 # How many cycles to keep records
     # Function to advance individuals from one stage to the next
-    selPipeAdv <- selectAdvIID
-    bsp <- c(bsp, mget(setdiff(ls(), "bsp")))
+    selPipeAdv <- iidPhenoEval
+    ctrlParms <- mget(setdiff(ls(), "bsp"))
     #END no control file
   } else{
-    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nChks", "nReps" ,"errVars", "nCyclesToKeepRecords", "selPipeAdv")
+    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "minNChks", "errVars", "nCyclesToKeepRecords", "selPipeAdv")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
-    names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$errVars) <- ctrlParms$stageNames
-    ctrlParms$selPipeAdv <- get(ctrlParms$selPipeAdv)
-    bsp <- c(bsp, ctrlParms)
   }
+  ctrlParms <- with(ctrlParms,{
+    # Get the function to replace the name
+    ctrlParms$selPipeAdv <- get(selPipeAdv)
+    # Make sure you keep enough cycles
+    ctrlParms$nCyclesToKeepRecords <- max(nStages+1, nCyclesToKeepRecords)
+    # Figure out how many checks to add to each stage
+    pairwiseComp <- function(vec1, vec2, fnc){
+      return(apply(cbind(vec1, vec2), 1, fnc))
+    }
+    nPlots <- nEntries * nReps
+    nChkPlots <- nPlots / entryToChkRatio
+    nChkPlots <- pairwiseComp(nChkPlots, nReps, min) # At least one check / rep
+    chkReps <- ceiling(nChkPlots / nChks)
+    nChkPlots <- chkReps * nChks
+    # Give everything names
+    names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$nLocs) <- names(ctrlParms$errVars) <- names(nChkPlots) <- names(chkReps) <- stageNames
+    ctrlParms <- c(ctrlParms, list(nChkPlots=nChkPlots), list(chkReps=chkReps))
+  })
+  bsp <- c(bsp, ctrlParms)
   return(bsp)
 }
 
@@ -68,14 +87,14 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     nQTL <- 5 # Number of QTL per chromosome
     nSNP <- 5 # Number of observed SNP per chromosome
     genVar <- 40 # Initial genetic variance
-    meanDD <- 0.3; varDD <- 0.01 # Mean and variance of dominance degree
-    bsp <- c(bsp, mget(setdiff(ls(), "bsp")))
+    meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
+    ctrlParms <- mget(setdiff(ls(), "bsp"))
     #END no control file
   } else{
     ctrlParms <- c("nChr", "nFounders", "segSites", "nQTL", "nSNP", "genVar", "meanDD", "varDD")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
-    bsp <- c(bsp, ctrlParms)
   }
+  bsp <- c(bsp, ctrlParms)
   return(bsp)
 }
 
@@ -96,19 +115,20 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
 specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   if (is.null(ctrlFileName)){ # NULL control file: make toy example
     # Plot costs
-    plotCost <- c(1, 8, 14, 32)
+    plotCosts <- c(1, 8, 14, 32)
     # Crossing cost
     crossingCost <- 0.2
     # Genotyping cost
     qcGenoCost <- 1.5
     wholeGenomeCost <- 10
-    bsp <- c(bsp, mget(setdiff(ls(), "bsp")))
+    ctrlParms <- mget(setdiff(ls(), "bsp"))
     #END no control file
   } else{
-    ctrlParms <- c("plotCost", "crossingCost", "qcGenoCost", "wholeGenomeCost")
+    ctrlParms <- c("plotCosts", "crossingCost", "qcGenoCost", "wholeGenomeCost")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
-    bsp <- c(bsp, ctrlParms)
   }
+  names(ctrlParms$plotCosts) <- bsp$stageNames
+  bsp <- c(bsp, ctrlParms)
   # Calculate the program yearly cost
   # Assumptions
   # 1. Every new progeny is both QC and whole-genome genotyped. The number of 
@@ -116,8 +136,9 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   # nCrosses*nProgeny*(crossingCost + qcGenoCost + wholeGenomeCost)
   # 2. The number of plots in each trial is (nEntries + nChks)*nReps so the cost
   # of the trial is (nEntries + nChks)*nReps*plotCost
+  # NOTE for develCosts not accounting for number of rapid cycles
   develCosts <- bsp$nCrosses * bsp$nProgeny * (bsp$crossingCost + bsp$qcGenoCost + bsp$wholeGenomeCost)
-  trialCosts <- ((bsp$nEntries + bsp$nChks) * bsp$nReps) %*% bsp$plotCost
+  trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
   totalCosts <- develCosts + trialCosts
   return(c(bsp, c(develCosts=develCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
 }

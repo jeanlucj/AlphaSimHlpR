@@ -1,8 +1,8 @@
 # The number of stages simulated and retained in the records
 nStages
-6
+4
 stageNames
-SDN CET PYT AYT UY1 UY2
+SDN CET PYT AYT
 
 # Number of parents in the crossing nursery
 nParents
@@ -16,12 +16,12 @@ nProgeny
 
 # Vector of number of number of entries in each stage
 nEntries
-200 60 20 6 4 4
+200 60 20 6
 
 # Vector of number of checks used in each stage
 # Checks are replicated the same as experimental entries
 nChks
-10 5 2 1 1 1
+10 5 2 1
 # How many entry plots do you have per check plot
 entryToChkRatio
 20
@@ -31,17 +31,20 @@ minNChks
 
 # Vector of number of reps used in each stage
 nReps
-1 1 2 2 3 3
+1 1 2 2
+# Vector of number of locations used in each stage
+nLocs
+1 1 2 2
 
 # Vector of error variances estimated from historical data 
 # 200 for SDN is a guess
 errVars
-200 146 82 40 37 37
+200 146 82 40
 
-# How many cycles to keep records
+# How many cycles to keep records. Must be > nStages
 nCyclesToKeepRecords
-4
+5
 
 # Name of function to advance individuals from one stage to the next
 selPipeAdv
-selectAdvIID
+iidPhenoEval

@@ -11,7 +11,7 @@
 #' 
 #' @export
 mean_records <- function(records){
-  return(sapply(records[-1], function(popList) sapply(popList, meanG)))
+  return(sapply(records[-1], function(popList) sapply(popList, function(popMat) return(mean(popMat$genoVal)))))
 }
 
 #' framePhenoRec function
@@ -19,25 +19,44 @@ mean_records <- function(records){
 #' function to make a data.frame to be used as a source of data to analyze the phenotypic \code{records}
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param bsp The breeding scheme parameter list
 #' @return A data.frame of phenotypic records with four columns: 1. The id of individuals; 2. The trial type of the phenotype record; 3. The year the observation was recorded; 4. The phenotypic value
 #' @details \code{records} is a list of lists of populations and is primarily useful for maintaining the phenotypic observations across years and stages. For analysis, you need just the phenotypes in a matrix with relevant independent values
 #' 
 #' @examples
-#' phenoDF <- framePhenoRec(records, bsp)
+#' phenoDF <- framePhenoRec(records)
 #' 
 #' @export
-framePhenoRec <- function(records, bsp){
-  allPheno <- data.frame()
+framePhenoRec <- function(records){
+  allPheno <- tibble()
   for (stage in 2:length(records)){
-    errVar <- bsp$errVars[names(records)[stage]]; names(errVar) <- NULL
     for (year in 1:length(records[[stage]])){
-      pop <- records[[stage]][[year]]
-      thisPheno <- data.frame(id=pop@id, stage=names(records)[stage], year=year, errVar=errVar, pheno=c(pop@pheno))
-      allPheno <- rbind(allPheno, thisPheno)
+      phenoRec <- records[[stage]][[year]]
+      thisPheno <- phenoRec %>% mutate(year=year)
+      allPheno <- bind_rows(allPheno, thisPheno)
     }
   }
   return(allPheno)
+}
+
+#' phenoRecFromPop function
+#'
+#' function to make a tibble to be added to \code{records}
+#'
+#' @param pop The population from which to extract phenotypic records. Has to have been phenotyped
+#' @param bsp The breeding scheme parameter list
+#' @param stage At what stage of the breeding scheme this population was phenotyped. Necessary to determine the error variance and degree of replication
+#' @param checks Whether this was a population of experimentals or checks. Necessary to determine the degree of replication
+#' @return A tibble of phenotypic records with six columns: 1. The id, 2. The id of the mother, 3. The id of the father, 4. The name of the stage, 5. The actual phenotype, 6. The error variance of the phenotype
+#' @details The tibbles coming from this function will be incorporated into \code{records} useful for maintaining the phenotypic observations across years and stages. For analysis, you need these phenotypes coupled to their ids and error variances
+#' 
+#' @examples
+#' phenoDF <- phenoRecFromPop(pop, bsp, stage)
+#' 
+#' @export
+phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
+  nReps <- if_else(checks, bsp$chkReps[stage], bsp$nReps[stage])
+  phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], pheno=pheno(pop), genoVal=gv(pop), errVar=bsp$errorVars[stage]/nReps/bsp$nLocs[stage])
+  return(phenoRec)
 }
 
 #' makeGRM function
@@ -55,7 +74,7 @@ framePhenoRec <- function(records, bsp){
 #' @export
 makeGRM <- function(records, SP){
   require(sommer)
-  allPop <- mergePops(c(records[[1]], records[[2]]))
+  allPop <- mergePops(records[[1]])
   allPop <- allPop[!duplicated(allPop@id)]
   grm <- A.mat(pullSnpGeno(allPop, simParam=SP) - 1)
   return(grm)
@@ -98,7 +117,7 @@ iidPhenoEval <- function(phenoDF){
 #' @export
 grmPhenoEval <- function(phenoDF, grm){
   require(sommer)
-  phenoDF$id<-factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
+  phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
   fm <- mmer(pheno ~ 1,
              random= ~ vs(id, Gu=grm),

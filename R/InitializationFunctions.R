@@ -89,9 +89,9 @@ initFuncADChk <- function(bsp){
 #'
 #' @param founders Pop-class object of the founders of the breeding program
 #' @param bsp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
-#' @return A \code{records} object. A list of lists containing nStages+1 lists. The first list contains the F1 progeny of individuals derived from the \code{parents}. The remaining lists contain one Pop-class object each, with a number of individuals equal to nEntries for that stage. The indivduals have been phenotyped using \code{setPheno}
+#' @return A \code{records} object. A list of lists containing nStages+1 lists. The first list contains one Pop-class of progeny per year of the scheme. The remaining lists contain one matrix per year that has individual id, mother, father, stage, phenotypes, and error variances. The individuals have been phenotyped using \code{setPheno}. The matrix may contain a mix of experimental and check phenotypes with different levels of replication
 #' 
-#' @details This is a quick and dirty way to create a records object that will be used to simulate breeding schemes
+#' @details This is a structure for a records object that will be used to simulate breeding schemes
 #' 
 #' @examples
 #' bsp <- specifyPipeline()
@@ -112,20 +112,27 @@ fillPipeline <- function(founders, bsp=NULL, SP){
     
     F1 <- randCross(founders, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)
     records <- list(list(F1))
-    
-    for (stage in 1:nStages){
-      entries <- last(records[[stage]])
-      
-      use <- if_else(stage == 1, "rand", "pheno")
-      entries <- selectInd(entries, nInd=nEntries[stage], use=use, simParam=SP)
-      # If provided, add checks to the population
-      if(!is.null(checks) & nChks[stage] > 0){
-        entries <- c(entries, checks[1:nChks[stage]])
-      }
-      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage], simParam=SP)
-      
-      records <- c(records, list(list(entries)))
-    }
+    for (year in 1:nStages){
+      for (stage in 1:year){
+        sourcePop <- last(records[[stage]])
+        if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
+          entries <- selectInd(sourcePop, nInd=nEntries[stage], use="rand", simParam=SP)
+        } else{ # Stage > 1: sort the matrix and make population of best
+          idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:nEntries[stage]]]
+          entries <- records[[1]][year + 1 - stage][idBest]
+          if(!is.null(checks) & nChks[stage] > 0){
+            entries <- c(entries, checks[1:nChks[stage]])
+          }
+        }
+        entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
+        phenoRec <- phenoRecFromPop(entries, bsp, stage)
+        if (stage==year){
+          records <- c(records, list(list(phenoRec)))
+        } else{
+          records[[stage+1]] <- c(records[[stage+1]], list(phenoRec))
+        }
+      }#END stages
+    }#END years
     names(records) <- c("F1", stageNames)
     records
   })#END with bsp

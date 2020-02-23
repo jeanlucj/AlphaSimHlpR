@@ -57,7 +57,7 @@ meanMeans <- Reduce("+", meansList) / nReplications
 
 ```{r Make a plot}
 ylim <- range(c(meanMeans))
-plot(1:nrow(meanMeans), meanMeans[,1], type="l", ylim=ylim, xlab="Cycle", ylab="Pop mean", xlim=c(0,nrow(meanMeans)), main=paste("Annual cost:", bsp$totalCosts))
+plot(1:nrow(meanMeans), meanMeans[,1], type="l", ylim=ylim, xlab="Cycle", ylab="Pop mean", main=paste("Annual cost:", bsp$totalCosts))
 for (i in 2:ncol(meanMeans)) lines(1:nrow(meanMeans), meanMeans[,i], col=i)
-legend(0, 48, bsp$stageNames, lwd=2, col=1:bsp$nStages, cex=0.6)
+legend(1, ylim[2], bsp$stageNames, lwd=2, col=1:bsp$nStages, cex=0.6)
 ```

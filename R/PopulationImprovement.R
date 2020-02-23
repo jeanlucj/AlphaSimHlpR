@@ -1,4 +1,4 @@
-#' popImprov1 function
+#' popImprov1Cyc function
 #'
 #' Function to improve a simulated breeding population by one cycle. This version takes phenotyped individuals and crosses them to create new F1
 #'
@@ -20,15 +20,15 @@
 #' records <- popImprov1(records, bsp, SP)
 #' 
 #' @export
-popImprov1 <- function(records, bsp, SP){
+popImprov1Cyc <- function(records, bsp, SP){
   records <- with(bsp,{
     
     # Make one population to select out of
-    allPop <- mergePops(records[[2]])
+    allPop <- mergePops(records[[1]])
     candidates <- allPop@id
     # Select parents among all individuals
     parents <- allPop[selectParIID(records, candidates, bsp)]
-    records[[1]] <- list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP))
+    records[[1]] <- c(records[[1]], list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)))
     
     records
   })#END with bsp
@@ -36,7 +36,7 @@ popImprov1 <- function(records, bsp, SP){
   return(records)
 }
 
-#' popImprov2 function
+#' popImprov2Cyc function
 #'
 #' Function to improve a simulated breeding population by one cycle. This version does two cycles of predicting F1 individuals and making new F1s
 #'
@@ -58,14 +58,17 @@ popImprov1 <- function(records, bsp, SP){
 #' records <- popImprov2(records, bsp, SP)
 #' 
 #' @export
-popImprov2 <- function(records, bsp, SP){
+popImprov2Cyc <- function(records, bsp, SP){
   records <- with(bsp,{
-    
+
     for (cycle in 1:2){
-      candidates <- records[[1]][[1]]@id
-      # Select parents among F1
-      parents <- records[[1]][[1]][selectParGRM(records, candidates, bsp, SP)]
-      records[[1]] <- list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP))
+      candidates <- last(records[[1]])@id
+      parents <- last(records[[1]])[selectParGRM(records, candidates, bsp, SP)]
+      if (cycle==1){
+        records[[1]][length(records[[1]])] <- randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)
+      } else{
+        records[[1]] <- c(records[[1]], list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)))
+      }
     }
     
     records
