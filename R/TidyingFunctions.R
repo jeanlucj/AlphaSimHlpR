@@ -10,7 +10,12 @@
 #' records <- removeOldestCyc(records)
 #' 
 #' @export
-removeOldestCyc <- function(records){
-  for (i in 2:length(records)) records[[i]] <- records[[i]][-1]
+removeOldestCyc <- function(records, nCyclesToKeepRecords){
+  for (i in 1:length(records)){
+    nCycStage <- length(records[[i]])
+    if (nCycStage > nCyclesToKeepRecords){
+      records[[i]] <- records[[i]][-(1:(nCycStage-nCyclesToKeepRecords))]
+    }
+  }
   return(records)
 }

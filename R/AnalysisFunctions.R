@@ -55,7 +55,7 @@ framePhenoRec <- function(records){
 #' @export
 phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
   nReps <- if_else(checks, bsp$chkReps[stage], bsp$nReps[stage])
-  phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], pheno=pheno(pop), genoVal=gv(pop), errVar=bsp$errorVars[stage]/nReps/bsp$nLocs[stage])
+  phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], pheno=pheno(pop), genoVal=gv(pop), errVar=bsp$errVars[stage]/nReps/bsp$nLocs[stage])
   return(phenoRec)
 }
 

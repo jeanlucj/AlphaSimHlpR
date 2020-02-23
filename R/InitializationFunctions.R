@@ -109,29 +109,32 @@ initFuncADChk <- function(bsp){
 #' @export
 fillPipeline <- function(founders, bsp=NULL, SP){
   records <- with(bsp,{
-    
-    F1 <- randCross(founders, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)
-    records <- list(list(F1))
+    records <- list(list(randCross(founders, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)))
     for (year in 1:nStages){
       for (stage in 1:year){
         sourcePop <- last(records[[stage]])
         if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
           entries <- selectInd(sourcePop, nInd=nEntries[stage], use="rand", simParam=SP)
+          parents <- selectInd(sourcePop, nInd=nInd(sourcePop)/2, use="gv", simParam=SP)
+          toAdd <- list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP))
         } else{ # Stage > 1: sort the matrix and make population of best
           idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:nEntries[stage]]]
-          entries <- records[[1]][year + 1 - stage][idBest]
-          if(!is.null(checks) & nChks[stage] > 0){
-            entries <- c(entries, checks[1:nChks[stage]])
-          }
+          entries <- records[[1]][[year + 1 - stage]][idBest]
+        }
+        if(!is.null(checks) & nChks[stage] > 0){
+          entries <- c(entries, checks[1:nChks[stage]])
         }
         entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
         phenoRec <- phenoRecFromPop(entries, bsp, stage)
-        if (stage==year){
-          records <- c(records, list(list(phenoRec)))
-        } else{
-          records[[stage+1]] <- c(records[[stage+1]], list(phenoRec))
-        }
+        toAdd <- c(toAdd, list(phenoRec))
       }#END stages
+      for (i in 1:length(toAdd)){
+        if (i > length(records)){
+          records <- c(records, list(toAdd[i]))
+        } else{
+          records[[i]] <- c(records[[i]], toAdd[i])
+        }
+      }
     }#END years
     names(records) <- c("F1", stageNames)
     records

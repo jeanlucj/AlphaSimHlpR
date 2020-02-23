@@ -29,7 +29,7 @@ prodPipeSimp <- function(records, bsp, SP){
         entries <- selectInd(sourcePop, nInd=nEntries[stage], use="rand", simParam=SP)
       } else{ # Stage > 1: sort the matrix and make population of best
         idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:nEntries[stage]]]
-        entries <- records[[1]][curYr + 1 - stage][idBest]
+        entries <- records[[1]][[curYr + 1 - stage]][idBest]
       }
       entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
       phenoRec <- phenoRecFromPop(entries, bsp, stage)
@@ -37,7 +37,7 @@ prodPipeSimp <- function(records, bsp, SP){
     }
     
     # Remove old records if needed
-    if (length(records[[2]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records)
+    if (length(records[[1]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records, nCyclesToKeepRecords)
     records
   })#END with bsp
   
@@ -77,10 +77,10 @@ prodPipeFncChk <- function(records, bsp, SP){
       if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
         idBest <- sourcePop@id
       } else{
-        idBest <- order(selCrit[sourcePop$id,], decreasing=T)[1:nEntries[stage]]
+        idBest <- order(selCrit[sourcePop$id], decreasing=T)[1:nEntries[stage]]
         idBest <- sourcePop$id[idBest]
       }
-      entries <- records[[1]][curYr + 1 - stage][idBest]
+      entries <- records[[1]][[curYr + 1 - stage]][idBest]
       entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
       phenoRec <- phenoRecFromPop(entries, bsp, stage)
       # If provided, add checks to the population
@@ -93,7 +93,7 @@ prodPipeFncChk <- function(records, bsp, SP){
     }#END 1:nStages
 
     # Remove old records if needed
-    if (length(records[[2]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records)
+    if (length(records[[1]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records, nCyclesToKeepRecords)
     records
   })#END with bsp
   

@@ -43,7 +43,7 @@ nCycles <- 6
 
 Replicate a very simple breeding program `r nReplications` times. 
 ```{r Replicate Scheme}
-replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=6, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1, bsp)
+replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=6, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1Cyc, bsp)
 ```
 
 ## Calculate the means of the breeding programs

@@ -94,7 +94,7 @@ popImprov2Cyc <- function(records, bsp, SP){
 #' 
 #' @export
 selectParIID <- function(records, candidates, bsp){
-  phenoDF <- framePhenoRec(records, bsp)
+  phenoDF <- framePhenoRec(records)
   if (!any(candidates %in% phenoDF$id)) return(sample(candidates, bsp$nParents))
   allBLUPs <- iidPhenoEval(phenoDF)
   allBLUPs <- allBLUPs[names(allBLUPs) %in% candidates]
@@ -118,7 +118,7 @@ selectParIID <- function(records, candidates, bsp){
 #' 
 #' @export
 selectParGRM <- function(records, candidates, bsp, SP){
-  phenoDF <- framePhenoRec(records, bsp)
+  phenoDF <- framePhenoRec(records)
   grm <- makeGRM(records, SP)
   if (!any(candidates %in% rownames(grm))) return(sample(candidates, bsp$nParents))
   allBLUPs <- grmPhenoEval(phenoDF, grm)
