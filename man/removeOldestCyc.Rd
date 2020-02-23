@@ -4,7 +4,7 @@
 \alias{removeOldestCyc}
 \title{removeOldestCyc function}
 \usage{
-removeOldestCyc(records)
+removeOldestCyc(records, nCyclesToKeepRecords)
 }
 \arguments{
 \item{records}{The breeding program \code{records} object. See \code{fillPipeline} for details}

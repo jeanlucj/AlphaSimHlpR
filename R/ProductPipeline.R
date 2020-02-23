@@ -85,7 +85,7 @@ prodPipeFncChk <- function(records, bsp, SP){
       phenoRec <- phenoRecFromPop(entries, bsp, stage)
       # If provided, add checks to the population
       if(!is.null(checks) & nChks[stage] > 0){
-        chkPheno <- setPheno(checks[1:nChks[stage]], varE=errVars[stage], reps=chkReps[stage]*nLocs[stage])
+        chkPheno <- setPheno(checks[1:nChks[stage]], varE=errVars[stage], reps=chkReps[stage]*nLocs[stage], simParam=SP)
         chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
         phenoRec <- bind_rows(phenoRec, chkRec)
       }
