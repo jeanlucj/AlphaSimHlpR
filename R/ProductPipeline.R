@@ -72,12 +72,13 @@ prodPipeFncChk <- function(records, bsp, SP){
     phenoDF <- framePhenoRec(records)
     # selPipeAdv has to be given in bsp
     selCrit <- selPipeAdv(phenoDF)
+    toAdd <- list()
     for (stage in 1:nStages){
       sourcePop <- last(records[[stage]])
       if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
         idBest <- sourcePop@id
       } else{
-        idBest <- order(selCrit[sourcePop$id], decreasing=T)[1:nEntries[stage]]
+        idBest <- order(selCrit[sourcePop$id[1:nEntries[stage-1]]], decreasing=T)[1:nEntries[stage]]
         idBest <- sourcePop$id[idBest]
       }
       entries <- records[[1]][[curYr + 1 - stage]][idBest]
@@ -89,8 +90,11 @@ prodPipeFncChk <- function(records, bsp, SP){
         chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
         phenoRec <- bind_rows(phenoRec, chkRec)
       }
-      records[[stage+1]] <- c(records[[stage+1]], list(phenoRec))
+      toAdd <- c(toAdd, list(phenoRec))
     }#END 1:nStages
+    for (stage in 1:nStages + 1){
+      records[[stage]] <- c(records[[stage]], toAdd[stage-1])
+    }
 
     # Remove old records if needed
     if (length(records[[1]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records, nCyclesToKeepRecords)
