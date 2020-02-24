@@ -64,10 +64,11 @@ popImprov2Cyc <- function(records, bsp, SP){
     for (cycle in 1:2){
       candidates <- last(records[[1]])@id
       parents <- last(records[[1]])[selectParGRM(records, candidates, bsp, SP)]
+      progeny <- randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)
       if (cycle==1){
-        records[[1]][length(records[[1]])] <- randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)
+        records[[1]][length(records[[1]])] <- list(progeny)
       } else{
-        records[[1]] <- c(records[[1]], list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)))
+        records[[1]] <- c(records[[1]], list(progeny))
       }
     }
     

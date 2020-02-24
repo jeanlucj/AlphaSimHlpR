@@ -23,6 +23,7 @@
 prodPipeSimp <- function(records, bsp, SP){
   records <- with(bsp,{
     curYr <- length(records[[1]])
+    toAdd <- list()
     for (stage in 1:nStages){
       sourcePop <- last(records[[stage]])
       if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
@@ -33,7 +34,10 @@ prodPipeSimp <- function(records, bsp, SP){
       }
       entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
       phenoRec <- phenoRecFromPop(entries, bsp, stage)
-      records[[stage+1]] <- c(records[[stage+1]], list(phenoRec))
+      toAdd <- c(toAdd, list(phenoRec))
+    }
+    for (stage in 1:nStages + 1){
+      records[[stage]] <- c(records[[stage]], toAdd[stage-1])
     }
     
     # Remove old records if needed
