@@ -14,6 +14,24 @@ mean_records <- function(records){
   return(sapply(records[-1], function(popList) sapply(popList, function(popMat) return(mean(popMat$genoVal)))))
 }
 
+#' elementWise function
+#'
+#' given a list of arrays (could be matrices), all of the same dimension, and a function, returns an array of the same dimensions as the objects of the list, for which each element is the application of the function to the vector of cells in a position across all arrays in the list.
+#'
+#' @param arrayList The list of arrays to which the function will be applied
+#' @param fnc The function that can be applied to a vector
+#' @return Array of the function values
+#' 
+#' @examples
+#' cellMeans <- elementWise(lapply(replicRecords, mean_records))
+#' 
+#' @export
+elementWise <- function(arrayList, fnc=mean){
+  arDim <- dim(arrayList[[1]])
+  arMat <- sapply(arrayList, c)
+  return(array(apply(arMat, 1, fnc), dim=arDim))
+}
+
 #' framePhenoRec function
 #'
 #' function to make a data.frame to be used as a source of data to analyze the phenotypic \code{records}

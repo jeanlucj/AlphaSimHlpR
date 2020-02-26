@@ -1,8 +1,8 @@
 # Program costs
 # The seedling development costs are included in the SDN cost
-# SDN CET PYT AYT
+# SDN CET PYT
 plotCosts
-1 8 14 32
+1 8 14
 
 # Crossing cost
 crossingCost

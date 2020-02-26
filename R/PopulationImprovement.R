@@ -122,6 +122,7 @@ selectParGRM <- function(records, candidates, bsp, SP){
   phenoDF <- framePhenoRec(records)
   grm <- makeGRM(records, SP)
   if (!any(candidates %in% rownames(grm))) return(sample(candidates, bsp$nParents))
+  phenoDF <- phenoDF[phenoDF$id %in% rownames(grm),]
   allBLUPs <- grmPhenoEval(phenoDF, grm)
   allBLUPs <- allBLUPs[names(allBLUPs) %in% candidates]
   nToSelect <- min(bsp$nParents, length(allBLUPs))
