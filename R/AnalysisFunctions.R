@@ -49,7 +49,7 @@ framePhenoRec <- function(records){
   for (stage in 2:length(records)){
     for (year in 1:length(records[[stage]])){
       phenoRec <- records[[stage]][[year]]
-      thisPheno <- phenoRec %>% mutate(year=year)
+      thisPheno <- phenoRec %>% dplyr::mutate(year=year)
       allPheno <- bind_rows(allPheno, thisPheno)
     }
   }
