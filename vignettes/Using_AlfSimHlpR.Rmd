@@ -21,43 +21,38 @@ AlphaSimR is a package with many useful functions to simulate plant and animal b
 
 ## Using AlfSimHlpR
 
-```{r loadASHR}
+```{r Load packages}
+# Make sure you have the right packages installed
+neededPackages <- c("AlphaSimR", "dplyr", "tidyr", "plotrix", "lme4", "sommer")
+for (p in neededPackages) if (!require(p, character.only=T)) install.packages(p)
 suppressMessages(library(AlfSimHlpR))
 ```
 
-## Define simulation settings
-
+### Define simulation settings
 Define the genetic architecture of the population and other breeding scheme parameters in a list `bsp`.
-
 ```{r Define Population}
 bsp <- specifyPipeline(ctrlFileName="../inst/ControlFile_Small.txt")
 bsp <- specifyPopulation(bsp, ctrlFileName="../inst/PopulationCtrlFile_Small.txt")
-bsp <- specifyCosts(bsp, ctrlFileName="../inst/CostsControlFile.txt")
+bsp <- specifyCosts(bsp, ctrlFileName="../inst/CostsCtrlFile_Small.txt")
 print(bsp)
 
-nReplications <- 2
-nCycles <- 6
+nReplications <- 3
+bsp$nCyclesToRun <- 6
 ```
 
-## Run a simple breeding scheme for `r nCycles` cycles
-
+### Run a simple breeding scheme for `r bsp$nCyclesToRun` cycles
 Replicate a very simple breeding program `r nReplications` times. 
 ```{r Replicate Scheme}
-replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=6, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1Cyc, bsp)
+replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=bsp$nCyclesToRun, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1Cyc, bsp)
 ```
 
-## Calculate the means of the breeding programs
-
+### Calculate the means of the breeding programs
+And plot them out
 ```{r Calculate means}
+plotData <- plotRecords(replicRecords, bsp)
 meansList <- lapply(replicRecords, mean_records)
-meanMeans <- Reduce("+", meansList) / nReplications
-```
-
-## Plot out the means
-
-```{r Make a plot}
-ylim <- range(c(meanMeans))
-plot(1:nrow(meanMeans), meanMeans[,1], type="l", ylim=ylim, xlab="Cycle", ylab="Pop mean", main=paste("Annual cost:", bsp$totalCosts))
-for (i in 2:ncol(meanMeans)) lines(1:nrow(meanMeans), meanMeans[,i], col=i)
-legend(1, ylim[2], bsp$stageNames, lwd=2, col=1:bsp$nStages, cex=0.6)
+meanMeans <- elementWise(meansList, mean)
+colnames(meanMeans) <- bsp$stageNames
+rownames(meanMeans) <- paste0("Time", 1:bsp$nCyclesToKeepRecords + (bsp$nCyclesToRun - bsp$nCyclesToKeepRecords))
+print(round(meanMeans, 1))
 ```
