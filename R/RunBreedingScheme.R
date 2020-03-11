@@ -19,22 +19,17 @@
 
 #' @export
 runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, productPipeline, populationImprovement, bsp){
-  records <- with(bsp, {
-    
-    cat("******", replication, "\n")
-    initList <- initializeFunc(bsp)
-    SP <- initList$SP
-    bsp <- initList$bsp
-    records <- initList$records
-    
-    for (cycle in 1:nCycles){
-      cat(cycle, " ")
-      records <- productPipeline(records, bsp, SP)
-      records <- populationImprovement(records, bsp, SP)
-    }
-    cat("\n")
-    
-    records
-  })#END with bsp
+  cat("******", replication, "\n")
+  initList <- initializeFunc(bsp)
+  SP <- initList$SP
+  bsp <- initList$bsp
+  records <- initList$records
+  
+  for (cycle in 1:nCycles){
+    cat(cycle, " ")
+    records <- productPipeline(records, bsp, SP)
+    records <- populationImprovement(records, bsp, SP)
+  }
+  cat("\n")
   return(records)
 }

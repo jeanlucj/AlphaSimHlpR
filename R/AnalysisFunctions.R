@@ -1,7 +1,7 @@
 #' mean_records function
 #'
 #' function to calculate the mean genotypic value at each cycle and stage
-#'
+#' WARNING: right now, checks are kept in the population records and they are included in the means that are calculated
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @return Real matrix with breeding program cycles in rows and product pipeline stages in columns, each cell being the mean genotypic value for that year and stage
 #' @details The records object is a list of lists of populations. This function takes those lists and returns the poplation means in a matrix

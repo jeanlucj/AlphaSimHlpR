@@ -41,24 +41,22 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "minNChks", "errVars", "nCyclesToKeepRecords", "selPipeAdv")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
   }
-  ctrlParms <- with(ctrlParms,{
-    # Get the function to replace the name
-    ctrlParms$selPipeAdv <- get(selPipeAdv)
-    # Make sure you keep enough cycles
-    ctrlParms$nCyclesToKeepRecords <- max(nStages+1, nCyclesToKeepRecords)
-    # Figure out how many checks to add to each stage
-    pairwiseComp <- function(vec1, vec2, fnc){
-      return(apply(cbind(vec1, vec2), 1, fnc))
-    }
-    nPlots <- nEntries * nReps
-    nChkPlots <- nPlots / entryToChkRatio
-    nChkPlots <- pairwiseComp(nChkPlots, nReps, min) # At least one check / rep
-    chkReps <- ceiling(nChkPlots / nChks)
-    nChkPlots <- chkReps * nChks
-    # Give everything names
-    names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$nLocs) <- names(ctrlParms$errVars) <- names(nChkPlots) <- names(chkReps) <- stageNames
-    ctrlParms <- c(ctrlParms, list(nChkPlots=nChkPlots), list(chkReps=chkReps))
-  })
+  # Get the function to replace the name
+  ctrlParms$selPipeAdv <- get(ctrlParms$selPipeAdv)
+  # Make sure you keep enough cycles
+  ctrlParms$nCyclesToKeepRecords <- max(ctrlParms$nStages+1, ctrlParms$nCyclesToKeepRecords)
+  # Figure out how many checks to add to each stage
+  pairwiseComp <- function(vec1, vec2, fnc){
+    return(apply(cbind(vec1, vec2), 1, fnc))
+  }
+  nPlots <- ctrlParms$nEntries * ctrlParms$nReps
+  nChkPlots <- nPlots / ctrlParms$entryToChkRatio
+  nChkPlots <- pairwiseComp(nChkPlots, ctrlParms$nReps, min) # At least one check / rep
+  chkReps <- ceiling(nChkPlots / ctrlParms$nChks)
+  nChkPlots <- chkReps * ctrlParms$nChks
+  # Give everything names
+  names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$nLocs) <- names(ctrlParms$errVars) <- names(nChkPlots) <- names(chkReps) <- ctrlParms$stageNames
+  ctrlParms <- c(ctrlParms, list(nChkPlots=nChkPlots), list(chkReps=chkReps), list(checks=NULL))
   bsp <- c(bsp, ctrlParms)
   return(bsp)
 }

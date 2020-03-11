@@ -21,29 +21,26 @@
 #'
 #' @export
 prodPipeSimp <- function(records, bsp, SP){
-  records <- with(bsp,{
-    curYr <- length(records[[1]])
-    toAdd <- list()
-    for (stage in 1:nStages){
-      sourcePop <- last(records[[stage]])
-      if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
-        entries <- selectInd(sourcePop, nInd=nEntries[stage], use="rand", simParam=SP)
-      } else{ # Stage > 1: sort the matrix and make population of best
-        idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:nEntries[stage]]]
-        entries <- records[[1]][[curYr + 1 - stage]][idBest]
-      }
-      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
-      phenoRec <- phenoRecFromPop(entries, bsp, stage)
-      toAdd <- c(toAdd, list(phenoRec))
+  curYr <- length(records[[1]])
+  toAdd <- list()
+  for (stage in 1:bsp$nStages){
+    sourcePop <- last(records[[stage]])
+    if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
+      entries <- selectInd(sourcePop, nInd=bsp$nEntries[stage], use="rand", simParam=SP)
+    } else{ # Stage > 1: sort the matrix and make population of best
+      idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]]
+      entries <- records[[1]][[curYr + 1 - stage]][idBest]
     }
-    for (stage in 1:nStages + 1){
-      records[[stage]] <- c(records[[stage]], toAdd[stage-1])
-    }
-    
-    # Remove old records if needed
-    if (length(records[[1]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records, nCyclesToKeepRecords)
-    records
-  })#END with bsp
+    entries <- setPheno(entries, varE=bsp$errVars[stage], reps=bsp$nReps[stage]*bsp$nLocs[stage], simParam=SP)
+    phenoRec <- phenoRecFromPop(entries, bsp, stage)
+    toAdd <- c(toAdd, list(phenoRec))
+  }
+  for (stage in 1:bsp$nStages + 1){
+    records[[stage]] <- c(records[[stage]], toAdd[stage-1])
+  }
+  
+  # Remove old records if needed
+  if (length(records[[1]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp$nCyclesToKeepRecords)
   
   return(records)
 }
@@ -71,39 +68,36 @@ prodPipeSimp <- function(records, bsp, SP){
 #'
 #' @export
 prodPipeFncChk <- function(records, bsp, SP){
-  records <- with(bsp,{
-    curYr <- length(records[[1]])
-    phenoDF <- framePhenoRec(records)
-    # selPipeAdv has to be given in bsp
-    selCrit <- selPipeAdv(phenoDF)
-    toAdd <- list()
-    for (stage in 1:nStages){
-      sourcePop <- last(records[[stage]])
-      if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
-        idBest <- sourcePop@id
-      } else{
-        idBest <- order(selCrit[sourcePop$id[1:nEntries[stage-1]]], decreasing=T)[1:nEntries[stage]]
-        idBest <- sourcePop$id[idBest]
-      }
-      entries <- records[[1]][[curYr + 1 - stage]][idBest]
-      entries <- setPheno(entries, varE=errVars[stage], reps=nReps[stage]*nLocs[stage], simParam=SP)
-      phenoRec <- phenoRecFromPop(entries, bsp, stage)
-      # If provided, add checks to the population
-      if(!is.null(checks) & nChks[stage] > 0){
-        chkPheno <- setPheno(checks[1:nChks[stage]], varE=errVars[stage], reps=chkReps[stage]*nLocs[stage], simParam=SP)
-        chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
-        phenoRec <- bind_rows(phenoRec, chkRec)
-      }
-      toAdd <- c(toAdd, list(phenoRec))
-    }#END 1:nStages
-    for (stage in 1:nStages + 1){
-      records[[stage]] <- c(records[[stage]], toAdd[stage-1])
+  curYr <- length(records[[1]])
+  phenoDF <- framePhenoRec(records)
+  # selPipeAdv has to be given in bsp
+  selCrit <- bsp$selPipeAdv(phenoDF)
+  toAdd <- list()
+  for (stage in 1:nStages){
+    sourcePop <- last(records[[stage]])
+    if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
+      idBest <- sourcePop@id
+    } else{ # 1:bsp$nEntries[stage-1]] keeps only non-checks
+      idBest <- order(selCrit[sourcePop$id[1:bsp$nEntries[stage-1]]], decreasing=T)[1:bsp$nEntries[stage]]
+      idBest <- sourcePop$id[idBest]
     }
-
-    # Remove old records if needed
-    if (length(records[[1]]) > nCyclesToKeepRecords) records <- removeOldestCyc(records, nCyclesToKeepRecords)
-    records
-  })#END with bsp
+    entries <- records[[1]][[curYr + 1 - stage]][idBest]
+    entries <- setPheno(entries, varE=bsp$errVars[stage], reps=bsp$nReps[stage]*bsp$nLocs[stage], simParam=SP)
+    phenoRec <- phenoRecFromPop(entries, bsp, stage)
+    # If provided, add checks to the population
+    if(!is.null(bsp$checks) & bsp$nChks[stage] > 0){
+      chkPheno <- setPheno(bsp$checks[1:nChks[stage]], varE=bsp$errVars[stage], reps=bsp$chkReps[stage]*bsp$nLocs[stage], simParam=SP)
+      chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
+      phenoRec <- bind_rows(phenoRec, chkRec)
+    }
+    toAdd <- c(toAdd, list(phenoRec))
+  }#END 1:nStages
+  for (stage in 1:bsp$nStages + 1){
+    records[[stage]] <- c(records[[stage]], toAdd[stage-1])
+  }
+  
+  # Remove old records if needed
+  if (length(records[[1]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp$nCyclesToKeepRecords)
   
   return(records)
 }

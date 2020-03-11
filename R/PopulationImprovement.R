@@ -21,18 +21,12 @@
 #' 
 #' @export
 popImprov1Cyc <- function(records, bsp, SP){
-  records <- with(bsp,{
-    
-    # Make one population to select out of
-    allPop <- mergePops(records[[1]])
-    candidates <- allPop@id
-    # Select parents among all individuals
-    parents <- allPop[selectParIID(records, candidates, bsp)]
-    records[[1]] <- c(records[[1]], list(randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)))
-    
-    records
-  })#END with bsp
-  
+  # Make one population to select out of
+  allPop <- mergePops(records[[1]])
+  candidates <- allPop@id
+  # Select parents among all individuals
+  parents <- allPop[selectParIID(records, candidates, bsp)]
+  records[[1]] <- c(records[[1]], list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)))
   return(records)
 }
 
@@ -59,22 +53,16 @@ popImprov1Cyc <- function(records, bsp, SP){
 #' 
 #' @export
 popImprov2Cyc <- function(records, bsp, SP){
-  records <- with(bsp,{
-
-    for (cycle in 1:2){
-      candidates <- last(records[[1]])@id
-      parents <- last(records[[1]])[selectParGRM(records, candidates, bsp, SP)]
-      progeny <- randCross(parents, nCrosses=nCrosses, nProgeny=nProgeny, ignoreGender=T, simParam=SP)
-      if (cycle==1){
-        records[[1]] <- c(records[[1]], list(progeny))
-      } else{
-        records[[1]][length(records[[1]])] <- list(progeny)
-      }
+  for (cycle in 1:2){
+    candidates <- last(records[[1]])@id
+    parents <- last(records[[1]])[selectParGRM(records, candidates, bsp, SP)]
+    progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
+    if (cycle==1){
+      records[[1]] <- c(records[[1]], list(progeny))
+    } else{
+      records[[1]][length(records[[1]])] <- list(progeny)
     }
-    
-    records
-  })#END with bsp
-  
+  }
   return(records)
 }
 
