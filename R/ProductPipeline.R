@@ -73,7 +73,7 @@ prodPipeFncChk <- function(records, bsp, SP){
   # selPipeAdv has to be given in bsp
   selCrit <- bsp$selPipeAdv(phenoDF)
   toAdd <- list()
-  for (stage in 1:nStages){
+  for (stage in 1:bsp$nStages){
     sourcePop <- last(records[[stage]])
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
       idBest <- sourcePop@id
