@@ -15,7 +15,7 @@ Depends:
   plotrix,
   lme4,
   sommer
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 Suggests: 
     knitr,
     rmarkdown

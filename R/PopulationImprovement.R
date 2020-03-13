@@ -21,12 +21,11 @@
 #' 
 #' @export
 popImprov1Cyc <- function(records, bsp, SP){
-  # Make one population to select out of
-  allPop <- mergePops(records[[1]])
-  candidates <- allPop@id
+  candidates <- records[[1]]@id
   # Select parents among all individuals
-  parents <- allPop[selectParIID(records, candidates, bsp)]
-  records[[1]] <- c(records[[1]], list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)))
+  parents <- records[[1]][selectParIID(records, candidates, bsp)]
+  progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
+  records[[1]] <- c(records[[1]], progeny)
   return(records)
 }
 
@@ -54,14 +53,10 @@ popImprov1Cyc <- function(records, bsp, SP){
 #' @export
 popImprov2Cyc <- function(records, bsp, SP){
   for (cycle in 1:2){
-    candidates <- last(records[[1]])@id
-    parents <- last(records[[1]])[selectParGRM(records, candidates, bsp, SP)]
+    candidates <- records[[1]]@id
+    parents <- records[[1]][selectParGRM(records, candidates, bsp, SP)]
     progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
-    if (cycle==1){
-      records[[1]] <- c(records[[1]], list(progeny))
-    } else{
-      records[[1]][length(records[[1]])] <- list(progeny)
-    }
+    records[[1]] <- c(records[[1]], progeny)
   }
   return(records)
 }
@@ -110,6 +105,8 @@ selectParGRM <- function(records, candidates, bsp, SP){
   phenoDF <- framePhenoRec(records)
   grm <- makeGRM(records, SP)
   if (!any(candidates %in% rownames(grm))) return(sample(candidates, bsp$nParents))
+  # Remove individuals with phenotypes but who no longer have geno records
+  # I am not sure this can happen, but it is a safeguard
   phenoDF <- phenoDF[phenoDF$id %in% rownames(grm),]
   allBLUPs <- grmPhenoEval(phenoDF, grm)
   allBLUPs <- allBLUPs[names(allBLUPs) %in% candidates]

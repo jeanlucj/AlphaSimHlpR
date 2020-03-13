@@ -11,7 +11,8 @@
 #' 
 #' @export
 mean_records <- function(records){
-  return(sapply(records[-1], function(popList) sapply(popList, function(popMat) return(mean(popMat$genoVal)))))
+  chkID <- records$bsp$checks@id
+  return(sapply(records$records[-1], function(popList) sapply(popList, function(popMat) return(mean(popMat$genoVal[!(popMat$id %in% chkID)])))))
 }
 
 #' elementWise function
@@ -48,8 +49,7 @@ framePhenoRec <- function(records){
   allPheno <- tibble()
   for (stage in 2:length(records)){
     for (year in 1:length(records[[stage]])){
-      phenoRec <- records[[stage]][[year]]
-      thisPheno <- phenoRec %>% dplyr::mutate(year=year)
+      thisPheno <- records[[stage]][[year]] %>% dplyr::mutate(year=year)
       allPheno <- bind_rows(allPheno, thisPheno)
     }
   }
@@ -92,10 +92,7 @@ phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
 #' @export
 makeGRM <- function(records, SP){
   require(sommer)
-  allPop <- mergePops(records[[1]])
-  allPop <- allPop[!duplicated(allPop@id)]
-  grm <- A.mat(pullSnpGeno(allPop, simParam=SP) - 1)
-  return(grm)
+  return(A.mat(pullSnpGeno(records[[1]], simParam=SP) - 1))
 }
 
 #' iidPhenoEval function

@@ -9,10 +9,10 @@ nParents
 30
 # Number of crosses entering the pipeline
 nCrosses
-100
+200
 # Number of progeny per cross
 nProgeny
-30
+15
 
 # Vector of number of number of entries in each stage
 nEntries

@@ -11,11 +11,19 @@
 #' 
 #' @export
 removeOldestCyc <- function(records, nCyclesToKeepRecords){
-  for (i in 1:length(records)){
+  # Remove the phenotypic records that are older
+  for (i in 2:length(records)){
     nCycStage <- length(records[[i]])
     if (nCycStage > nCyclesToKeepRecords){
       records[[i]] <- records[[i]][-(1:(nCycStage-nCyclesToKeepRecords))]
     }
   }
+  # List the id of the individuals remaining
+  allID <- NULL
+  for (i in 1:length(records[[2]])) allID <- c(allID, records[[2]][[i]]$id)
+  for (i in 3:length(records)) allID <- c(allID, records[[i]][[1]]$id)
+  allID <- unique(allID)
+  allID <- allID[order(as.integer(allID))]
+  records[[1]] <- records[[1]][allID]
   return(records)
 }

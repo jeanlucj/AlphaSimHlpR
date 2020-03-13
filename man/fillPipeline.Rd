@@ -23,14 +23,12 @@ This is a structure for a records object that will be used to simulate breeding 
 \examples{
 bsp <- specifyPipeline()
 bsp <- specifyPopulation(bsp)
-records <- with(bsp, {founderPop <- runMacs(nInd=nFounders, nChr=nChr, segSites=segSites)
+founderPop <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
 SP <- SimParam$new(founderPop)
-SP$addTraitA(nQtlPerChr=nQTL, var=genVar)
-SP$addSnpChip(nSNP)
+SP$addTraitA(nQtlPerChr=bsp$nQTL, var=bsp$genVar)
+SP$addSnpChip(bsp$nSNP)
 founders <- newPop(founderPop, simParam=SP)
 bsp <- c(bsp, checks=list(NULL))
 records <- fillPipeline(founders, bsp, SP)
-records
-})
 
 }

@@ -14,6 +14,7 @@ Real matrix with breeding program cycles in rows and product pipeline stages in 
 }
 \description{
 function to calculate the mean genotypic value at each cycle and stage
+WARNING: right now, checks are kept in the population records and they are included in the means that are calculated
 }
 \details{
 The records object is a list of lists of populations. This function takes those lists and returns the poplation means in a matrix

@@ -18,8 +18,7 @@
 #' @export
 initFuncSimp <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
-  # Note: default effective population size for runMacs is 100
-  founderPop <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
+  founderPop <- runMacs2(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites, Ne=bsp$effPopSize)
   
   # New global simulation parameters from founder haplotypes
   SP <- SimParam$new(founderPop)
@@ -56,7 +55,7 @@ initFuncSimp <- function(bsp){
 initFuncADChk <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
   # Note: default effective population size for runMacs is 100
-  founderPop <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
+  founderPop <- runMacs2(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
   
   # New global simulation parameters from founder haplotypes
   SP <- SimParam$new(founderPop)
@@ -67,10 +66,9 @@ initFuncADChk <- function(bsp){
   
   founders <- newPop(founderPop, simParam=SP)
   if (any(bsp$nChks > 0)){
-    checks <- selectInd(founders, nInd=max(bsp$nChks), use="rand", simParam=SP)
-  } else checks <- NULL
-  bsp <- c(bsp, checks=list(checks))
-  
+    bsp$checks <- selectInd(founders, nInd=max(bsp$nChks), use="rand", simParam=SP)
+  } else bsp$checks <- NULL
+
   records <- fillPipeline(founders, bsp, SP)
   
   return(list(SP=SP, records=records, bsp=bsp))
@@ -99,26 +97,32 @@ initFuncADChk <- function(bsp){
 #' 
 #' @export
 fillPipeline <- function(founders, bsp=NULL, SP){
-  records <- list(list(randCross(founders, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)))
+  records <- list(randCross(founders, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP))
   for (year in 1:bsp$nStages){
     for (stage in 1:year){
-      sourcePop <- last(records[[stage]])
       if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
-        entries <- selectInd(sourcePop, nInd=bsp$nEntries[stage], use="rand", simParam=SP)
-        parents <- selectInd(sourcePop, nInd=nInd(sourcePop)/2, use="gv", simParam=SP)
+        nGenoRec <- nInd(records[[1]])
+        nF1 <- bsp$nCrosses * bsp$nProgeny # Sample from the most-recent F1s
+        indToAdv <- nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))
+        entries <- records[[1]][indToAdv]
+        parents <- selectInd(entries, nInd=nInd(entries)/2, use="gv", simParam=SP)
         toAdd <- list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP))
       } else{ # Stage > 1: sort the matrix and make population of best
+        sourcePop <- last(records[[stage]])
         idBest <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]]
-        entries <- records[[1]][[year + 1 - stage]][idBest]
-      }
-      if(!is.null(bsp$checks) & bsp$nChks[stage] > 0){
-        entries <- c(entries, bsp$checks[1:bsp$nChks[stage]])
+        entries <- records[[1]][idBest]
       }
       entries <- setPheno(entries, varE=bsp$errVars[stage], reps=bsp$nReps[stage]*bsp$nLocs[stage], simParam=SP)
       phenoRec <- phenoRecFromPop(entries, bsp, stage)
+      if(!is.null(bsp$checks) & bsp$nChks[stage] > 0){
+        chkPheno <- setPheno(bsp$checks[1:bsp$nChks[stage]], varE=bsp$errVars[stage], reps=bsp$chkReps[stage]*bsp$nLocs[stage], simParam=SP)
+        chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
+        phenoRec <- bind_rows(phenoRec, chkRec)
+      }
       toAdd <- c(toAdd, list(phenoRec))
     }#END stages
-    for (i in 1:length(toAdd)){
+    records[[1]] <- c(records[[1]], toAdd[[1]])
+    for (i in 2:length(toAdd)){
       if (i > length(records)){
         records <- c(records, list(toAdd[i]))
       } else{

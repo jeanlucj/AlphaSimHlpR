@@ -10,7 +10,7 @@
 #' exptSummary <- plotRecords(records)
 #' 
 #' @export
-plotRecords <- function(records, bsp){
+plotRecords <- function(records){
   nCycKept <- bsp$nCyclesToKeepRecords
   nCyc <- bsp$nCyclesToRun
   records <- lapply(records, mean_records)

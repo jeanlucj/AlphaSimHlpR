@@ -16,7 +16,7 @@ A list containing: 1. The simulation parameters in \code{SP}; 2. The initial rec
 Function to initialize simulation of a breeding program. A single additive trait is simulated. No checks are used in this scheme
 }
 \details{
-Creates the founders and the initial records at the beginning of the simulation of a breeding program.
+Creates the founders and the initial records at the beginning of the simulation of a breeding program. The initialization function you use needs to be consistent with the functions for advancing the pipeline and improving the population. At a minimum, the SP has to be able to generate a phenotype, so SP$addTraitCCC needs to be invoked. the \code{records} object needs to be "filled" in the sense that there are phenotypes of individuals in all stages of the pipeline that can be advanced to the next stage.
 }
 \examples{
 bsp <- specifyPipeline()

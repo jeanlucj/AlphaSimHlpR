@@ -4,6 +4,10 @@ nChr
 2
 
 # Population characteristics
+# Effective size of population generating the founders
+effPopSize
+100
+
 # Number of founders
 nFounders
 100

@@ -51,7 +51,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   }
   nPlots <- ctrlParms$nEntries * ctrlParms$nReps
   nChkPlots <- nPlots / ctrlParms$entryToChkRatio
-  nChkPlots <- pairwiseComp(nChkPlots, ctrlParms$nReps, min) # At least one check / rep
+  nChkPlots <- pairwiseComp(nChkPlots, ctrlParms$nReps, max) # At least one check / rep
   chkReps <- ceiling(nChkPlots / ctrlParms$nChks)
   nChkPlots <- chkReps * ctrlParms$nChks
   # Give everything names
@@ -78,8 +78,9 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
 specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
   if (is.null(ctrlFileName)){ # NULL control file: make toy example
     # Species characteristics
-    nChr <- 1 # Number of chromosomes
+    nChr <- 2 # Number of chromosomes
     # Population characteristics
+    effPopSize <- 100 # Effective size of population generating founders
     nFounders <- 50 # Number of founders
     segSites <- 20 # Number of segregating sites per chromosome
     nQTL <- 5 # Number of QTL per chromosome
@@ -89,7 +90,7 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     ctrlParms <- mget(setdiff(ls(), "bsp"))
     #END no control file
   } else{
-    ctrlParms <- c("nChr", "nFounders", "segSites", "nQTL", "nSNP", "genVar", "meanDD", "varDD")
+    ctrlParms <- c("nChr", "effPopSize", "nFounders", "segSites", "nQTL", "nSNP", "genVar", "meanDD", "varDD")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
   }
   bsp <- c(bsp, ctrlParms)
