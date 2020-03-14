@@ -115,6 +115,8 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   if (is.null(ctrlFileName)){ # NULL control file: make toy example
     # Plot costs
     plotCosts <- c(1, 8, 14, 32)
+    # Per location cost
+    perLocationCost <- 1000
     # Crossing cost
     crossingCost <- 0.2
     # Genotyping cost
@@ -123,7 +125,7 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
     ctrlParms <- mget(setdiff(ls(), "bsp"))
     #END no control file
   } else{
-    ctrlParms <- c("plotCosts", "crossingCost", "qcGenoCost", "wholeGenomeCost")
+    ctrlParms <- c("plotCosts", "perLocationCost", "crossingCost", "qcGenoCost", "wholeGenomeCost")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
   }
   names(ctrlParms$plotCosts) <- bsp$stageNames
@@ -138,7 +140,8 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   # NOTE for develCosts not accounting for number of rapid cycles
   develCosts <- bsp$nCrosses * bsp$nProgeny * (bsp$crossingCost + bsp$qcGenoCost + bsp$wholeGenomeCost)
   trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
-  totalCosts <- develCosts + trialCosts
+  locationCosts <- max(bsp$nLocs) * bsp$perLocationCost
+  totalCosts <- develCosts + trialCosts + locationCosts
   return(c(bsp, c(develCosts=develCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
 }
 
