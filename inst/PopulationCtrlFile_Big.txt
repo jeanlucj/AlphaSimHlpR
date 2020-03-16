@@ -28,6 +28,10 @@ nSNP
 genVar
 40
 
+# Initial genotype x environment interaction variance
+gxeVar
+30
+
 # Mean and variance of dominance degree
 meanDD
 0.8

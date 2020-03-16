@@ -32,7 +32,9 @@ prodPipeSimp <- function(records, bsp, SP){
       indToAdv <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]]
     }
     entries <- records[[1]][indToAdv]
-    entries <- setPheno(entries, varE=bsp$errVars[stage], reps=bsp$nReps[stage]*bsp$nLocs[stage], simParam=SP)
+    varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
+    # reps=1 because varE is computed above
+    entries <- setPheno(entries, varE=varE, reps=1, simParam=SP)
     phenoRec <- phenoRecFromPop(entries, bsp, stage)
     toAdd <- c(toAdd, list(phenoRec))
   }
@@ -84,11 +86,14 @@ prodPipeFncChk <- function(records, bsp, SP){
       indToAdv <- sourcePop$id[indToAdv]
     }
     entries <- records[[1]][indToAdv]
-    entries <- setPheno(entries, varE=bsp$errVars[stage], reps=bsp$nReps[stage]*bsp$nLocs[stage], simParam=SP)
+    varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
+    # reps=1 because varE is computed above
+    entries <- setPheno(entries, varE=varE, reps=1, simParam=SP)
     phenoRec <- phenoRecFromPop(entries, bsp, stage)
     # If provided, add checks to the population
     if(!is.null(bsp$checks) & bsp$nChks[stage] > 0){
-      chkPheno <- setPheno(bsp$checks[1:bsp$nChks[stage]], varE=bsp$errVars[stage], reps=bsp$chkReps[stage]*bsp$nLocs[stage], simParam=SP)
+      varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$chkReps[stage]) / bsp$nLocs[stage]
+      chkPheno <- setPheno(bsp$checks[1:bsp$nChks[stage]], varE=varE, reps=1, simParam=SP)
       chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
       phenoRec <- bind_rows(phenoRec, chkRec)
     }
