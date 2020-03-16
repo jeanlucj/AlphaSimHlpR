@@ -26,8 +26,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # Number of checks used in each stage
     # Checks are replicated the same as experimental entries
     nChks <- c(2, 1, 1, 1)
-    entryToChkRatio <- 20
-    minNChks <- 1
+    entryToChkRatio <- c(20, 20, 20, 10)
     # Error variances estimated from historical data 
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
@@ -38,7 +37,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     ctrlParms <- mget(setdiff(ls(), "bsp"))
     #END no control file
   } else{
-    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "minNChks", "errVars", "nCyclesToKeepRecords", "selPipeAdv")
+    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "nCyclesToKeepRecords", "selPipeAdv")
     ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
   }
   # Get the function to replace the name
@@ -53,10 +52,9 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   nChkPlots <- nPlots / ctrlParms$entryToChkRatio
   nChkPlots <- pairwiseComp(nChkPlots, ctrlParms$nReps, max) # At least one check / rep
   chkReps <- ceiling(nChkPlots / ctrlParms$nChks)
-  nChkPlots <- chkReps * ctrlParms$nChks
   # Give everything names
-  names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$nLocs) <- names(ctrlParms$errVars) <- names(nChkPlots) <- names(chkReps) <- ctrlParms$stageNames
-  ctrlParms <- c(ctrlParms, list(nChkPlots=nChkPlots), list(chkReps=chkReps), list(checks=NULL))
+  names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$nLocs) <- names(ctrlParms$errVars) <- names(chkReps) <- ctrlParms$stageNames
+  ctrlParms <- c(ctrlParms, list(chkReps=chkReps), list(checks=NULL))
   bsp <- c(bsp, ctrlParms)
   return(bsp)
 }

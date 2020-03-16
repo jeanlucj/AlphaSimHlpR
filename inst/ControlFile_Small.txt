@@ -24,10 +24,7 @@ nChks
 5 4 2
 # How many entry plots do you have per check plot
 entryToChkRatio
-20
-# If nEntries / entryToChkRatio is lower than minNChks, use minNChks
-minNChks
-1
+50 30 15
 
 # Vector of number of reps used in each stage
 nReps
