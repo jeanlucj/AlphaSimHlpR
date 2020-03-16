@@ -73,7 +73,7 @@ framePhenoRec <- function(records){
 #' @export
 phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
   nReps <- if_else(checks, bsp$chkReps[stage], bsp$nReps[stage])
-  varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps) / bsp$nLocs[stage]
+  varE <- (bsp$gxeVar + bsp$errVars[stage] / nReps) / bsp$nLocs[stage]
   phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], pheno=pheno(pop), genoVal=gv(pop), errVar=varE)
   return(phenoRec)
 }
