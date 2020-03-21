@@ -41,7 +41,7 @@ errVars
 # Are the current year phenotypes available for model training
 # when parents are chosen to send to the crossing nursery? YES / NO
 useCurrentPhenoTrain
-YES
+TRUE
 
 # How many cycles to keep records. Must be > nStages
 nCyclesToKeepRecords

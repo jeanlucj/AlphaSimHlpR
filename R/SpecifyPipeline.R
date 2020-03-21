@@ -31,7 +31,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
-    useCurrentPhenoTrain <- "NO"
+    useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
     # Function to advance individuals from one stage to the next
     selCritPipeAdv <- iidPhenoEval
@@ -43,7 +43,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   # Convert to logical
-  bspNew$useCurrentPhenoTrain <- if_else(bspNew$useCurrentPhenoTrain=="YES", T, F)
+  bspNew$useCurrentPhenoTrain <- as.logical(bspNew$useCurrentPhenoTrain)
   # Get the function to replace the name
   bspNew$selCritPipeAdv <- get(bspNew$selCritPipeAdv)
   bspNew$selCritPopImprov <- get(bspNew$selCritPopImprov)
