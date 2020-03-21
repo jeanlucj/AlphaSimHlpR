@@ -1,4 +1,4 @@
-Package: AlfSimHlpR
+Package: AlphaSimHlpR
 Type: Package
 Title: Functions added to AlphaSimR to simplify simulating breeding schemes
 Version: 0.1.2

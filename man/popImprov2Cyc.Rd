@@ -14,7 +14,7 @@ popImprov2Cyc(records, bsp, SP)
 \item{SP}{The AlphaSimR SimParam object}
 }
 \value{
-A records object with a new F1 Pop-class object of progeny coming out of a population improvement scheme
+A records object with the F1 Pop-class object updated with new progeny coming out of a population improvement scheme
 }
 \description{
 Function to improve a simulated breeding population by one cycle. This version does two cycles of predicting F1 individuals and making new F1s
@@ -30,6 +30,6 @@ SP <- initList$SP
 bsp <- initList$bsp
 records <- initList$records
 records <- prodPipeSimp(records, bsp, SP)
-records <- popImprov2(records, bsp, SP)
+records <- popImprov2Cyc(records, bsp, SP)
 
 }

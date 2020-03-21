@@ -72,9 +72,11 @@ framePhenoRec <- function(records){
 #' 
 #' @export
 phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
+  # Entries and replicates have different numbers of stages
   nReps <- if_else(checks, bsp$chkReps[stage], bsp$nReps[stage])
   varE <- (bsp$gxeVar + bsp$errVars[stage] / nReps) / bsp$nLocs[stage]
-  phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], pheno=pheno(pop), genoVal=gv(pop), errVar=varE)
+  # Set this up for the lmer method distinguishing checks from experimentals
+  phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], isChk=if_else(checks, "check", "exptl"), pheno=pheno(pop), genoVal=gv(pop), errVar=varE)
   return(phenoRec)
 }
 
@@ -112,8 +114,12 @@ makeGRM <- function(records, SP){
 iidPhenoEval <- function(phenoDF){
   require(lme4)
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
-  fm <- lmer(pheno ~ (1 | id), weights=errVar, data=phenoDF)
-  return(as.matrix(ranef(fm)[[1]])[,1]) # Make into matrix to get names
+  phenoDF <- phenoDF %>% mutate(entryChk=if_else(isChk=="check", id, "-1"))
+  fm <- lmer(pheno ~ entryChk + (1|id:isChk), weights=errVar, data=phenoDF)
+  blup <- as.matrix(ranef(fm)[[1]])[,1]
+  names(blup) <- (names(blup) %>% strsplit(":", fixed=T) %>% unlist %>%
+                  matrix(nrow=2))[1,]
+  return(blup) # Make into matrix to get names
 }
 
 #' grmPhenoEval function

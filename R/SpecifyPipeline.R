@@ -31,31 +31,36 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
+    useCurrentPhenoTrain <- "NO"
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
     # Function to advance individuals from one stage to the next
-    selPipeAdv <- iidPhenoEval
-    ctrlParms <- mget(setdiff(ls(), "bsp"))
+    selCritPipeAdv <- iidPhenoEval
+    selCritPopImprov <- selCritIID
+    bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    ctrlParms <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "nCyclesToKeepRecords", "selPipeAdv")
-    ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
+    parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    bspNew <- readControlFile(ctrlFileName, parmNames)
   }
+  # Convert to logical
+  bspNew$useCurrentPhenoTrain <- if_else(bspNew$useCurrentPhenoTrain=="YES", T, F)
   # Get the function to replace the name
-  ctrlParms$selPipeAdv <- get(ctrlParms$selPipeAdv)
+  bspNew$selCritPipeAdv <- get(bspNew$selCritPipeAdv)
+  bspNew$selCritPopImprov <- get(bspNew$selCritPopImprov)
   # Make sure you keep enough cycles
-  ctrlParms$nCyclesToKeepRecords <- max(ctrlParms$nStages+1, ctrlParms$nCyclesToKeepRecords)
+  bspNew$nCyclesToKeepRecords <- max(bspNew$nStages+1, bspNew$nCyclesToKeepRecords)
   # Figure out how many checks to add to each stage
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
   }
-  nPlots <- ctrlParms$nEntries * ctrlParms$nReps
-  nChkPlots <- nPlots / ctrlParms$entryToChkRatio
-  nChkPlots <- pairwiseComp(nChkPlots, ctrlParms$nReps, max) # At least one check / rep
-  chkReps <- ceiling(nChkPlots / ctrlParms$nChks)
+  nPlots <- bspNew$nEntries * bspNew$nReps
+  nChkPlots <- nPlots / bspNew$entryToChkRatio
+  nChkPlots <- pairwiseComp(nChkPlots, bspNew$nReps, max) # At least one check / rep
+  chkReps <- ceiling(nChkPlots / bspNew$nChks)
   # Give everything names
-  names(ctrlParms$nEntries) <- names(ctrlParms$nChks) <- names(ctrlParms$nReps) <- names(ctrlParms$nLocs) <- names(ctrlParms$errVars) <- names(chkReps) <- ctrlParms$stageNames
-  ctrlParms <- c(ctrlParms, list(chkReps=chkReps), list(checks=NULL))
-  bsp <- c(bsp, ctrlParms)
+  names(bspNew$nEntries) <- names(bspNew$nChks) <- names(bspNew$nReps) <- names(bspNew$nLocs) <- names(bspNew$errVars) <- names(chkReps) <- bspNew$stageNames
+  bspNew <- c(bspNew, list(chkReps=chkReps), list(checks=NULL))
+  bsp <- c(bsp, bspNew)
   return(bsp)
 }
 
@@ -86,13 +91,13 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     genVar <- 40 # Initial genetic variance
     gxeVar <- 30 # Initial genetic variance
     meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
-    ctrlParms <- mget(setdiff(ls(), "bsp"))
+    bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    ctrlParms <- c("nChr", "effPopSize", "nFounders", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
-    ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
+    parmNames <- c("nChr", "effPopSize", "nFounders", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
+    bspNew <- readControlFile(ctrlFileName, parmNames)
   }
-  bsp <- c(bsp, ctrlParms)
+  bsp <- c(bsp, bspNew)
   return(bsp)
 }
 
@@ -121,14 +126,14 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
     # Genotyping cost
     qcGenoCost <- 1.5
     wholeGenomeCost <- 10
-    ctrlParms <- mget(setdiff(ls(), "bsp"))
+    bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    ctrlParms <- c("plotCosts", "perLocationCost", "crossingCost", "qcGenoCost", "wholeGenomeCost")
-    ctrlParms <- readControlFile(ctrlFileName, ctrlParms)
+    parmNames <- c("plotCosts", "perLocationCost", "crossingCost", "qcGenoCost", "wholeGenomeCost")
+    bspNew <- readControlFile(ctrlFileName, parmNames)
   }
-  names(ctrlParms$plotCosts) <- bsp$stageNames
-  bsp <- c(bsp, ctrlParms)
+  names(bspNew$plotCosts) <- bsp$stageNames
+  bsp <- c(bsp, bspNew)
   # Calculate the program yearly cost
   # Assumptions
   # 1. Every new progeny is both QC and whole-genome genotyped. The number of 
@@ -151,7 +156,7 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' 2. Control parameter names should be on their own line
 #' 3. Parameter values should be on the following line. If multiple parameter values are needed they should be separated by white space but on the same line
 #' @param fileName The name of the text file to be read. Must include the path to the file
-#' @param ctrlParms A string vector with the names of the control parameters that will be searched in the text file
+#' @param bsp A string vector with the names of the control parameters that will be searched in the text file
 #' @return A named list of the parameter values read from the control file
 #' 
 #' @details Call this function before beginning the simulation
@@ -160,10 +165,10 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' params <- readControlFile("./inputDir/ctrlFile.txt", c("nStages", "nParents", "nCrosses"))
 #' 
 #' @export
-readControlFile <- function(fileName, ctrlParms){
+readControlFile <- function(fileName, parmNames){
   ctrlLines <- readLines(fileName)
   ctrlLines <- sapply(ctrlLines, function(st) strsplit(st, "#", fixed=T)[[1]][1])
-  findGetParm <- function(parmName){
+  getParm <- function(parmName){
     parmRow <- grep(parmName, ctrlLines)+1
     parms <- unlist(strsplit(ctrlLines[parmRow], "[[:space:]]"))
     names(parms) <- NULL
@@ -171,7 +176,7 @@ readControlFile <- function(fileName, ctrlParms){
     if (!any(is.na(parmsNum))) parms <- parmsNum
     return(parms)
   }
-  parms <- lapply(ctrlParms, findGetParm)
-  names(parms) <- ctrlParms
+  parms <- lapply(parmNames, getParm)
+  names(parms) <- parmNames
   return(parms)
 }

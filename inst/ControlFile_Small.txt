@@ -38,10 +38,19 @@ nLocs
 errVars
 200 146 82
 
+# Are the current year phenotypes available for model training
+# when parents are chosen to send to the crossing nursery? YES / NO
+useCurrentPhenoTrain
+YES
+
 # How many cycles to keep records. Must be > nStages
 nCyclesToKeepRecords
 5
 
 # Name of function to advance individuals from one stage to the next
-selPipeAdv
+selCritPipeAdv
 iidPhenoEval
+
+# Name of function to select individuals to be parents for the next cycle
+selCritPopImprov
+selCritGRM

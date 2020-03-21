@@ -72,8 +72,8 @@ prodPipeSimp <- function(records, bsp, SP){
 #' @export
 prodPipeFncChk <- function(records, bsp, SP){
   phenoDF <- framePhenoRec(records)
-  # selPipeAdv has to be given in bsp
-  selCrit <- bsp$selPipeAdv(phenoDF)
+  # selCritPipeAdv has to be given in bsp
+  selCrit <- bsp$selCritPipeAdv(phenoDF)
   toAdd <- list()
   for (stage in 1:bsp$nStages){
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
