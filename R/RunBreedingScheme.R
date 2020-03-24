@@ -31,5 +31,5 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
     records <- populationImprovement(records, bsp, SP)
   }
   cat("\n")
-  return(list(records=records, bsp=bsp))
+  return(list(records=records, bsp=bsp, SP=SP))
 }
