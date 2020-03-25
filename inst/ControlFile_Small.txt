@@ -6,13 +6,23 @@ SDN CET PYT
 
 # Number of parents in the crossing nursery
 nParents
-15
+20
 # Number of crosses entering the pipeline
 nCrosses
 30
 # Number of progeny per cross
 nProgeny
 10
+
+# Optimum contributions parameters
+useOptContrib
+TRUE
+nCandOptCont
+200
+breedCycleTime
+2
+targetEffPopSize
+20
 
 # Vector of number of number of entries in each stage
 nEntries
@@ -53,4 +63,4 @@ iidPhenoEval
 
 # Name of function to select individuals to be parents for the next cycle
 selCritPopImprov
-selCritGRM
+selCritIID

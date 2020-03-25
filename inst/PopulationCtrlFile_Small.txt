@@ -1,7 +1,7 @@
 # Species characteristics
 # Number of chromosomes
 nChr
-2
+4
 
 # Population characteristics
 # Effective size of population generating the founders
@@ -14,15 +14,15 @@ nFounders
 
 # Number of segregating sites per chromosome
 segSites
-200
+500
 
 # Number of QTL per chromosome
 nQTL
-30
+50
 
 # Number of observed SNP per chromosome
 nSNP
-80
+200
 
 # Initial genetic variance
 genVar

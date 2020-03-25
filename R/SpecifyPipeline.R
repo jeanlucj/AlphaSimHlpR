@@ -16,9 +16,14 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   if (is.null(ctrlFileName)){ # NULL control file: make toy example
     nStages <- 4 # Number of stages in the product pipeline
     stageNames <- c("SDN", "CET", "PYT", "AYT")
-    nParents <- 10 # Number of parents in the crossing nursery
+    nParents <- 20 # Number of parents in the crossing nursery
     nCrosses <- 20 # Number of crosses entering the pipeline
     nProgeny <- 10 # Number of progeny per cross
+    # Don't use optimum contributions in simple default. Define other parms in case
+    useOptContrib <- FALSE
+    nCandOptCont <- 100
+    breedCycleTime <- 2
+    targetEffPopSize <- 30
     # Number of number of entries in each stage
     nEntries <- c(nCrosses*nProgeny, 60, 20, 10)
     nReps <- c(1, 1, 2, 2) # Number of reps used in each stage
@@ -39,11 +44,12 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny",    "useOptContrib", "nCandOptCont", "breedCycleTime", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   # Convert to logical
   bspNew$useCurrentPhenoTrain <- as.logical(bspNew$useCurrentPhenoTrain)
+  bspNew$useOptContrib <- as.logical(bspNew$useOptContrib)
   # Get the function to replace the name
   bspNew$selCritPipeAdv <- get(bspNew$selCritPipeAdv)
   bspNew$selCritPopImprov <- get(bspNew$selCritPopImprov)
