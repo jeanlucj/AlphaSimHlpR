@@ -165,7 +165,7 @@ optContrib <- function(records, bsp, SP, crit){
   grm <- sommer::A.mat(pullSnpGeno(records[[1]][candidates], simParam=SP) - 1)
   grm <- grm[candidates, candidates] # Put it in the right order
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
-  cand <- optiSel::candes(phen, grm=grm)
+  cand <- optiSel::candes(phen, grm=grm, quiet=T)
   
   L <- if_else(exists("breedCycleTime", bsp), bsp$breedCycleTime, 2)
   Ne <- bsp$targetEffPopSize
@@ -198,7 +198,7 @@ optContrib <- function(records, bsp, SP, crit){
       # find which other has minimum relationship with curPar
       mate <- which.min(grm[curPar,])
       if (mate == curPar){ # Happens if last parent somewhat related to all
-        redis <- sample(nrow(crossPlan), oc$remOffspr[mate]/2)
+        redis <- sample(nrow(crossPlan), ceiling(oc$remOffspr[mate]/2))
         redisPar <- c(crossPlan[redis,])
         crossPlan <- rbind(crossPlan[-redis,], cbind(oc$Indiv[mate], redisPar))
         oc$remOffspr[mate] <- 0
