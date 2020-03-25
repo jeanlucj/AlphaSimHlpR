@@ -114,7 +114,7 @@ makeGRM <- function(records, SP){
 iidPhenoEval <- function(phenoDF){
   require(lme4)
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
-  phenoDF <- phenoDF %>% mutate(entryChk=if_else(isChk=="check", id, "-1"))
+  phenoDF <- phenoDF %>% dplyr::mutate(entryChk=if_else(isChk=="check", id, "-1"))
   fm <- lmer(pheno ~ entryChk + (1|id:isChk), weights=errVar, data=phenoDF)
   blup <- as.matrix(ranef(fm)[[1]])[,1]
   names(blup) <- (names(blup) %>% strsplit(":", fixed=T) %>% unlist %>%
