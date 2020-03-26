@@ -63,6 +63,10 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   nChkPlots <- nPlots / bspNew$entryToChkRatio
   nChkPlots <- pairwiseComp(nChkPlots, bspNew$nReps, max) # At least one check / rep
   chkReps <- ceiling(nChkPlots / bspNew$nChks)
+  
+  # Safety if nChks or entryToChkRatio misunderstood
+  chkReps <- if_else(chkReps == Inf, 1, chkReps, 1)
+  
   # Give everything names
   names(bspNew$nEntries) <- names(bspNew$nChks) <- names(bspNew$nReps) <- names(bspNew$nLocs) <- names(bspNew$errVars) <- names(chkReps) <- bspNew$stageNames
   bspNew <- c(bspNew, list(chkReps=chkReps), list(checks=NULL))
@@ -145,8 +149,8 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   # 1. Every new progeny is both QC and whole-genome genotyped. The number of 
   # new progeny is nCrosses*nProgeny, so the cost is 
   # nCrosses*nProgeny*(crossingCost + qcGenoCost + wholeGenomeCost)
-  # 2. The number of plots in each trial is (nEntries + nChks)*nReps so the cost
-  # of the trial is (nEntries + nChks)*nReps*plotCost
+  # 2. The number of plots in each trial is nEntries*nReps + nChks*chkReps so the cost
+  # of the trial is (nEntries*nReps + nChks*chkReps)*plotCost*nLocs
   # NOTE for develCosts not accounting for number of rapid cycles
   develCosts <- bsp$nCrosses * bsp$nProgeny * (bsp$crossingCost + bsp$qcGenoCost + bsp$wholeGenomeCost)
   trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
