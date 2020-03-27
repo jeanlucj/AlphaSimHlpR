@@ -169,7 +169,7 @@ optContrib <- function(records, bsp, SP, crit){
   
   Ne <- bsp$targetEffPopSize
   con <- list(
-    ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))^(1/L)
+    ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
   )
   
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
