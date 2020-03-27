@@ -22,7 +22,6 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # Don't use optimum contributions in simple default. Define other parms in case
     useOptContrib <- FALSE
     nCandOptCont <- 100
-    breedCycleTime <- 2
     targetEffPopSize <- 30
     # Number of number of entries in each stage
     nEntries <- c(nCrosses*nProgeny, 60, 20, 10)
@@ -44,7 +43,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny",    "useOptContrib", "nCandOptCont", "breedCycleTime", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny",    "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   # Convert to logical

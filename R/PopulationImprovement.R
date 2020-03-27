@@ -167,7 +167,6 @@ optContrib <- function(records, bsp, SP, crit){
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
   cand <- optiSel::candes(phen, grm=grm, quiet=T)
   
-  L <- if_else(exists("breedCycleTime", bsp), bsp$breedCycleTime, 2)
   Ne <- bsp$targetEffPopSize
   con <- list(
     ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))^(1/L)

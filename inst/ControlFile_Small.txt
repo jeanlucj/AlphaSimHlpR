@@ -19,8 +19,6 @@ useOptContrib
 TRUE
 nCandOptCont
 200
-breedCycleTime
-2
 targetEffPopSize
 20
 
