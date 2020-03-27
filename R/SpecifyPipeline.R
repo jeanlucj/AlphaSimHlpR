@@ -31,7 +31,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # Checks are replicated the same as experimental entries
     nChks <- c(2, 1, 1, 1)
     entryToChkRatio <- c(20, 20, 20, 10)
-    # Error variances estimated from historical data 
+    # Error variances estimated from historical data
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
@@ -54,6 +54,12 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   bspNew$selCritPopImprov <- get(bspNew$selCritPopImprov)
   # Make sure you keep enough cycles
   bspNew$nCyclesToKeepRecords <- max(bspNew$nStages+1, bspNew$nCyclesToKeepRecords)
+  # Stop and warn user if not enough crosses specified
+  if((bspNew$nCrosses * bspNew$nProgeny) < bspNew$nEntries[1]){
+    print("Not enough F1s to fill up Stage 1 trial. nCrosses * nProgeny must by >= nEntries for Stage 1.")
+    stop()
+  }
+
   # Figure out how many checks to add to each stage
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
@@ -62,10 +68,9 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   nChkPlots <- nPlots / bspNew$entryToChkRatio
   nChkPlots <- pairwiseComp(nChkPlots, bspNew$nReps, max) # At least one check / rep
   chkReps <- ceiling(nChkPlots / bspNew$nChks)
-  
   # Safety if nChks or entryToChkRatio misunderstood
   chkReps <- if_else(chkReps == Inf, 1, chkReps, 1)
-  
+
   # Give everything names
   names(bspNew$nEntries) <- names(bspNew$nChks) <- names(bspNew$nReps) <- names(bspNew$nLocs) <- names(bspNew$errVars) <- names(chkReps) <- bspNew$stageNames
   bspNew <- c(bspNew, list(chkReps=chkReps), list(checks=NULL))
