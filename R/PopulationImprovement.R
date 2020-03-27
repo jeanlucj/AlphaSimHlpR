@@ -165,12 +165,11 @@ optContrib <- function(records, bsp, SP, crit){
   grm <- sommer::A.mat(pullSnpGeno(records[[1]][candidates], simParam=SP) - 1)
   grm <- grm[candidates, candidates] # Put it in the right order
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
-  cand <- optiSel::candes(phen, grm=grm, quiet=T)
+  invisible(capture.output(cand <- optiSel::candes(phen, grm=grm, quiet=T)))
   
-  L <- if_else(exists("breedCycleTime", bsp), bsp$breedCycleTime, 2)
   Ne <- bsp$targetEffPopSize
   con <- list(
-    ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))^(1/L)
+    ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
   )
   
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
