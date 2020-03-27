@@ -165,7 +165,7 @@ optContrib <- function(records, bsp, SP, crit){
   grm <- sommer::A.mat(pullSnpGeno(records[[1]][candidates], simParam=SP) - 1)
   grm <- grm[candidates, candidates] # Put it in the right order
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
-  cand <- optiSel::candes(phen, grm=grm, quiet=T)
+  invisible(capture.output(cand <- optiSel::candes(phen, grm=grm, quiet=T)))
   
   Ne <- bsp$targetEffPopSize
   con <- list(
