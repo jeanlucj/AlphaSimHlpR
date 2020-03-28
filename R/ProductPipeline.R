@@ -73,7 +73,8 @@ prodPipeSimp <- function(records, bsp, SP){
 prodPipeFncChk <- function(records, bsp, SP){
   phenoDF <- framePhenoRec(records)
   # selCritPipeAdv has to be given in bsp
-  selCrit <- bsp$selCritPipeAdv(phenoDF)
+  candidates <- records[[1]]@id
+  selCrit <- bsp$selCritPipeAdv(records, candidates, SP)
   toAdd <- list()
   for (stage in 1:bsp$nStages){
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
@@ -82,6 +83,7 @@ prodPipeFncChk <- function(records, bsp, SP){
       indToAdv <- nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))
     } else{ # 1:bsp$nEntries[stage-1]] keeps only non-checks
       sourcePop <- last(records[[stage]])
+      # Don't allow checks to be advanced: use 1:bsp$nEntries[stage-1]
       indToAdv <- order(selCrit[sourcePop$id[1:bsp$nEntries[stage-1]]], decreasing=T)[1:bsp$nEntries[stage]]
       indToAdv <- sourcePop$id[indToAdv]
     }
