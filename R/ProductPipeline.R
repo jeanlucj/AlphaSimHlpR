@@ -43,7 +43,7 @@ prodPipeSimp <- function(records, bsp, SP){
   }
   
   # Remove old records if needed
-  if (length(records[[2]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp$nCyclesToKeepRecords)
+  if (length(records[[2]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp)
   
   return(records)
 }
@@ -104,7 +104,7 @@ prodPipeFncChk <- function(records, bsp, SP){
   }
 
   # Remove old records if needed
-  if (length(records[[2]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp$nCyclesToKeepRecords)
+  if (length(records[[2]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp)
   
   return(records)
 }
