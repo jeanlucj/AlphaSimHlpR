@@ -84,67 +84,6 @@ popImprov2Cyc <- function(records, bsp, SP){
   return(records)
 }
 
-#' selCritIID function
-#'
-#' function to select parents among individuals with phenotypes, assuming individual effects are IID
-#'
-#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param candidates Character vector of ids of the candidates to be parents
-#' @param SP The AlphaSimR SimParam object (not used, here for uniformity)
-#' @return An IID BLUP of the trait of the candidates
-#' @details Accesses all individuals in \code{records} to pick the highest among candidates. If candidates do not have records, a random sample is returned
-#' 
-#' @examples
-#' allPop <- mergePops(records[[2]])
-#' candidates <- allPop@id
-#' parents <- allPop[selectParIID(records, candidates, bsp)]
-#' 
-#' @export
-selCritIID <- function(records, candidates, SP){
-  phenoDF <- framePhenoRec(records)
-  # Candidates don't have phenotypes so return random vector
-  if (!any(candidates %in% phenoDF$id)){ 
-    crit <- runif(length(candidates))
-    names(crit) <- candidates
-  } else{
-    crit <- iidPhenoEval(phenoDF)
-    crit <- crit[candidates]
-  }
-  return(crit)
-}
-
-#' selCritGRM function
-#'
-#' function to select parents among individuals with phenotypes, assuming individual effects covary according to a GRM
-#'
-#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
-#' @param candidates Character vector of ids of the candidates to be parents
-#' @param bsp A list of product pipeline parameters
-#' @param SP The AlphaSimR SimParam object (needed to pull SNPs)
-#' @return Character vector of the ids of the selected individuals
-#' @details Accesses all individuals in \code{records} to pick the highest ones
-#' @examples 
-#' candidates <- records[[1]][[1]]@id
-#' parents <- records[[1]][[1]][selectParGRM(records, candidates, bsp, SP)]
-#' 
-#' @export
-selCritGRM <- function(records, candidates, SP){
-  phenoDF <- framePhenoRec(records)
-  if (!any(candidates %in% phenoDF$id)){ 
-    crit <- runif(length(candidates))
-    names(crit) <- candidates
-  } else{
-    grm <- makeGRM(records, SP)
-    # Remove individuals with phenotypes but who no longer have geno records
-    # I am not sure this can happen, but it is a safeguard
-    phenoDF <- phenoDF[phenoDF$id %in% rownames(grm),]
-    crit <- grmPhenoEval(phenoDF, grm)
-    crit <- crit[candidates]
-  }
-  return(crit)
-}
-
-
 #' optContrib function
 #'
 #' function uses optiSel to identify number of progeny, allocate mates to minimize inbreeding depression, and return progeny
