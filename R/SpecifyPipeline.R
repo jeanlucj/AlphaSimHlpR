@@ -226,7 +226,6 @@ readControlFile <- function(fileName, parmNames){
 #' @param varDD
 #'
 #' @return a named list of of the parameters to specify a breeding scheme simulation
-#' @export
 #'
 #' @details All arguments are exactly as specified in the control files. Main exception is schemeDF, which is just a tibble() or data.frame version of the set of bsp arguments which are vectors (giving values for each breeding stage). Columns must have names exactly as in the corresponding arguments in control file: stageNames, nReps, nLocs, nChks, nEntries, entryToChkRatio, errVars
 #'
@@ -252,7 +251,8 @@ readControlFile <- function(fileName, parmNames){
 #'                         productPipeline = prodPipeFncChk,
 #'                         populationImprovement = popImprov1Cyc,
 #'                         bsp = bsp)
-
+#' @export
+#'
 specifyBSP<-function(schemeDF,
                      nParents,nCrosses,nProgeny,
                      useOptContrib=FALSE,nCandOptCont=NULL,targetEffPopSize=NULL, # if useOptContrib=TRUE, must specify these args
