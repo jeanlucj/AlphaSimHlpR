@@ -76,5 +76,6 @@ tidyrecords<-function(records){
   tidyrecs<-tibble(stageName=names(records),recs=records) %>%
     unnest_longer(recs,indices_to = "year") %>%
     unnest(recs)
+
   return(tidyrecs)
 }
