@@ -5,10 +5,10 @@
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @return A \code{records} object with the first population of each list removed.
 #' @details \code{records} is a list of lists. This function deletes the first object of each list, excluding the F1 list.
-#' 
+#'
 #' @examples
 #' records <- removeOldestCyc(records)
-#' 
+#'
 #' @export
 removeOldestCyc <- function(records, bsp){
   nCyclesToKeepRecords <- bsp$nCyclesToKeepRecords
@@ -27,4 +27,55 @@ removeOldestCyc <- function(records, bsp){
   allID <- allID[order(as.integer(allID))]
   records[[1]] <- records[[1]][allID]
   return(records)
+}
+
+
+#' tidysims function
+#'
+#' function to create a tidy tibble from a list of runBreedingScheme simulations
+#'
+#' @param sims a list of AlphaSimHlpR sims (result of runBreedingScheme)
+#'
+#' @return a tidy tibble with one row per simulation, cols: records (tibble of all phenotypic records with indicator added for "year" and "stageName"), simulatedpop (the pop-class object from the sim), bsp and SP for the sim.
+#' @export
+#'
+#' @examples
+#' sims<-map(1:2,~runBreedingScheme(replication = .,nCycles = 7,
+#'                                 initializeFunc = initFuncADChk,
+#'                                 productPipeline = prodPipeFncChk,
+#'                                 populationImprovement = popImprov1Cyc,
+#'                                 bsp = bsp))
+#' sims<-tidysims(sims)
+tidysims<-function(sims){
+  require(magrittr); require(purrr)
+  sims<-tibble(SimRep=1:length(sims),sim=sims) %>%
+    dplyr::mutate(sim=map(sim,~tibble(outType=names(.),output=.))) %>%
+    tidyr::unnest(sim) %>%
+    tidyr::pivot_wider(names_from = "outType",values_from = "output")
+  sims %<>%
+    dplyr::mutate(simulatedpop=map(records,~.$F1),
+                  records=map(records,~.[-1]))
+  sims %<>%
+    dplyr::mutate(records=map(records,tidyrecords))
+  return(sims)
+}
+
+#' tidyrecords function
+#'
+#' function to create a tibble with indicator for year and stage from a "records" object produced by AlphaSimHlpR. Possibly redundant to framePhenoRec() function.
+#'
+#' @param records a list-class "records" object produced by AlphaSimHlpR
+#'
+#' @return a tibble with indicator for year and stage
+#' @export
+#'
+#' @examples
+#' records <- fillPipeline(founders, bsp, SP)
+#' records <- tidyrecords(records)
+tidyrecords<-function(records){
+  tidyrecs<-tibble(stageName=names(records),recs=records) %>%
+    unnest_longer(recs,indices_to = "year") %>%
+    unnest(recs)
+
+  return(tidyrecs)
 }
