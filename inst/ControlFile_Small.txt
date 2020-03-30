@@ -16,7 +16,7 @@ nProgeny
 
 # Optimum contributions parameters
 useOptContrib
-TRUE
+FALSE
 nCandOptCont
 200
 targetEffPopSize
