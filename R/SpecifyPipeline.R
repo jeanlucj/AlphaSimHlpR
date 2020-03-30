@@ -38,20 +38,20 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
     # Function to advance individuals from one stage to the next
-    selCritPipeAdv <- iidPhenoEval
+    selCritPipeAdv <- selCritIID
     selCritPopImprov <- selCritIID
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
     parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny",    "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
     bspNew <- readControlFile(ctrlFileName, parmNames)
+    # Convert to logical
+    bspNew$useCurrentPhenoTrain <- as.logical(bspNew$useCurrentPhenoTrain)
+    bspNew$useOptContrib <- as.logical(bspNew$useOptContrib)
+    # Get the function to replace the name
+    bspNew$selCritPipeAdv <- get(bspNew$selCritPipeAdv)
+    bspNew$selCritPopImprov <- get(bspNew$selCritPopImprov)
   }
-  # Convert to logical
-  bspNew$useCurrentPhenoTrain <- as.logical(bspNew$useCurrentPhenoTrain)
-  bspNew$useOptContrib <- as.logical(bspNew$useOptContrib)
-  # Get the function to replace the name
-  bspNew$selCritPipeAdv <- get(bspNew$selCritPipeAdv)
-  bspNew$selCritPopImprov <- get(bspNew$selCritPopImprov)
   # Make sure you keep enough cycles
   bspNew$nCyclesToKeepRecords <- max(bspNew$nStages+1, bspNew$nCyclesToKeepRecords)
   # Stop and warn user if not enough crosses specified

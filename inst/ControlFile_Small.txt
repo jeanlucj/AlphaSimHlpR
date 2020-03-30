@@ -57,7 +57,7 @@ nCyclesToKeepRecords
 
 # Name of function to advance individuals from one stage to the next
 selCritPipeAdv
-selCritGRM
+selCritIID
 
 # Name of function to select individuals to be parents for the next cycle
 selCritPopImprov

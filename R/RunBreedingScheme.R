@@ -31,5 +31,8 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
     records <- populationImprovement(records, bsp, SP)
   }
   cat("\n")
+  
+  # For prettiness, get rid of that first row in summaries
+  records$summaries <- records$summaries[-1,]
   return(list(records=records, bsp=bsp, SP=SP))
 }

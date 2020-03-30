@@ -24,14 +24,14 @@ prodPipeSimp <- function(records, bsp, SP){
   toAdd <- list()
   for (stage in 1:bsp$nStages){
     if (stage==1){ # Stage 1: F1 progeny population: take them at random
-      nGenoRec <- nInd(records[[1]])
+      nGenoRec <- nInd(records$F1)
       nF1 <- bsp$nCrosses * bsp$nProgeny
       indToAdv <- nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))
     } else{ # Stage > 1: sort the matrix and make population of best
       sourcePop <- last(records[[stage]])
       indToAdv <- sourcePop$id[order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]]
     }
-    entries <- records[[1]][indToAdv]
+    entries <- records$F1[indToAdv]
     varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
     # reps=1 because varE is computed above
     entries <- setPheno(entries, varE=varE, reps=1, simParam=SP)
@@ -71,23 +71,37 @@ prodPipeSimp <- function(records, bsp, SP){
 #'
 #' @export
 prodPipeFncChk <- function(records, bsp, SP){
-  phenoDF <- framePhenoRec(records)
-  # selCritPipeAdv has to be given in bsp
-  candidates <- records[[1]]@id
-  selCrit <- bsp$selCritPipeAdv(records, candidates, SP)
+  # Some useful objects
+  nF1 <- bsp$nCrosses * bsp$nProgeny 
+  year <- max(records$summaries$year)+1 # Add a year relative to last year
   toAdd <- list()
+  
+  # Calculate the selection criterion. selCritPipeAdv has to be given in bsp
+  candidates <- records$F1@id
+  selCrit <- bsp$selCritPipeAdv(records, candidates, bsp, SP)
+  
+  # Make summary for the incoming F1s
+  nGenoRec <- nInd(records$F1)
+  newF1Idx <- nGenoRec - nF1 + 1:nF1
+  id <- records$F1[newF1Idx]@id
+  records$summaries <- records$summaries %>% bind_rows(tibble(cycle=year, year=year, stage="F1", first=id[1], last=id[nF1], genValMean=mean(gv(records$F1[id])), genValSD=sd(gv(records$F1[id])), evalAtSelMean=mean(selCrit[id], na.rm=T), evalAtSelSD=sd(selCrit[id], na.rm=T), accAtSel=cor(gv(records$F1[id]), selCrit[id])))
+  
   for (stage in 1:bsp$nStages){
+    # Make a summary for this stage
+    id <- last(records[[stage+1]])$id[1:bsp$nEntries[stage]]
+    records$summaries <- records$summaries %>% bind_rows(tibble(cycle=year-stage, year=year, stage=bsp$stageNames[stage], first=id[1], last=id[bsp$nEntries[stage]], genValMean=mean(gv(records$F1[id])), genValSD=sd(gv(records$F1[id])), evalAtSelMean=mean(selCrit[id]), evalAtSelSD=sd(selCrit[id]), accAtSel=cor(gv(records$F1[id]), selCrit[id])))
+    
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
-      nGenoRec <- nInd(records[[1]])
-      nF1 <- bsp$nCrosses * bsp$nProgeny # Sample from the most-recent F1s
-      indToAdv <- nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))
-    } else{ # 1:bsp$nEntries[stage-1]] keeps only non-checks
-      sourcePop <- last(records[[stage]])
+      # Sample from the most-recent F1s
+      indToAdv <- records$F1@id[nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))]
+    } else{
       # Don't allow checks to be advanced: use 1:bsp$nEntries[stage-1]
-      indToAdv <- order(selCrit[sourcePop$id[1:bsp$nEntries[stage-1]]], decreasing=T)[1:bsp$nEntries[stage]]
-      indToAdv <- sourcePop$id[indToAdv]
+      id <- last(records[[stage]])$id[1:bsp$nEntries[stage-1]]
+      selCritPop <- selCrit[id]
+      indToAdv <- (selCritPop %>% order(decreasing=T))[1:bsp$nEntries[stage]]
+      indToAdv <- names(selCritPop)[sort(indToAdv)]
     }
-    entries <- records[[1]][indToAdv]
+    entries <- records$F1[indToAdv]
     varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
     # reps=1 because varE is computed above
     entries <- setPheno(entries, varE=varE, reps=1, simParam=SP)
