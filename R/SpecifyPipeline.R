@@ -270,7 +270,8 @@ calcDerivedParms <- function(bsp){
   nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
   chkReps <- ceiling(nChkPlots / bsp$nChks)
   # Safety if nChks or entryToChkRatio misunderstood
-  chkReps <- if_else(chkReps == Inf, 1, chkReps, 1)
+  bsp$nChks <- if_else(bsp$entryToChkRatio == 0, 0, bsp$nChks)
+  chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
   
   # Make sure everything has names
   names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- bsp$stageNames
