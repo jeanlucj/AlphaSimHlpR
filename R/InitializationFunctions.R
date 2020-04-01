@@ -104,6 +104,7 @@ fillPipeline <- function(founders, bsp=NULL, SP){
     toAdd <- list()
     for (stage in 1:(year+bsp$nStages)){
       if (stage==1){ # Stage 1: F1 progeny population: random selection use pop
+<<<<<<< HEAD
         # Select from the most recent F1s
         indToAdv <- nInd(records[[1]]) - nF1 + sort(sample(nF1, bsp$nEntries[stage]))
       } else{
@@ -111,6 +112,19 @@ fillPipeline <- function(founders, bsp=NULL, SP){
         sourcePop <- last(records[[stage]])[1:bsp$nEntries[stage-1],]
         indToAdv <- order(sourcePop$pheno, decreasing=T)[1:bsp$nEntries[stage]]
         indToAdv <- sourcePop$id[sort(indToAdv)]
+=======
+        nGenoRec <- nInd(records[[1]])
+        nF1 <- bsp$nCrosses * bsp$nProgeny # Sample from the most-recent F1s
+        indToAdv <- nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[1]))
+        entries <- records[[1]][indToAdv]
+        # Don't want to bother with phenotypes but want mild selection: use gv
+        parents <- selectInd(entries, nInd=nInd(entries)/1.5, use="gv", simParam=SP)
+        toAdd <- list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP))
+      } else{ # Stage > 1: sort the matrix and make population of best
+        sourcePop <- last(records[[stage]])
+        idBest <- sourcePop$id[order(sourcePop$pheno[1:bsp$nEntries[stage-1]], decreasing=T)[1:bsp$nEntries[stage]]]
+        entries <- records[[1]][idBest]
+>>>>>>> master
       }
       entries <- records[[1]][indToAdv]
       varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
