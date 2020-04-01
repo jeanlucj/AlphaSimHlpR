@@ -145,7 +145,11 @@ stageOutputs <- function(id, f1, selCrit, stage, year){
   f1 <- f1[id]
   selCrit <- selCrit[id]
   bestCrit <- which.max(selCrit)
-  gvOfBestCrit <- if_else(length(bestCrit) == 0, "NA", gv(f1[names(selCrit)[bestCrit]]))
+  if (length(bestCrit) == 0){
+    gvOfBestCrit <- NA
+  } else{
+    gvOfBestCrit <- gv(f1[names(selCrit)[bestCrit]])
+  }
   highestGV <- max(gv(f1))
   return(tibble(cycle=year-stage, year=year, stage=stageName, first=first(id), last=last(id), genValMean=mean(gv(f1)), genValSD=sd(gv(f1)), evalAtSelMean=mean(selCrit, na.rm=T), evalAtSelSD=sd(selCrit, na.rm=T), accAtSel=cor(gv(f1), selCrit), gvOfBestCrit=gvOfBestCrit, highestGV=highestGV))
 }
