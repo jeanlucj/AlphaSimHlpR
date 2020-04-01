@@ -142,7 +142,7 @@ prodPipeFncChk <- function(records, bsp, SP){
 #' records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year))
 #' 
 stageOutputs <- function(id, f1, selCrit, stage, year){
-  stageName <- if_else(stage==0, "F1", bsp$stageNames[stage])
+  stageName <- c("F1", bsp$stageNames)[stage+1]
   f1 <- f1[id]
   selCrit <- selCrit[id]
   gvOfBestCrit <- gv(f1[names(selCrit)[which.max(selCrit)]])
