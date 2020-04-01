@@ -71,21 +71,20 @@ prodPipeSimp <- function(records, bsp, SP){
 #'
 #' @export
 prodPipeFncChk <- function(records, bsp, SP){
-  # Some useful objects
-  year <- max(records$stageOutputs$year)+1 # Add a year relative to last year
-  toAdd <- list()
-  
   # Calculate the selection criterion. selCritPipeAdv has to be given in bsp
   candidates <- records$F1@id
   selCrit <- bsp$selCritPipeAdv(records, candidates, bsp, SP)
   
   # Make summary for the incoming F1s
+  year <- max(records$stageOutputs$year)+1 # Add a year relative to last year
   nF1 <- bsp$nCrosses * bsp$nProgeny 
   nGenoRec <- nInd(records$F1)
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
   records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year))
 
+  # Will be added to the phenotype records
+  toAdd <- list()
   for (stage in 1:bsp$nStages){
     # Make a summary for this stage
     id <- last(records[[stage+1]])$id[1:bsp$nEntries[stage]]
@@ -145,9 +144,10 @@ stageOutputs <- function(id, f1, selCrit, stage, year){
   stageName <- c("F1", bsp$stageNames)[stage+1]
   f1 <- f1[id]
   selCrit <- selCrit[id]
-  gvOfBestCrit <- gv(f1[names(selCrit)[which.max(selCrit)]])
+  bestCrit <- which.max(selCrit)
+  gvOfBestCrit <- if_else(length(bestCrit) == 0, "NA", gv(f1[names(selCrit)[bestCrit]]))
   highestGV <- max(gv(f1))
-  return(tibble(cycle=year, year=year, stage=stageName, first=first(id), last=last(id), genValMean=mean(gv(f1)), genValSD=sd(gv(f1)), evalAtSelMean=mean(selCrit, na.rm=T), evalAtSelSD=sd(selCrit, na.rm=T), accAtSel=cor(gv(f1), selCrit), gvOfBestCrit=gvOfBestCrit, highestGV=highestGV))
+  return(tibble(cycle=year-stage, year=year, stage=stageName, first=first(id), last=last(id), genValMean=mean(gv(f1)), genValSD=sd(gv(f1)), evalAtSelMean=mean(selCrit, na.rm=T), evalAtSelSD=sd(selCrit, na.rm=T), accAtSel=cor(gv(f1), selCrit), gvOfBestCrit=gvOfBestCrit, highestGV=highestGV))
 }
 
 #' lastCycStgOut function
