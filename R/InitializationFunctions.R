@@ -141,5 +141,6 @@ fillPipeline <- function(founders, bsp=NULL, SP){
     }
   }#END years
   names(records) <- c("F1", bsp$stageNames)
-  return(c(records, summaries=list(tibble(year=0))))
+  # stageOutputs relies on knowing the year from the previous year
+  return(c(records, stageOutputs=list(tibble(year=0))))
 }

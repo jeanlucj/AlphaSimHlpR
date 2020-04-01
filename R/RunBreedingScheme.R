@@ -32,7 +32,7 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
   }
   cat("\n")
   
-  # For prettiness, get rid of that first row in summaries
-  records$summaries <- records$summaries[-1,]
+  # Finalize the stageOutputs
+  records <- lastCycStgOut(records, bsp, SP)
   return(list(records=records, bsp=bsp, SP=SP))
 }
