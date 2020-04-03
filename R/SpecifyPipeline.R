@@ -274,7 +274,7 @@ calcDerivedParms <- function(bsp){
   }
   
   # Stop and warn user if stageToGenotype is not a named stage
-  if (!is.null(bsp$stageToGenotype)){
+  if (length(bsp$stageToGenotype) > 0){
     if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
       stop("The stage to genotype is not one of the pipeline stages")
     }
