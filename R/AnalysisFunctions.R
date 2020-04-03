@@ -99,18 +99,18 @@ makeGRM <- function(records, bsp, SP){
   require(sommer)
   
   allPop <- records$F1
+  # Only make GRM of individuals that are actually genotyped
   if (!is.null(bsp$stageToGenotype)){
-    stageNum <- which(names(records) == bsp$stageToGenotype)[1]
-    if (length(stageNum) > 0){
-      if (stageNum > 1){
-        allID <- NULL
-        for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
-        for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
-        allID <- unique(allID)
-        if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
-        allID <- allID[order(as.integer(allID))]
-        allPop <- allPop[allID]
-      }
+    stageNum <- which(names(records) == bsp$stageToGenotype)
+    if (length(stageNum) == 0) break
+    if (stageNum > 1){ # If stageNum == 1 just stay with records$F1
+      allID <- NULL
+      for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
+      for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
+      allID <- unique(allID)
+      if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
+      allID <- allID[order(as.integer(allID))]
+      allPop <- allPop[allID]
     }
   }
   if (!is.null(bsp$checks)){
@@ -219,12 +219,12 @@ selCritIID <- function(records, candidates, bsp, SP){
 #' 
 #' @export
 selCritGRM <- function(records, candidates, bsp, SP){
-  phenoDF <- framePhenoRec(records, bsp)
-  if (!any(candidates %in% phenoDF$id)){ 
+  grm <- makeGRM(records, bsp, SP)
+  if (!any(candidates %in% rownames(grm)){ 
     crit <- runif(length(candidates))
     names(crit) <- candidates
   } else{
-    grm <- makeGRM(records, bsp, SP)
+    phenoDF <- framePhenoRec(records, bsp)
     # Remove individuals with phenotypes but who do not have geno records
     phenoDF <- phenoDF[phenoDF$id %in% rownames(grm),]
     crit <- grmPhenoEval(phenoDF, grm)

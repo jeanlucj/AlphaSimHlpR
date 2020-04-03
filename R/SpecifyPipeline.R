@@ -16,6 +16,9 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
   if (is.null(ctrlFileName)){ # NULL control file: make toy example
     nStages <- 4 # Number of stages in the product pipeline
     stageNames <- c("SDN", "CET", "PYT", "AYT")
+    
+    stageToGenotype <- "SDN"
+    
     nParents <- 20 # Number of parents in the crossing nursery
     nCrosses <- 20 # Number of crosses entering the pipeline
     nProgeny <- 10 # Number of progeny per cross
@@ -43,7 +46,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bspNew <- calcDerivedParms(bspNew)
@@ -268,6 +271,12 @@ calcDerivedParms <- function(bsp){
   # Stop and warn user if not enough crosses specified
   if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
     print("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
+    stop()
+  }
+  
+  # Stop and warn user if stageToGenotype is not a named stage
+  if (!is.null(bsp$stageToGenotype) & !(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
+    print("The stage to genotype is not one of the pipeline stages")
     stop()
   }
   
