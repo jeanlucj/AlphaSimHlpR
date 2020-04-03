@@ -220,7 +220,7 @@ selCritIID <- function(records, candidates, bsp, SP){
 #' @export
 selCritGRM <- function(records, candidates, bsp, SP){
   grm <- makeGRM(records, bsp, SP)
-  if (!any(candidates %in% rownames(grm)){ 
+  if (!any(candidates %in% rownames(grm))){ 
     crit <- runif(length(candidates))
     names(crit) <- candidates
   } else{
