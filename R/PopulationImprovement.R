@@ -87,6 +87,8 @@ popImprov2Cyc <- function(records, bsp, SP){
 #' optContrib function
 #'
 #' function uses optiSel to identify number of progeny, allocate mates to minimize inbreeding depression, and return progeny
+#' NOTE: This function assumes that all selection candidates have been genotyped
+#' If stageToGenotype has been set to a later stage, that might not be true
 #'
 #' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
 #' @param bsp A list of product pipeline parameters

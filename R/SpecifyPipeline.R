@@ -130,11 +130,21 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   # 2. The number of plots in each trial is nEntries*nReps + nChks*chkReps so the cost
   # of the trial is (nEntries*nReps + nChks*chkReps)*plotCost*nLocs
   # NOTE for develCosts not accounting for number of rapid cycles
-  develCosts <- bsp$nCrosses * bsp$nProgeny * (bsp$crossingCost + bsp$qcGenoCost + bsp$wholeGenomeCost)
+  develCosts <- bsp$nCrosses * bsp$nProgeny * bsp$crossingCost
+  
+  if (is.null(bsp$stageToGenotype)){
+    nGeno <- bsp$nCrosses * bsp$nProgeny
+  } else{
+    nGeno <- bsp$nEntries[bsp$stageToGenotype]
+  }
+  genotypingCosts <- nGeno * (bsp$qcGenoCost + bsp$wholeGenomeCost)
+  
   trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
+  
   locationCosts <- max(bsp$nLocs) * bsp$perLocationCost
-  totalCosts <- develCosts + trialCosts + locationCosts
-  return(c(bsp, c(develCosts=develCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
+  
+  totalCosts <- develCosts + genotypingCosts + trialCosts + locationCosts
+  return(c(bsp, c(develCosts=develCosts, genotypingCosts=genotypingCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
 }
 
 #' specifyBSP function

@@ -97,7 +97,22 @@ phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
 #' @export
 makeGRM <- function(records, bsp, SP){
   require(sommer)
-  allPop <- records[[1]]
+  
+  allPop <- records$F1
+  if (!is.null(bsp$stageToGenotype)){
+    stageNum <- which(names(records) == bsp$stageToGenotype)[1]
+    if (length(stageNum) > 0){
+      if (stageNum > 1){
+        allID <- NULL
+        for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
+        for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
+        allID <- unique(allID)
+        if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
+        allID <- allID[order(as.integer(allID))]
+        allPop <- allPop[allID]
+      }
+    }
+  }
   if (!is.null(bsp$checks)){
     putInChks <- setdiff(bsp$checks@id, allPop@id)
     if (length(putInChks > 0)) allPop <- c(allPop, bsp$checks[putInChks])
@@ -210,8 +225,7 @@ selCritGRM <- function(records, candidates, bsp, SP){
     names(crit) <- candidates
   } else{
     grm <- makeGRM(records, bsp, SP)
-    # Remove individuals with phenotypes but who no longer have geno records
-    # I am not sure this can happen but it is a safeguard
+    # Remove individuals with phenotypes but who do not have geno records
     phenoDF <- phenoDF[phenoDF$id %in% rownames(grm),]
     crit <- grmPhenoEval(phenoDF, grm)
     crit <- crit[candidates]

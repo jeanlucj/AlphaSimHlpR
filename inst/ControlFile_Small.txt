@@ -4,6 +4,13 @@ nStages
 stageNames
 SDN CET PYT
 
+# At what stage do you want to genotype individuals?  In addition to the
+# named stages (SDN, CET, and PYT in this control file), the user can
+# specify F1, which will cause all nCrosses * nProgeny individuals to be 
+# genotyped. If nothing is specified, the default will be to genotype all F1
+stageToGenotype
+SDN
+
 # Number of parents in the crossing nursery
 nParents
 20
