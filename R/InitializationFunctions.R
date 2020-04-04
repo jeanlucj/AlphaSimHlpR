@@ -18,7 +18,8 @@
 #' @export
 initFuncSimp <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
-  founderHap <- runMacs2(nInd=bsp$nEntries[1], nChr=bsp$nChr, segSites=bsp$segSites, Ne=bsp$effPopSize)
+  nF1 <- bsp$nCrosses * bsp$nProgeny
+  founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, Ne=bsp$effPopSize)
   
   # New global simulation parameters from founder haplotypes
   SP <- SimParam$new(founderHap)
@@ -54,8 +55,8 @@ initFuncSimp <- function(bsp){
 #' @export
 initFuncADChk <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
-  # Note: default effective population size for runMacs is 100
-  founderHap <- runMacs2(nInd=bsp$nEntries[1], nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
+  nF1 <- bsp$nCrosses * bsp$nProgeny
+  founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
   
   # New global simulation parameters from founder haplotypes
   SP <- SimParam$new(founderHap)
