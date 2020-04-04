@@ -79,6 +79,7 @@ prodPipeFncChk <- function(records, bsp, SP){
   year <- max(records$stageOutputs$year)+1 # Add a year relative to last year
   nF1 <- bsp$nCrosses * bsp$nProgeny 
   nGenoRec <- nInd(records$F1)
+  # Sample from the most-recent F1s
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
   records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year))
@@ -91,9 +92,19 @@ prodPipeFncChk <- function(records, bsp, SP){
     records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year))
 
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
-      # Sample from the most-recent F1s
-      indToAdv <- records$F1@id[nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[stage]))]
-    } else{
+      # Use phenotypes to select the F1 going into Stage 1?
+      if (bsp$phenoF1toStage1){ # Use phenotypes to choose what goes to Stage 1
+        phenoF1 <- setPheno(records$F1[newF1Idx], varE=bsp$errVarPreStage1, onlyPheno=T)
+        indToAdv <- records$F1@id[nGenoRec - nF1 + (phenoF1 %>% order(decreasing=T))[bsp$nEntries[stage]] %>% sort]
+      } else{
+        # Do the F1 have genotypic values that could be used?
+        if (selCrit[newF1Idx] %>% is.na %>% all){ # Choose at random
+          indToAdv <- records$F1@id[nGenoRec - nF1 + sort(sample(nF1, bsp$nEntries[stage]))]
+        } else{ # Use selCrit
+          indToAdv <- records$F1@id[nGenoRec - nF1 + (selCrit[newF1Idx] %>% order(decreasing=T))[bsp$nEntries[stage]] %>% sort]
+        }
+      }
+    } else{ # Beyond stage 1
       # Don't allow checks to be advanced: use 1:bsp$nEntries[stage-1]
       id <- last(records[[stage]])$id[1:bsp$nEntries[stage-1]]
       selCritPop <- selCrit[id]

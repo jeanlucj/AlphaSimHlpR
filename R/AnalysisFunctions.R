@@ -100,18 +100,15 @@ makeGRM <- function(records, bsp, SP){
   
   allPop <- records$F1
   # Only make GRM of individuals that are actually genotyped
-  if (!is.null(bsp$stageToGenotype)){
-    stageNum <- which(names(records) == bsp$stageToGenotype)
-    if (length(stageNum) == 0) break
-    if (stageNum > 1){ # If stageNum == 1 just stay with records$F1
-      allID <- NULL
-      for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
-      for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
-      allID <- unique(allID)
-      if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
-      allID <- allID[order(as.integer(allID))]
-      allPop <- allPop[allID]
-    }
+  stageNum <- which(names(records) == bsp$stageToGenotype)
+  if (stageNum > 1){ # If stageNum == 1 just stay with records$F1
+    allID <- NULL
+    for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
+    for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
+    allID <- unique(allID)
+    if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
+    allID <- allID[order(as.integer(allID))]
+    allPop <- allPop[allID]
   }
   if (!is.null(bsp$checks)){
     putInChks <- setdiff(bsp$checks@id, allPop@id)

@@ -256,9 +256,14 @@ specifyBSP <- function(schemeDF,
 #'
 calcDerivedParms <- function(bsp){
   # Some parms have to be logical
-  bsp$useCurrentPhenoTrain <- as.logical(bsp$useCurrentPhenoTrain)
-  bsp$useOptContrib <- as.logical(bsp$useOptContrib)
-  
+  makeLogical <- function(parm){
+    if (is.null(parm)) parm <- FALSE else parm <- as.logical(parm)
+    return(parm)
+  }
+  bsp$useCurrentPhenoTrain <- makeLogical(bsp$useCurrentPhenoTrain)
+  bsp$useOptContrib <- makeLogical(bsp$useOptContrib)
+  bsp$phenoF1toStage1 <- makeLogical(bsp$useOptContrib)
+
   # In case the function is referred by name, replace with actual function
   if ("character" %in% class(bsp$selCritPipeAdv))
     bsp$selCritPipeAdv <- get(bsp$selCritPipeAdv)
@@ -274,10 +279,9 @@ calcDerivedParms <- function(bsp){
   }
   
   # Stop and warn user if stageToGenotype is not a named stage
-  if (length(bsp$stageToGenotype) > 0){
-    if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
-      stop("The stage to genotype is not one of the pipeline stages")
-    }
+  if (is.null(bsp$stageToGenotype)) bsp$stageToGenotype <- "F1"
+  if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
+      stop("The stageToGenotype is not one of the pipeline stages")
   }
   
   # Figure out how many checks to add to each stage

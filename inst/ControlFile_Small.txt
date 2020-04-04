@@ -53,6 +53,12 @@ nLocs
 errVars
 200 146 82
 
+# Parameters to control how seeds are moved from F1 to the Stage 1 trial
+phenoF1toStage1
+TRUE
+errVarPreStage1
+500
+
 # Are the current year phenotypes available for model training
 # when parents are chosen to send to the crossing nursery? YES / NO
 useCurrentPhenoTrain
