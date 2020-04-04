@@ -37,6 +37,11 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # Error variances estimated from historical data
     # 200 for SDN is a guess
     errVars <- c(200, 146, 82, 40)
+    
+    # Use rapid visual selection to move pre-seedlings to SDN
+    phenoF1toStage1 <- FALSE
+    errVarPreStage1 <- 500
+
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
     useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
@@ -46,7 +51,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bspNew <- calcDerivedParms(bspNew)
