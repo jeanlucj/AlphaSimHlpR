@@ -94,7 +94,7 @@ prodPipeFncChk <- function(records, bsp, SP){
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
       # Use phenotypes to select the F1 going into Stage 1?
       if (bsp$phenoF1toStage1){ # Use phenotypes to choose what goes to Stage 1
-        phenoF1 <- setPheno(records$F1[newF1Idx], varE=bsp$errVarPreStage1, onlyPheno=T)
+        phenoF1 <- setPheno(records$F1[newF1Idx], varE=bsp$errVarPreStage1, onlyPheno=T, simParam=SP)
         indToAdv <- records$F1@id[nGenoRec - nF1 + (phenoF1 %>% order(decreasing=T))[bsp$nEntries[stage]] %>% sort]
       } else{
         # Do the F1 have genotypic values that could be used?
