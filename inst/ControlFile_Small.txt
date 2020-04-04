@@ -16,7 +16,7 @@ nParents
 20
 # Number of crosses entering the pipeline
 nCrosses
-30
+50
 # Number of progeny per cross
 nProgeny
 10
