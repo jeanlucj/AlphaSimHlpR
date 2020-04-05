@@ -52,6 +52,14 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     #END no control file
   } else{
     parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+# Should have default if not specified
+# stageToGenotype=SDN
+# useOptContrib=FALSE, nCandOptCont=min(nParents*5, nCand), targetEffPopSize=30
+# nChks=2, entryToChkRatio=20
+# phenoF1toStage1=FALSE, errVarPreStage1=genoVar*10
+# useCurrentPhenoTrain=FALSE
+# nCyclesToKeepRecords=5
+# selCritPipeAdv=selCritPopImprov=selCritIID
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bspNew <- calcDerivedParms(bspNew)
@@ -259,6 +267,15 @@ specifyBSP <- function(schemeDF,
 #'
 #' @details This function is only called internally by other functions used to specify the pipeline
 #'
+#' Should have default if not specified
+#' DONE stageToGenotype=SDN
+#' DONE useOptContrib=FALSE, 
+#' DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
+#' DONE nChks=0, entryToChkRatio=0
+#' DONE phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
+#' DONE useCurrentPhenoTrain=FALSE
+#' DONE nCyclesToKeepRecords=5
+#' DONE selCritPipeAdv=selCritPopImprov=selCritIID
 calcDerivedParms <- function(bsp){
   # Some parms have to be logical
   makeLogical <- function(parm){
@@ -270,6 +287,8 @@ calcDerivedParms <- function(bsp){
   bsp$phenoF1toStage1 <- makeLogical(bsp$useOptContrib)
 
   # In case the function is referred by name, replace with actual function
+  if (length(bsp$selCritPipeAdv) == 0) bsp$selCritPipeAdv <- selCritIID
+  if (length(bsp$selCritPopImprov) == 0) bsp$selCritPopImprov <- selCritIID
   if ("character" %in% class(bsp$selCritPipeAdv))
     bsp$selCritPipeAdv <- get(bsp$selCritPipeAdv)
   if ("character" %in% class(bsp$selCritPopImprov))
@@ -284,12 +303,13 @@ calcDerivedParms <- function(bsp){
   }
   
   # Stop and warn user if stageToGenotype is not a named stage
-  if (is.null(bsp$stageToGenotype)) bsp$stageToGenotype <- "F1"
+  if (length(bsp$stageToGenotype)==0) bsp$stageToGenotype <- "SDN"
   if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
       stop("The stageToGenotype is not one of the pipeline stages")
   }
   
   # Figure out how many checks to add to each stage
+  # I think this enforces defaults also
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
   }
@@ -301,10 +321,19 @@ calcDerivedParms <- function(bsp){
   bsp$nChks <- if_else(bsp$entryToChkRatio == 0, 0, bsp$nChks)
   chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
   
+  # Enforce other defaults
+  if (bsp$useOptContrib){
+    if (length(bsp$nCandOptCont) == 0) bsp$nCandOptCont <- bsp$nEntries[1]
+    if (length(bsp$targetEffPopSize) == 0) bsp$targetEffPopSize <- bsp$nParents
+  }
+  if (bsp$phenoF1toStage1){
+    if (length(bsp$errVarPreStage1) == 0) bsp$errVarPreStage1 <- bsp$genVar * 20
+  }
+  if (length(bsp$nCyclesToKeepRecords) == 0) bsp$nCyclesToKeepRecords <- 5
+
   # Make sure everything has names
   names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- bsp$stageNames
   bsp <- c(bsp, list(chkReps=chkReps), list(checks=NULL))
-
   return(bsp)
 }
 
