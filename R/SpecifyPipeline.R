@@ -1,3 +1,39 @@
+#' specifyPopulation function
+#'
+#' Function to specify the species and population characteristics. This would not need to be a function, but this way all definitions are in one place
+#'
+#' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
+#' @param ctrlFileName The name of the text file with parameter values specifying the breeding population. Must include the path to the file. If NULL a toy example simulation will be set up
+#' @return A list containing objects that specify the species and population characteristics.
+#'
+#' @details Call this function before beginning the simulation
+#'
+#' @examples
+#' bsp <- specifyPopulation(bsp)
+#'
+#' @export
+specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
+  if (is.null(ctrlFileName)){ # NULL control file: make toy example
+    # Species characteristics
+    nChr <- 2 # Number of chromosomes
+    # Population characteristics
+    effPopSize <- 100 # Effective size of population generating founders
+    segSites <- 20 # Number of segregating sites per chromosome
+    nQTL <- 5 # Number of QTL per chromosome
+    nSNP <- 5 # Number of observed SNP per chromosome
+    genVar <- 40 # Initial genetic variance
+    gxeVar <- 30 # Initial genetic variance
+    meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
+    bspNew <- mget(setdiff(ls(), "bspNew"))
+    #END no control file
+  } else{
+    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
+    bspNew <- readControlFile(ctrlFileName, parmNames)
+  }
+  bsp <- c(bsp, bspNew)
+  return(bsp)
+}
+
 #' specifyPipeline function
 #'
 #' function specify the product pipeline. This would not need to be a function, but this way all definitions are in one place
@@ -41,7 +77,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     # Use rapid visual selection to move pre-seedlings to SDN
     phenoF1toStage1 <- FALSE
     errVarPreStage1 <- 500
-
+    
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
     useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
@@ -52,55 +88,18 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     #END no control file
   } else{
     parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
-# Should have default if not specified
-# stageToGenotype=SDN
-# useOptContrib=FALSE, nCandOptCont=min(nParents*5, nCand), targetEffPopSize=30
-# nChks=2, entryToChkRatio=20
-# phenoF1toStage1=FALSE, errVarPreStage1=genoVar*10
-# useCurrentPhenoTrain=FALSE
-# nCyclesToKeepRecords=5
-# selCritPipeAdv=selCritPopImprov=selCritIID
-    bspNew <- readControlFile(ctrlFileName, parmNames)
-  }
-  bspNew <- calcDerivedParms(bspNew)
-
-  bsp <- c(bsp, bspNew)
-  return(bsp)
-}
-
-#' specifyPopulation function
-#'
-#' Function to specify the species and population characteristics. This would not need to be a function, but this way all definitions are in one place
-#'
-#' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
-#' @param ctrlFileName The name of the text file with parameter values specifying the breeding population. Must include the path to the file. If NULL a toy example simulation will be set up
-#' @return A list containing objects that specify the species and population characteristics.
-#'
-#' @details Call this function before beginning the simulation
-#'
-#' @examples
-#' bsp <- specifyPopulation(bsp)
-#'
-#' @export
-specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
-  if (is.null(ctrlFileName)){ # NULL control file: make toy example
-    # Species characteristics
-    nChr <- 2 # Number of chromosomes
-    # Population characteristics
-    effPopSize <- 100 # Effective size of population generating founders
-    segSites <- 20 # Number of segregating sites per chromosome
-    nQTL <- 5 # Number of QTL per chromosome
-    nSNP <- 5 # Number of observed SNP per chromosome
-    genVar <- 40 # Initial genetic variance
-    gxeVar <- 30 # Initial genetic variance
-    meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
-    bspNew <- mget(setdiff(ls(), "bspNew"))
-    #END no control file
-  } else{
-    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
+    # Should have default if not specified
+    # stageToGenotype=SDN
+    # useOptContrib=FALSE, nCandOptCont=min(nParents*5, nCand), targetEffPopSize=30
+    # nChks=2, entryToChkRatio=20
+    # phenoF1toStage1=FALSE, errVarPreStage1=genoVar*10
+    # useCurrentPhenoTrain=FALSE
+    # nCyclesToKeepRecords=5
+    # selCritPipeAdv=selCritPopImprov=selCritIID
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
+  bsp <- calcDerivedParms(bsp)
   return(bsp)
 }
 
