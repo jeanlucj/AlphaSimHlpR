@@ -7,7 +7,7 @@
 #' @param initializeFunc Function to initialize the breeding program.
 #' @param productPipeline Function to advance the product pipeline by one generation
 #' @param populationImprovement Function to improve the breeding population and select parents to initiate the next cycle of the breeding scheme
-#' @param bsp  A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP
+#' @param bsp  A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains species / population parameters: nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP
 #' @return A \code{records} object containing the phenotypic records retained of the breeding scheme
 #' 
 #' @details A wrapper to initiate the breeding program then iterate cycles of product pipeline and population improvement

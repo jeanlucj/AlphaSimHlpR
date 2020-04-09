@@ -69,6 +69,8 @@ nCyclesToKeepRecords
 3
 
 # Name of function to advance individuals from one stage to the next
+# selCritIID assumes no information sharing between individuals
+# selCritGRM calculates an additive GRM using markers
 selCritPipeAdv
 selCritIID
 

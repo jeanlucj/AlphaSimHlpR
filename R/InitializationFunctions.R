@@ -88,7 +88,8 @@ initFuncADChk <- function(bsp){
 #' @examples
 #' bsp <- specifyPipeline()
 #' bsp <- specifyPopulation(bsp)
-#' founderHap <- runMacs(nInd=bsp$nFounders, nChr=bsp$nChr, segSites=bsp$segSites)
+#' nF1 <- bsp$nCrosses * bsp$nProgeny
+#' founderHap <- runMacs(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites)
 #' SP <- SimParam$new(founderHap)
 #' SP$addTraitA(nQtlPerChr=bsp$nQTL, var=bsp$genVar)
 #' SP$addSnpChip(bsp$nSNP)

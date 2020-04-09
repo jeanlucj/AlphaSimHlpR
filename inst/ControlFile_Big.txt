@@ -4,6 +4,10 @@ nStages
 stageNames
 SDN CET PYT AYT UY1 UY2
 
+# At what stage do you want to genotype individuals?
+stageToGenotype
+SDN
+
 # Number of parents in the crossing nursery
 nParents
 30
@@ -12,7 +16,7 @@ nCrosses
 200
 # Number of progeny per cross
 nProgeny
-15
+20
 
 # Optimum contributions parameters
 useOptContrib
@@ -45,6 +49,12 @@ nLocs
 # 200 for SDN is a guess
 errVars
 200 146 82 40 37 37
+
+# Parameters to control how seeds are moved from F1 to the Stage 1 trial
+phenoF1toStage1
+TRUE
+errVarPreStage1
+500
 
 # Are the current year phenotypes available for model training
 # when parents are chosen to send to the crossing nursery? YES / NO

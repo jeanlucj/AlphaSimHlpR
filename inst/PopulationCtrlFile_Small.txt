@@ -8,10 +8,6 @@ nChr
 effPopSize
 100
 
-# Number of founders
-nFounders
-100
-
 # Number of segregating sites per chromosome
 segSites
 500

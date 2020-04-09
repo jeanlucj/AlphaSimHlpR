@@ -88,7 +88,6 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     nChr <- 2 # Number of chromosomes
     # Population characteristics
     effPopSize <- 100 # Effective size of population generating founders
-    nFounders <- 50 # Number of founders
     segSites <- 20 # Number of segregating sites per chromosome
     nQTL <- 5 # Number of QTL per chromosome
     nSNP <- 5 # Number of observed SNP per chromosome
@@ -98,7 +97,7 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nChr", "effPopSize", "nFounders", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
+    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
@@ -182,7 +181,6 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' @param selCritPopImprov
 #' @param nChr
 #' @param effPopSize
-#' @param nFounders
 #' @param segSites
 #' @param nQTL
 #' @param nSNP
@@ -209,7 +207,7 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #'                 nCyclesToKeepRecords = 1,
 #'                 selCritPipeAdv = selCritGRM,
 #'                 selCritPopImprov = selCritGRM,
-#'                 nChr = 2,effPopSize = 50, nFounders = 100,
+#'                 nChr = 2,effPopSize = 50,
 #'                 segSites = 100, nQTL = 5, nSNP = 10,
 #'                 genVar = 50, gxeVar = 0, meanDD = 0.05, varDD = 0.25)
 #' test <- runBreedingScheme(replication = 1,nCycles = 1,
@@ -224,7 +222,7 @@ specifyBSP <- function(schemeDF,
                      useCurrentPhenoTrain=TRUE,
                      nCyclesToKeepRecords,
                      selCritPipeAdv,selCritPopImprov,
-                     nChr,effPopSize,nFounders,
+                     nChr,effPopSize,
                      segSites,nQTL,nSNP,genVar,gxeVar,meanDD,varDD){
   bspNew <- list()
   bspNew[["nStages"]] <- nrow(schemeDF)
@@ -245,7 +243,6 @@ specifyBSP <- function(schemeDF,
   bspNew[["selCritPopImprov"]] <- selCritPopImprov
   bspNew[["nChr"]] <- nChr
   bspNew[["effPopSize"]] <- effPopSize
-  bspNew[["nFounders"]] <- nFounders
   bspNew[["segSites"]] <- segSites
   bspNew[["nQTL"]] <- nQTL
   bspNew[["nSNP"]] <- nSNP
@@ -277,6 +274,11 @@ specifyBSP <- function(schemeDF,
 #' DONE nCyclesToKeepRecords=5
 #' DONE selCritPipeAdv=selCritPopImprov=selCritIID
 calcDerivedParms <- function(bsp){
+  # Prevent some errors having to do with inconsistent parameters
+  if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
+    print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites has been set to nSNP + nQTL + 1")
+    bsp$segSites <- bsp$nSNP + bsp$nQTL + 1
+  }
   # Some parms have to be logical
   makeLogical <- function(parm){
     if (is.null(parm)) parm <- FALSE else parm <- as.logical(parm)
