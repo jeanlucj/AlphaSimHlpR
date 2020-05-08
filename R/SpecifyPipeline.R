@@ -158,7 +158,7 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   locationCosts <- max(bsp$nLocs) * bsp$perLocationCost
   
   totalCosts <- develCosts + genotypingCosts + trialCosts + locationCosts
-  return(c(bsp, c(develCosts=develCosts, genotypingCosts=genotypingCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
+  return(c(bsp, c(develCosts=develCosts, genotypingCosts=genotypingCosts, locationCosts=locationCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
 }
 
 #' specifyBSP function
