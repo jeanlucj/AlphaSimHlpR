@@ -43,7 +43,7 @@ popImprov1Cyc <- function(records, bsp, SP){
   strtStgOut <- nrow(records$stageOutputs) - bsp$nStages - 1
   for (i in 1:nrow(stgCyc)){
     stage <- as.integer(rownames(stgCyc)[i])
-    records$stageOutputs$nContribToPar[[strtStgOut + stage]] <- stgCyc[i,]
+    records$stageOutputs$nContribToPar[[strtStgOut + stage]] <- tibble(cycle=as.integer(as.integer(rownames(stgCyc))), nContribToPar=stgCyc[i,])
   }
   records$F1 <- c(records$F1, progeny)
   return(records)
