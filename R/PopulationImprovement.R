@@ -37,8 +37,49 @@ popImprov1Cyc <- function(records, bsp, SP){
     parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
     progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
   }
+  parentsUsed <- unique(c(progeny@mother, progeny@father))
+  stgCyc <- sapply(parentsUsed, whereIsID, records=records)
+  stgCyc <- table(stgCyc[1,], stgCyc[2,])
+  strtStgOut <- nrow(records$stageOutputs) - bsp$nStages - 1
+  for (i in 1:nrow(stgCyc)){
+    stage <- as.integer(rownames(stgCyc)[i])
+    records$stageOutputs$nContribToPar[[strtStgOut + stage]] <- stgCyc[i,]
+  }
   records$F1 <- c(records$F1, progeny)
   return(records)
+}
+
+#' whereIsID function
+#'
+#' Function to figure out where an ID is in the records
+#'
+#' @param id String id use in AlphaSimR
+#' @param records The breeding program \code{records} object. See \code{fillPipeline} for details
+#' @return Integer vector with the stage and cycle where the id was found or c(NA, NA)
+#' 
+#' @details Goes through the records to find the last time id was phenotyped
+#' 
+#' @examples
+#' stgCyc <- whereIsID(id, records)
+#' 
+whereIsID <- function(id, records){
+  found <- FALSE
+  stage <- length(records)
+  while (stage > 2 & !found){
+    stage <- stage - 1
+    for (cycle in length(records[[stage]]):1){
+      found <- id %in% records[[stage]][[cycle]]$id
+      if (found) break
+    }
+  }
+  if (!found){
+    if (id %in% records[[1]]@id){
+      stage <- 1; cycle <- 1
+    } else{
+      stage <- NA; cycle <- NA
+    }
+  }
+  return(c(stage=stage, cycle=cycle))
 }
 
 #' popImprov2Cyc function
