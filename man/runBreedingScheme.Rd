@@ -24,7 +24,7 @@ runBreedingScheme(
 
 \item{populationImprovement}{Function to improve the breeding population and select parents to initiate the next cycle of the breeding scheme}
 
-\item{bsp}{A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains population parameters: nFounders, nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP}
+\item{bsp}{A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains species / population parameters: nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP}
 }
 \value{
 A \code{records} object containing the phenotypic records retained of the breeding scheme

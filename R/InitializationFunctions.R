@@ -114,12 +114,12 @@ fillPipeline <- function(founders, bsp=NULL, SP){
         indToAdv <- sourcePop$id[sort(indToAdv)]
       }
       entries <- records[[1]][indToAdv]
-      varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
+      varE <- bsp$gxyVar + (bsp$gxlVar + bsp$gxyxlVar + bsp$errVars[stage] / bsp$nReps[stage]) / bsp$nLocs[stage]
       # reps=1 because varE is computed above
       entries <- setPheno(entries, varE=varE, reps=1, simParam=SP)
       phenoRec <- phenoRecFromPop(entries, bsp, stage)
       if(!is.null(bsp$checks) & bsp$nChks[stage] > 0){
-        varE <- (bsp$gxeVar + bsp$errVars[stage] / bsp$chkReps[stage]) / bsp$nLocs[stage]
+        varE <- bsp$gxyVar + (bsp$gxlVar + bsp$gxyxlVar + bsp$errVars[stage] / bsp$chkReps[stage]) / bsp$nLocs[stage]
         chkPheno <- setPheno(bsp$checks[1:bsp$nChks[stage]], varE=varE, reps=1, simParam=SP)
         chkRec <- phenoRecFromPop(chkPheno, bsp, stage, checks=T)
         phenoRec <- bind_rows(phenoRec, chkRec)

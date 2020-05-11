@@ -25,8 +25,12 @@ genVar
 40
 
 # Initial genotype x environment interaction variance
-gxeVar
-30
+gxyVar
+15
+gxlVar
+10
+gxyxlVar
+5
 
 # Mean and variance of dominance degree
 meanDD

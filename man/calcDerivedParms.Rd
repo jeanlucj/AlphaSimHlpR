@@ -17,4 +17,14 @@ Once you have read in parameters from a control file, or set them yourself, ther
 }
 \details{
 This function is only called internally by other functions used to specify the pipeline
+
+Should have default if not specified
+DONE stageToGenotype=SDN
+DONE useOptContrib=FALSE, 
+DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
+DONE nChks=0, entryToChkRatio=0
+DONE phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
+DONE useCurrentPhenoTrain=FALSE
+DONE nCyclesToKeepRecords=5
+DONE selCritPipeAdv=selCritPopImprov=selCritIID
 }

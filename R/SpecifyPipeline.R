@@ -22,12 +22,14 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     nQTL <- 5 # Number of QTL per chromosome
     nSNP <- 5 # Number of observed SNP per chromosome
     genVar <- 40 # Initial genetic variance
-    gxeVar <- 30 # Initial genetic variance
+    gxyVar <- 15 # Initial genetype by year interaction variance
+    gxlVar <- 10 # Initial genetype by location interaction variance
+    gxyxlVar <- 5 # Initial genetype by year by location interaction variance
     meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
+    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
@@ -88,18 +90,10 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     #END no control file
   } else{
     parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
-    # Should have default if not specified
-    # stageToGenotype=SDN
-    # useOptContrib=FALSE, nCandOptCont=min(nParents*5, nCand), targetEffPopSize=30
-    # nChks=2, entryToChkRatio=20
-    # phenoF1toStage1=FALSE, errVarPreStage1=genoVar*10
-    # useCurrentPhenoTrain=FALSE
-    # nCyclesToKeepRecords=5
-    # selCritPipeAdv=selCritPopImprov=selCritIID
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
-  bsp <- calcDerivedParms(bsp)
+  bsp <- calcDerivedParms(bsp) # Also sets defaults for missing parameters
   return(bsp)
 }
 
@@ -168,25 +162,28 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' Ideally this is useful for programmatically varying breeding schemes.
 #'
 #' @param schemeDF data.frame columns: stageNames, nReps, nLocs, nChks, nEntries, entryToChkRatio, errVars
-#' @param nParents
-#' @param nCrosses
-#' @param nProgeny
-#' @param useOptContrib
-#' @param nCandOptCont
-#' @param targetEffPopSize
-#' @param useCurrentPhenoTrain
-#' @param nCyclesToKeepRecords
-#' @param selCritPipeAdv
-#' @param selCritPopImprov
-#' @param nChr
-#' @param effPopSize
-#' @param segSites
-#' @param nQTL
-#' @param nSNP
-#' @param genVar
-#' @param gxeVar
-#' @param meanDD
-#' @param varDD
+#' @param nParents integer number of parents to cross
+#' @param nCrosses integer how many crosses to make
+#' @param nProgeny integer how many progeny per cross
+#' @param useOptContrib logical whether to use optimal contributions
+#' @param nCandOptCont integer how many candidates to consider for opt contrib
+#' @param targetEffPopSize numeric target effective population size for OC
+#' @param useCurrentPhenoTrain logical whether to use phenotypes for parent sel
+#' @param nCyclesToKeepRecords integer eliminate data on cycles above this num
+#' @param selCritPipeAdv function used to determine selection criterion for pipe
+#' @param selCritPopImprov function used to determine sel crit for pop improv
+#' @param nChr integer number of chromosomes for the species
+#' @param effPopSize numeric historic effective population size for the species
+#' @param segSites integer number of sites segregating per chromosome
+#' @param nQTL integer number of loci affecting the trait per chromosome
+#' @param nSNP integer number of observed SNPs per chromosome
+#' @param genVar numeric genetic variance of the founders
+#' @param gxeVar numeric genotype by environment variance of the founders
+#' @param gxyVar numeric genotype by year variance of the founders
+#' @param gxlVar numeric genotype by location variance of the founders
+#' @param gxyxlVar numeric genotype by year by location variance of the founders
+#' @param meanDD numeric mean dominance deviation. Set to zero for additive
+#' @param varDD numeric variance across loci of their dominance deviation
 #'
 #' @return a named list of of the parameters to specify a breeding scheme simulation
 #'
@@ -217,12 +214,16 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' @export
 specifyBSP <- function(schemeDF,
                      nParents,nCrosses,nProgeny,
-                     useOptContrib=FALSE,nCandOptCont=NULL,targetEffPopSize=NULL, # if useOptContrib=TRUE, must specify these args
+                     # if useOptContrib=TRUE, must specify these args
+                     useOptContrib=FALSE,nCandOptCont=NULL,targetEffPopSize=NULL,
                      useCurrentPhenoTrain=TRUE,
                      nCyclesToKeepRecords,
                      selCritPipeAdv,selCritPopImprov,
                      nChr,effPopSize,
-                     segSites,nQTL,nSNP,genVar,gxeVar,meanDD,varDD){
+                     segSites,nQTL,nSNP,
+                     genVar,gxeVar,
+                     gxyVar=gxeVar/3,gxlVar=gxeVar/3,gxyxlVar=gxeVar/3,
+                     meanDD,varDD){
   bspNew <- list()
   bspNew[["nStages"]] <- nrow(schemeDF)
   bspNew[["stageNames"]] <- schemeDF$stageNames
@@ -247,6 +248,9 @@ specifyBSP <- function(schemeDF,
   bspNew[["nSNP"]] <- nSNP
   bspNew[["genVar"]] <- genVar
   bspNew[["gxeVar"]] <- gxeVar
+  bspNew[["gxyVar"]] <- gxyVar
+  bspNew[["gxlVar"]] <- gxlVar
+  bspNew[["gxyxlVar"]] <- gxyxlVar
   bspNew[["meanDD"]] <- meanDD
   bspNew[["varDD"]] <- varDD
 
@@ -256,28 +260,28 @@ specifyBSP <- function(schemeDF,
 
 #' calcDerivedParms function
 #'
-#' Once you have read in parameters from a control file, or set them yourself, there are still a few derived parameters that are needed.  This function calculates them.
+#' Once you have read in parameters from a control file, or set them yourself, there are still a few derived parameters that are needed. This function calculates them. If parameters are missing, this function sets them to reasonable defaults:
+#' stageToGenotype=SDN
+#' useOptContrib=FALSE, 
+#' nCandOptCont=nEntries[1], targetEffPopSize=nParents
+#' nChks=0, entryToChkRatio=0
+#' phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
+#' useCurrentPhenoTrain=FALSE
+#' nCyclesToKeepRecords=5
+#' selCritPipeAdv=selCritPopImprov=selCritIID
 #'
 #' @param bsp A list. bsp is short for breeding sheme parameters.
 #' @return A list bsp that extends the input with a few derived parameters
 #'
 #' @details This function is only called internally by other functions used to specify the pipeline
 #'
-#' Should have default if not specified
-#' DONE stageToGenotype=SDN
-#' DONE useOptContrib=FALSE, 
-#' DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
-#' DONE nChks=0, entryToChkRatio=0
-#' DONE phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
-#' DONE useCurrentPhenoTrain=FALSE
-#' DONE nCyclesToKeepRecords=5
-#' DONE selCritPipeAdv=selCritPopImprov=selCritIID
 calcDerivedParms <- function(bsp){
   # Prevent some errors having to do with inconsistent parameters
   if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
     print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites has been set to nSNP + nQTL + 1")
     bsp$segSites <- bsp$nSNP + bsp$nQTL + 1
   }
+  
   # Some parms have to be logical
   makeLogical <- function(parm){
     if (is.null(parm)) parm <- FALSE else parm <- as.logical(parm)
@@ -324,13 +328,26 @@ calcDerivedParms <- function(bsp){
   
   # Enforce other defaults
   if (bsp$useOptContrib){
-    if (length(bsp$nCandOptCont) == 0) bsp$nCandOptCont <- bsp$nEntries[1]
+    if (length(bsp$nCandOptCont) == 0) bsp$nCandOptCont <- min(bsp$nEntries[1], bsp$nParents*10)
     if (length(bsp$targetEffPopSize) == 0) bsp$targetEffPopSize <- bsp$nParents
   }
   if (bsp$phenoF1toStage1){
     if (length(bsp$errVarPreStage1) == 0) bsp$errVarPreStage1 <- bsp$genVar * 20
   }
   if (length(bsp$nCyclesToKeepRecords) == 0) bsp$nCyclesToKeepRecords <- 5
+  
+  # Defaults for GxE variance
+  if (any(is.null(bsp$gxyVar), is.null(bsp$gxlVar), is.null(bsp$gxyxlVar))){
+    if (!is.null(bsp$gxeVar)){
+      if (is.null(bsp$gxyVar)) bsp$gxyVar <- bsp$gxeVar / 3
+      if (is.null(bsp$gxlVar)) bsp$gxlVar <- bsp$gxeVar / 3
+      if (is.null(bsp$gxyxlVar)) bsp$gxyxlVar <- bsp$gxeVar / 3
+    } else{
+      if (is.null(bsp$gxyVar)) bsp$gxyVar <- 0
+      if (is.null(bsp$gxlVar)) bsp$gxlVar <- 0
+      if (is.null(bsp$gxyxlVar)) bsp$gxyxlVar <- 0
+    }
+  }
 
   # Make sure everything has names
   names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- bsp$stageNames

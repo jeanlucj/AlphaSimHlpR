@@ -20,6 +20,8 @@ Pop class object with the progeny from optimum contribution crosses
 }
 \description{
 function uses optiSel to identify number of progeny, allocate mates to minimize inbreeding depression, and return progeny
+NOTE: This function assumes that all selection candidates have been genotyped
+If stageToGenotype has been set to a later stage, that might not be true
 }
 \details{
 Calculate a grm of individuals with high enough crit, then maximize crit subject to a target increase of relatedness consistent with bsp$targetEffPopSize
