@@ -73,7 +73,7 @@ Aspects of polymorphism and linkage disequilibrium are determined by the populat
 
 The number of segregating sites per chromosome includes both QTL and observed SNPs. QTL and SNPs will be selected at random, so there is a chance that some QTL will be observed as SNPs:  
 
-> segSites
+> segSites  
 > 500
 
 #### Genotyping resources  
@@ -321,7 +321,7 @@ Then
 Per year and for each trial stage, the number of plots are:  
 `nPlots <- nEntries * nReps + nChks * chkReps`  
 Note that the `chkReps` are determined by the number of plots used for entries and the `entryToChkRatio`  
-`trialCosts <- nPlots * nLocs * plotCost`
+`trialCosts <- nPlots * nLocs * plotCost`  
 The overall cost of evaluation in the product pipeline is the sum of `trialCosts` across stages.  
 
 ##### Location Costs  
