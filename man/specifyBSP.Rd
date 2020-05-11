@@ -23,6 +23,9 @@ specifyBSP(
   nSNP,
   genVar,
   gxeVar,
+  gxyVar = gxeVar/3,
+  gxlVar = gxeVar/3,
+  gxyxlVar = gxeVar/3,
   meanDD,
   varDD
 )
@@ -30,7 +33,49 @@ specifyBSP(
 \arguments{
 \item{schemeDF}{data.frame columns: stageNames, nReps, nLocs, nChks, nEntries, entryToChkRatio, errVars}
 
-\item{varDD}{}
+\item{nParents}{integer number of parents to cross}
+
+\item{nCrosses}{integer how many crosses to make}
+
+\item{nProgeny}{integer how many progeny per cross}
+
+\item{useOptContrib}{logical whether to use optimal contributions}
+
+\item{nCandOptCont}{integer how many candidates to consider for opt contrib}
+
+\item{targetEffPopSize}{numeric target effective population size for OC}
+
+\item{useCurrentPhenoTrain}{logical whether to use phenotypes for parent sel}
+
+\item{nCyclesToKeepRecords}{integer eliminate data on cycles above this num}
+
+\item{selCritPipeAdv}{function used to determine selection criterion for pipe}
+
+\item{selCritPopImprov}{function used to determine sel crit for pop improv}
+
+\item{nChr}{integer number of chromosomes for the species}
+
+\item{effPopSize}{numeric historic effective population size for the species}
+
+\item{segSites}{integer number of sites segregating per chromosome}
+
+\item{nQTL}{integer number of loci affecting the trait per chromosome}
+
+\item{nSNP}{integer number of observed SNPs per chromosome}
+
+\item{genVar}{numeric genetic variance of the founders}
+
+\item{gxeVar}{numeric genotype by environment variance of the founders}
+
+\item{gxyVar}{numeric genotype by year variance of the founders}
+
+\item{gxlVar}{numeric genotype by location variance of the founders}
+
+\item{gxyxlVar}{numeric genotype by year by location variance of the founders}
+
+\item{meanDD}{numeric mean dominance deviation. Set to zero for additive}
+
+\item{varDD}{numeric variance across loci of their dominance deviation}
 }
 \value{
 a named list of of the parameters to specify a breeding scheme simulation

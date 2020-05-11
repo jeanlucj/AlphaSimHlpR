@@ -13,18 +13,16 @@ calcDerivedParms(bsp)
 A list bsp that extends the input with a few derived parameters
 }
 \description{
-Once you have read in parameters from a control file, or set them yourself, there are still a few derived parameters that are needed.  This function calculates them.
+Once you have read in parameters from a control file, or set them yourself, there are still a few derived parameters that are needed. This function calculates them. If parameters are missing, this function sets them to reasonable defaults:
+stageToGenotype=SDN
+useOptContrib=FALSE, 
+nCandOptCont=nEntries[1], targetEffPopSize=nParents
+nChks=0, entryToChkRatio=0
+phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
+useCurrentPhenoTrain=FALSE
+nCyclesToKeepRecords=5
+selCritPipeAdv=selCritPopImprov=selCritIID
 }
 \details{
 This function is only called internally by other functions used to specify the pipeline
-
-Should have default if not specified
-DONE stageToGenotype=SDN
-DONE useOptContrib=FALSE, 
-DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
-DONE nChks=0, entryToChkRatio=0
-DONE phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
-DONE useCurrentPhenoTrain=FALSE
-DONE nCyclesToKeepRecords=5
-DONE selCritPipeAdv=selCritPopImprov=selCritIID
 }
