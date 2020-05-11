@@ -2,11 +2,19 @@
 title: "AlphaSimHlpR Manual"
 author: "Jean-Luc Jannink"
 date: "5/9/2020"
-output: html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{AlphaSimHlpR_Manual}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(
+  echo = TRUE,
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
 ## Introduction

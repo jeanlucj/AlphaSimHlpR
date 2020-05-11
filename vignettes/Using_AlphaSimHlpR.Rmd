@@ -1,11 +1,11 @@
 ---
-title: "Using AlfSimHlpR to simulate a breeding program with AlphaSimR"
+title: "Using AlphaSimHlpR to simulate a breeding program with AlphaSimR"
 author: 
 - Jean-Luc Jannink
 date: "2020-01-05"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Using AlfSimHlpR}
+  %\VignetteIndexEntry{Using AlphaSimHlpR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -23,16 +23,16 @@ AlphaSimR is a package with many useful functions to simulate plant and animal b
 
 ```{r Load packages}
 # Make sure you have the right packages installed
-neededPackages <- c("AlphaSimR", "dplyr", "tidyr", "plotrix", "lme4", "sommer")
+neededPackages <- c("AlphaSimR", "dplyr", "tidyr", "plotrix", "lme4", "sommer", "optiSel")
 for (p in neededPackages) if (!require(p, character.only=T)) install.packages(p)
-suppressMessages(library(AlfSimHlpR))
+suppressMessages(library(AlphaSimHlpR))
 ```
 
 ### Define simulation settings
 Define the genetic architecture of the population and other breeding scheme parameters in a list `bsp`.
 ```{r Define Population}
-bsp <- specifyPipeline(ctrlFileName="../inst/ControlFile_Small.txt")
-bsp <- specifyPopulation(bsp, ctrlFileName="../inst/PopulationCtrlFile_Small.txt")
+bsp <- specifyPopulation(ctrlFileName="../inst/PopulationCtrlFile_Small.txt")
+bsp <- specifyPipeline(bsp, ctrlFileName="../inst/ControlFile_Small.txt")
 bsp <- specifyCosts(bsp, ctrlFileName="../inst/CostsCtrlFile_Small.txt")
 print(bsp)
 
@@ -49,10 +49,11 @@ replicRecords <- lapply(1:nReplications, runBreedingScheme, nCycles=bsp$nCyclesT
 ### Calculate the means of the breeding programs
 And plot them out
 ```{r Calculate means}
-plotData <- plotRecords(replicRecords, bsp)
-meansList <- lapply(replicRecords, mean_records)
-meanMeans <- elementWise(meansList, mean)
-colnames(meanMeans) <- bsp$stageNames
-rownames(meanMeans) <- paste0("Time", 1:bsp$nCyclesToKeepRecords + (bsp$nCyclesToRun - bsp$nCyclesToKeepRecords))
-print(round(meanMeans, 1))
+plotData <- plotRecords(replicRecords)
+meanMeans <- tapply(plotData$genValMean, list(plotData$year, plotData$stage), mean)
+meanMeans <- meanMeans[,c("F1", bsp$stageNames)]
+stdErrMeans <- tapply(plotData$genValMean, list(plotData$year, plotData$stage), std.error)
+stdErrMeans <- stdErrMeans[,c("F1", bsp$stageNames)]
+print(meanMeans)
+print(stdErrMeans)
 ```
