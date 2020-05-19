@@ -22,14 +22,12 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     nQTL <- 5 # Number of QTL per chromosome
     nSNP <- 5 # Number of observed SNP per chromosome
     genVar <- 40 # Initial genetic variance
-    gxyVar <- 15 # Initial genetype by year interaction variance
-    gxlVar <- 10 # Initial genetype by location interaction variance
-    gxyxlVar <- 5 # Initial genetype by year by location interaction variance
+    gxeVar <- 30 # Initial genetic variance
     meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD")
+    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
@@ -90,10 +88,11 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     #END no control file
   } else{
     parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    # Any parameter not specified will have a default set in calcDerivedParms
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
-  bsp <- calcDerivedParms(bsp) # Also sets defaults for missing parameters
+  bsp <- calcDerivedParms(bsp)
   return(bsp)
 }
 
@@ -140,7 +139,7 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   # NOTE for develCosts not accounting for number of rapid cycles
   develCosts <- bsp$nCrosses * bsp$nProgeny * bsp$crossingCost
   
-  if (is.null(bsp$stageToGenotype)){
+  if (is.null(bsp$stageToGenotype) | bsp$stageToGenotype == "F1"){
     nGeno <- bsp$nCrosses * bsp$nProgeny
   } else{
     nGeno <- bsp$nEntries[bsp$stageToGenotype]
@@ -179,9 +178,6 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' @param nSNP integer number of observed SNPs per chromosome
 #' @param genVar numeric genetic variance of the founders
 #' @param gxeVar numeric genotype by environment variance of the founders
-#' @param gxyVar numeric genotype by year variance of the founders
-#' @param gxlVar numeric genotype by location variance of the founders
-#' @param gxyxlVar numeric genotype by year by location variance of the founders
 #' @param meanDD numeric mean dominance deviation. Set to zero for additive
 #' @param varDD numeric variance across loci of their dominance deviation
 #'
@@ -214,16 +210,12 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' @export
 specifyBSP <- function(schemeDF,
                      nParents,nCrosses,nProgeny,
-                     # if useOptContrib=TRUE, must specify these args
-                     useOptContrib=FALSE,nCandOptCont=NULL,targetEffPopSize=NULL,
+                     useOptContrib=FALSE,nCandOptCont=NULL,targetEffPopSize=NULL, # if useOptContrib=TRUE, must specify these args
                      useCurrentPhenoTrain=TRUE,
                      nCyclesToKeepRecords,
                      selCritPipeAdv,selCritPopImprov,
                      nChr,effPopSize,
-                     segSites,nQTL,nSNP,
-                     genVar,gxeVar,
-                     gxyVar=gxeVar/3,gxlVar=gxeVar/3,gxyxlVar=gxeVar/3,
-                     meanDD,varDD){
+                     segSites,nQTL,nSNP,genVar,gxeVar,meanDD,varDD){
   bspNew <- list()
   bspNew[["nStages"]] <- nrow(schemeDF)
   bspNew[["stageNames"]] <- schemeDF$stageNames
@@ -248,9 +240,6 @@ specifyBSP <- function(schemeDF,
   bspNew[["nSNP"]] <- nSNP
   bspNew[["genVar"]] <- genVar
   bspNew[["gxeVar"]] <- gxeVar
-  bspNew[["gxyVar"]] <- gxyVar
-  bspNew[["gxlVar"]] <- gxlVar
-  bspNew[["gxyxlVar"]] <- gxyxlVar
   bspNew[["meanDD"]] <- meanDD
   bspNew[["varDD"]] <- varDD
 
@@ -260,21 +249,22 @@ specifyBSP <- function(schemeDF,
 
 #' calcDerivedParms function
 #'
-#' Once you have read in parameters from a control file, or set them yourself, there are still a few derived parameters that are needed. This function calculates them. If parameters are missing, this function sets them to reasonable defaults:
-#' stageToGenotype=SDN
-#' useOptContrib=FALSE, 
-#' nCandOptCont=nEntries[1], targetEffPopSize=nParents
-#' nChks=0, entryToChkRatio=0
-#' phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
-#' useCurrentPhenoTrain=FALSE
-#' nCyclesToKeepRecords=5
-#' selCritPipeAdv=selCritPopImprov=selCritIID
+#' Once you have read in parameters from a control file, or set them yourself, there are still a few derived parameters that are needed.  This function calculates them.
 #'
 #' @param bsp A list. bsp is short for breeding sheme parameters.
 #' @return A list bsp that extends the input with a few derived parameters
 #'
 #' @details This function is only called internally by other functions used to specify the pipeline
 #'
+#' Should have default if not specified
+#' DONE stageToGenotype=SDN
+#' DONE useOptContrib=FALSE, 
+#' DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
+#' DONE nChks=0, entryToChkRatio=0
+#' DONE phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
+#' DONE useCurrentPhenoTrain=FALSE
+#' DONE nCyclesToKeepRecords=5
+#' DONE selCritPipeAdv=selCritPopImprov=selCritIID
 calcDerivedParms <- function(bsp){
   # Prevent some errors having to do with inconsistent parameters
   if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
@@ -314,10 +304,10 @@ calcDerivedParms <- function(bsp){
   }
   
   # Figure out how many checks to add to each stage
-  # I think this enforces defaults also
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
   }
+  if (is.null(bsp$entryToChkRatio)) bsp$entryToChkRatio <- integer(bsp$nStages)
   nPlots <- bsp$nEntries * bsp$nReps
   nChkPlots <- nPlots / bsp$entryToChkRatio
   nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
@@ -350,8 +340,63 @@ calcDerivedParms <- function(bsp){
   }
 
   # Make sure everything has names
-  names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- bsp$stageNames
+  names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- names(bsp$entryToChkRatio) <- bsp$stageNames
   bsp <- c(bsp, list(chkReps=chkReps), list(checks=NULL))
+  return(bsp)
+}
+
+#' adjustBudget function
+#'
+#' Function to call once you have fully specified the costs but you want to adjust the size of the different stages so that the overall scheme budget matches some value.
+#'
+#' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
+#' @param targetBudget Numeric value that you want the budget adjusted to
+#' @param targetStages Character vector with stage names to be changed such that they become bigger or smaller to achieve the target budget
+#' 
+#' @return A revised bsp with the sizes of the target stages changed to match.
+#'
+#' @details Call this function after running specifyCosts.
+#'
+#' @examples
+#' bsp <- adjustBudget(bsp, targetBudget=50000, targetStages=c("CET", "AYT", "UYT"))
+#'
+#' @export
+adjustBudget <- function(bsp, targetBudget, targetStages){
+  budgDiff <- (targetBudget - bsp$totalCosts) / length(targetStages)
+  for (stage in targetStages){
+    costPerInd <- bsp$nReps[stage] * bsp$nLocs[stage] * bsp$plotCost[stage] * (1 + 1 / bsp$entryToChkRatio[stage])
+    if (stage == bsp$stageToGenotype){
+        costPerInd <- costPerInd + bsp$qcGenoCost + bsp$wholeGenomeCost
+    }
+    chngEntries <- floor(budgDiff / costPerInd)
+    nEntriesNow <- bsp$nEntries[stage] + chngEntries
+    if (nEntriesNow < 0) stop("adjustBudget: trying to decrease budget too much")
+    bsp$nEntries[stage] <- nEntriesNow
+  }
+  
+  # Rerun through this to make sure checks numbers are right
+  pairwiseComp <- function(vec1, vec2, fnc){
+    return(apply(cbind(vec1, vec2), 1, fnc))
+  }
+  nPlots <- bsp$nEntries * bsp$nReps
+  nChkPlots <- nPlots / bsp$entryToChkRatio
+  nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
+  chkReps <- ceiling(nChkPlots / bsp$nChks)
+  # Safety if nChks or entryToChkRatio misunderstood
+  bsp$nChks <- if_else(bsp$entryToChkRatio == 0, 0, bsp$nChks)
+  chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
+  bsp$chkReps <- chkReps
+  
+  if (is.null(bsp$stageToGenotype) | bsp$stageToGenotype == "F1"){
+    nGeno <- bsp$nCrosses * bsp$nProgeny
+  } else{
+    nGeno <- bsp$nEntries[bsp$stageToGenotype]
+  }
+  bsp$genotypingCosts <- nGeno * (bsp$qcGenoCost + bsp$wholeGenomeCost)
+  
+  bsp$trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
+  
+  bsp$totalCosts <- bsp$develCosts + bsp$genotypingCosts + bsp$trialCosts + bsp$locationCosts
   return(bsp)
 }
 

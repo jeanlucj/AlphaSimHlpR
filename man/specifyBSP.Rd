@@ -23,9 +23,6 @@ specifyBSP(
   nSNP,
   genVar,
   gxeVar,
-  gxyVar = gxeVar/3,
-  gxlVar = gxeVar/3,
-  gxyxlVar = gxeVar/3,
   meanDD,
   varDD
 )
@@ -66,12 +63,6 @@ specifyBSP(
 \item{genVar}{numeric genetic variance of the founders}
 
 \item{gxeVar}{numeric genotype by environment variance of the founders}
-
-\item{gxyVar}{numeric genotype by year variance of the founders}
-
-\item{gxlVar}{numeric genotype by location variance of the founders}
-
-\item{gxyxlVar}{numeric genotype by year by location variance of the founders}
 
 \item{meanDD}{numeric mean dominance deviation. Set to zero for additive}
 
