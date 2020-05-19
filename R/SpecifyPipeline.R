@@ -368,7 +368,7 @@ adjustBudget <- function(bsp, targetBudget, targetStages){
     if (stage == bsp$stageToGenotype){
         costPerInd <- costPerInd + bsp$qcGenoCost + bsp$wholeGenomeCost
     }
-    chngEntries <- floor(budgDiff / costPerInd)
+    chngEntries <- round(budgDiff / costPerInd)
     nEntriesNow <- bsp$nEntries[stage] + chngEntries
     if (nEntriesNow < 0) stop("adjustBudget: trying to decrease budget too much")
     bsp$nEntries[stage] <- nEntriesNow
