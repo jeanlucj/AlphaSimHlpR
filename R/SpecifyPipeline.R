@@ -22,12 +22,14 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     nQTL <- 5 # Number of QTL per chromosome
     nSNP <- 5 # Number of observed SNP per chromosome
     genVar <- 40 # Initial genetic variance
-    gxeVar <- 30 # Initial genetic variance
+    gxyVar <- 15 # Initial genetic x environment variances
+    gxlVar <- 10
+    gxyxlVar <- 5
     meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "meanDD", "varDD")
+    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
