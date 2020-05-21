@@ -131,29 +131,78 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
   }
   names(bspNew$plotCosts) <- bsp$stageNames
   bsp <- c(bsp, bspNew)
+  
+  bsp <- calculateBudget(bsp)
+  return(bsp)
+}
+
+#' calculateBudget function
+#'
+#' Once the costs are specified in bsp, this function calculates the total annual budget for the breeding scheme
+#'
+#' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
+#' @param ctrlFileName The name of the text file with parameter values specifying the breeding costs. Must include the path to the file. If NULL a toy example simulation will be set up
+#' @return The bsp list with augmented or modified intermediate and total costs
+#'
+#' @details Call this function once costs have been specified
+#'
+#' @examples
+#' bsp <- calculateBudget(bsp)
+#'
+#' @export
+calculateBudget <- function(bsp){
   # Calculate the program yearly cost
   # Assumptions
-  # 1. Every new progeny is both QC and whole-genome genotyped. The number of
-  # new progeny is nCrosses*nProgeny, so the cost is
-  # nCrosses*nProgeny*(crossingCost + qcGenoCost + wholeGenomeCost)
-  # 2. The number of plots in each trial is nEntries*nReps + nChks*chkReps so the cost
-  # of the trial is (nEntries*nReps + nChks*chkReps)*plotCost*nLocs
+  # 1. Genotyping means both QC and whole-genome genotyped, so the cost is
+  # nGeno*(qcGenoCost + wholeGenomeCost), where nGeno depends on the stage
+  # genotyped.
+  # 2. The number of plots in each trial is nEntries*nReps + nChks*chkReps so 
+  # the cost of the trial is (nEntries*nReps + nChks*chkReps)*plotCost*nLocs
   # NOTE for develCosts not accounting for number of rapid cycles
-  develCosts <- bsp$nCrosses * bsp$nProgeny * bsp$crossingCost
+  bsp$develCosts <- bsp$nCrosses * bsp$nProgeny * bsp$crossingCost
   
   if (is.null(bsp$stageToGenotype) | bsp$stageToGenotype == "F1"){
     nGeno <- bsp$nCrosses * bsp$nProgeny
   } else{
     nGeno <- bsp$nEntries[bsp$stageToGenotype]
   }
-  genotypingCosts <- nGeno * (bsp$qcGenoCost + bsp$wholeGenomeCost)
+  bsp$genotypingCosts <- nGeno * (bsp$qcGenoCost + bsp$wholeGenomeCost)
   
-  trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
+  bsp$trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
   
-  locationCosts <- max(bsp$nLocs) * bsp$perLocationCost
+  bsp$locationCosts <- max(bsp$nLocs) * bsp$perLocationCost
   
-  totalCosts <- develCosts + genotypingCosts + trialCosts + locationCosts
-  return(c(bsp, c(develCosts=develCosts, genotypingCosts=genotypingCosts, locationCosts=locationCosts, trialCosts=trialCosts, totalCosts=totalCosts)))
+  bsp$totalCosts <- bsp$develCosts + bsp$genotypingCosts + bsp$trialCosts + bsp$locationCosts
+  
+  return(bsp)
+}
+
+#' calculateChkReps function
+#'
+#' Once entries are specified, calculate the number of times checks will be replicated. Each rep must have at least one check.
+#'
+#' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
+#' @return The bsp list with updated chkReps
+#'
+#' @details Call this function once nEntries, nReps, nChks, and entryToChkRatio have been specified
+#'
+#' @examples
+#' bsp <- calculateChkReps(bsp)
+#'
+calculateChkReps <- function(bsp){
+  # Rerun through this to make sure checks numbers are right
+  pairwiseComp <- function(vec1, vec2, fnc){
+    return(apply(cbind(vec1, vec2), 1, fnc))
+  }
+  nChkPlots <- bsp$nEntries * bsp$nReps / bsp$entryToChkRatio
+  nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
+  chkReps <- ceiling(nChkPlots / bsp$nChks)
+  # Safety if nChks or entryToChkRatio misunderstood
+  bsp$nChks <- if_else(bsp$entryToChkRatio == 0, 0, bsp$nChks)
+  chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
+  bsp$chkReps <- chkReps
+  
+  return(bsp)
 }
 
 #' specifyBSP function
@@ -347,58 +396,50 @@ calcDerivedParms <- function(bsp){
   return(bsp)
 }
 
-#' adjustBudget function
+#' adjustEntriesToBudget function
 #'
-#' Function to call once you have fully specified the costs but you want to adjust the size of the different stages so that the overall scheme budget matches some value.
+#' Specify a budget, the number of entries for a set of stages, and the stages to adjust to hit the budget. The rules coming out are that the first stage can't be bigger than the number of F1s, and no later stage can be bigger than an earlier stage. The function will not adjust if the rules are broken but will report.
 #'
 #' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
 #' @param targetBudget Numeric value that you want the budget adjusted to
-#' @param targetStages Character vector with stage names to be changed such that they become bigger or smaller to achieve the target budget
+#' @param fixedEntryStages Named integer vector indicating entry numbers for specific stages
+#' @param adjustStages Character vector with names of stages to be changed such that the target budget is achieved
 #' 
 #' @return A revised bsp with the sizes of the target stages changed to match.
 #'
 #' @details Call this function after running specifyCosts.
 #'
 #' @examples
-#' bsp <- adjustBudget(bsp, targetBudget=50000, targetStages=c("CET", "AYT", "UYT"))
+#' bsp <- adjustEntriesToBudget(bsp, targetBudget=50000, fixedEntryStages=c(PYT=100), adjustStages=c("CET", "AYT", "UYT"))
 #'
 #' @export
-adjustBudget <- function(bsp, targetBudget, targetStages){
-  budgDiff <- (targetBudget - bsp$totalCosts) / length(targetStages)
-  for (stage in targetStages){
-    costPerInd <- bsp$nReps[stage] * bsp$nLocs[stage] * bsp$plotCost[stage] * (1 + 1 / bsp$entryToChkRatio[stage])
+adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages, adjustStages){
+  bsp$nEntries[names(fixedEntryStages)] <- fixedEntryStages
+  bsp <- calculateChkReps(bsp)
+  bsp <- calculateBudget(bsp)
+  budgDiff <- (targetBudget - bsp$totalCosts) / length(adjustStages)
+  
+  for (stage in adjustStages){
+    costPerInd <- bsp$nReps[stage] * bsp$nLocs[stage] * bsp$plotCost[stage]
+    if (bsp$entryToChkRatio[stage] > 0) costPerInd <- costPerInd * (1 + 1 / bsp$entryToChkRatio[stage])
     if (stage == bsp$stageToGenotype){
         costPerInd <- costPerInd + bsp$qcGenoCost + bsp$wholeGenomeCost
     }
     chngEntries <- round(budgDiff / costPerInd)
     nEntriesNow <- bsp$nEntries[stage] + chngEntries
-    if (nEntriesNow < 0) stop("adjustBudget: trying to decrease budget too much")
+    if (nEntriesNow < 0) stop(paste("adjustEntriesToBudget: needed nEntries for stage", stage, "below zero"))
     bsp$nEntries[stage] <- nEntriesNow
   }
   
-  # Rerun through this to make sure checks numbers are right
-  pairwiseComp <- function(vec1, vec2, fnc){
-    return(apply(cbind(vec1, vec2), 1, fnc))
+  bsp <- calculateBudget(bsp)
+  # Check to make sure no later stages are bigger than earlier stages
+  for (stage in 1:bsp$nStages){
+    if (stage == 1){
+      if (bsp$nEntries[stage] > bsp$nCrosses * bsp$nProgeny) stop("Stage 1 requires more individuals than the number of F1 progeny created")
+    } else{
+      if (bsp$nEntries[stage] > bsp$nEntries[stage-1]) stop(paste("Stage", stage, " requires more individuals than available from stage", stage - 1))
+    }
   }
-  nPlots <- bsp$nEntries * bsp$nReps
-  nChkPlots <- nPlots / bsp$entryToChkRatio
-  nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
-  chkReps <- ceiling(nChkPlots / bsp$nChks)
-  # Safety if nChks or entryToChkRatio misunderstood
-  bsp$nChks <- if_else(bsp$entryToChkRatio == 0, 0, bsp$nChks)
-  chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
-  bsp$chkReps <- chkReps
-  
-  if (is.null(bsp$stageToGenotype) | bsp$stageToGenotype == "F1"){
-    nGeno <- bsp$nCrosses * bsp$nProgeny
-  } else{
-    nGeno <- bsp$nEntries[bsp$stageToGenotype]
-  }
-  bsp$genotypingCosts <- nGeno * (bsp$qcGenoCost + bsp$wholeGenomeCost)
-  
-  bsp$trialCosts <- ((bsp$nEntries * bsp$nReps + bsp$nChks * bsp$chkReps) * bsp$nLocs) %*% bsp$plotCost
-  
-  bsp$totalCosts <- bsp$develCosts + bsp$genotypingCosts + bsp$trialCosts + bsp$locationCosts
   return(bsp)
 }
 
