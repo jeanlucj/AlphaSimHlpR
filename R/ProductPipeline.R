@@ -29,7 +29,7 @@ prodPipeFncChk <- function(records, bsp, SP){
   year <- max(records$stageOutputs$year)+1 # Add a year relative to last year
   nF1 <- bsp$nCrosses * bsp$nProgeny 
   nGenoRec <- nInd(records$F1)
-  # Sample from the most-recent F1s
+  # Analyze the most-recent F1s
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
   records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year))

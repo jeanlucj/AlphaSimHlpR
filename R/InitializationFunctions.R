@@ -60,6 +60,7 @@ initFuncADChk <- function(bsp){
   
   # New global simulation parameters from founder haplotypes
   SP <- SimParam$new(founderHap)
+  SP$restrSegSites(overlap=FALSE)
   # Additive and dominance trait architecture
   SP$addTraitAD(nQtlPerChr=bsp$nQTL, var=bsp$genVar, meanDD=bsp$meanDD, varDD=bsp$varDD, useVarA=FALSE)
   # Observed SNPs per chromosome

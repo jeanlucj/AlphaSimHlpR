@@ -330,7 +330,7 @@ calcDerivedParms <- function(bsp){
   }
   bsp$useCurrentPhenoTrain <- makeLogical(bsp$useCurrentPhenoTrain)
   bsp$useOptContrib <- makeLogical(bsp$useOptContrib)
-  bsp$phenoF1toStage1 <- makeLogical(bsp$useOptContrib)
+  bsp$phenoF1toStage1 <- makeLogical(bsp$phenoF1toStage1)
 
   # In case the function is referred by name, replace with actual function
   if (length(bsp$selCritPipeAdv) == 0) bsp$selCritPipeAdv <- selCritIID
@@ -349,7 +349,9 @@ calcDerivedParms <- function(bsp){
   }
   
   # Stop and warn user if stageToGenotype is not a named stage
-  if (length(bsp$stageToGenotype)==0) bsp$stageToGenotype <- "SDN"
+  if (length(bsp$stageToGenotype)==0){
+    bsp$stageToGenotype <- bsp$stageNames[1]
+  }
   if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
       stop("The stageToGenotype is not one of the pipeline stages")
   }
@@ -373,7 +375,9 @@ calcDerivedParms <- function(bsp){
     if (length(bsp$targetEffPopSize) == 0) bsp$targetEffPopSize <- bsp$nParents
   }
   if (bsp$phenoF1toStage1){
-    if (length(bsp$errVarPreStage1) == 0) bsp$errVarPreStage1 <- bsp$genVar * 20
+    if (length(bsp$errVarPreStage1) == 0){
+      bsp$errVarPreStage1 <- bsp$errVars[1] * 20
+    }
   }
   if (length(bsp$nCyclesToKeepRecords) == 0) bsp$nCyclesToKeepRecords <- 5
   
