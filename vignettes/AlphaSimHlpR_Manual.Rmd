@@ -1,8 +1,12 @@
 ---
 title: "AlphaSimHlpR Manual"
 author: "Jean-Luc Jannink"
-date: "5/9/2020"
-output: rmarkdown::html_vignette
+date: "6/1/2020"
+output: 
+  rmarkdown::html_document:
+    fig_width: 8
+    toc: true
+    toc_float: true
 vignette: >
   %\VignetteIndexEntry{AlphaSimHlpR_Manual}
   %\VignetteEngine{knitr::rmarkdown}
@@ -24,12 +28,12 @@ if (!require("devtools")) install.packages("devtools")
 devtools::install_github("jeanlucj/AlphaSimHlpR")
 suppressMessages(library(AlphaSimHlpR))
 ```
-The `suppressMessages` function is not strictly necessary, but removes a fair amount of output that doesn't seem necessary.  
+The `suppressMessages` function is not strictly necessary, but removes a fair amount of output that doesn't seem very informative.  
 The package is intended to simplify the simulation of a two-part breeding program, as defined by Gaynor et al. (2017)[^1]. The package assumes all individuals are outcrossed and clonally propagated.  
 
 [^1]:Gaynor, R.C., G. Gorjanc, A.R. Bentley, E.S. Ober, P. Howell, et al. 2017. A Two-Part Strategy for Using Genomic Selection to Develop Inbred Lines. Crop Sci. doi: 10.2135/cropsci2016.09.0742.  
 
-![Illustration of a generic two-part breeding strategy with a population improvement part and a product development part](TwoPartStrategy.png)  
+![Illustration of a generic two-part breeding strategy with a population improvement part and a product development part](TwoPartStrategy.png){ width=80% }  
 
 ## Specifying simulation parameters
 Three text control files are required to specify simulation parameters: a population control file, a scheme control file, and a costs control file. The control files need to be specified in that order:
@@ -88,12 +92,19 @@ The number of QTL per chromosome:
 > nQTL  
 > 50  
 
-`AlphaSimHlpR` assumes no epistasis. Single genes have additive and dominance effects. The distribution of the degree of dominance is set by:   
+Single genes have additive and dominance effects. The distribution of the degree of dominance is set by:   
 
 > meanDD  
 > 0.8  
 > varDD  
 > 0.01  
+
+It is also possible to specify a certain fraction of variance determined by additive by additive epistasis, set by:
+
+> relAA  
+> 0.5  
+
+Note that this relative fraction assumes allele frequencies of 0.5, where AxA effects are largest. In reality, because MAF < 0.5, relative epistasis will be lower.
 
 #### Genetic variance  
 The genetic variance among founders is given in the population control file. The genetic variance will change as individuals are selected and move down the product development pipeline (see below). Those changes will depend on the genetic architecture as well as selection intensities. It is worth checking whether changes in genetic variance observed in the simulation match at all observations from historical data in the breeding program. The parameter to set founder genetic variance is:  
@@ -329,12 +340,20 @@ The overall cost of evaluation in the product pipeline is the sum of `trialCosts
 
 All of these costs are summed to get the overall breeding scheme cost.
 
+##### Adjusting stage sizes to hit a budget  
+If you have a predetermined budget that you want to hit (for example, if you are trying to compare schemes with different `nStages`, but assuming the same budget), use `adjustEntriesToBudget`, as follows:  
+
+1. specify the breeding scheme using `specifyPopulation`, `specifyPipeline`, and `specifyCosts`.  
+2. call `adjustEntriesToBudget` with the resulting `bsp`, a target budget, and which stages should be fixed versus adjusted.  
+3. call `runBreedingScheme` with the `bsp` that is output from `adjustEntriesToBudget`.  
+The function changes only the number of entries in each stage, everything else is kept constant.  
+
 ## `AlphaSimHlpR` outputs  
 One simulation or multiple replicated simulations can be run by:  
 ```{r One or more simulations, eval=FALSE}
-simOut <- runBreedingScheme(nCycles=bsp$nCyclesToRun, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1Cyc, bsp=bsp)
+simOut <- runBreedingScheme(nCycles=bsp$nCyclesToRun, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp=bsp)
 
-repSimOut <- lapply(1:nReplications, runBreedingScheme, nCycles=bsp$nCyclesToRun, initializeFunc=initFuncADChk, productPipeline=prodPipeFncChk, populationImprovement=popImprov1Cyc, bsp)
+repSimOut <- lapply(1:nReplications, runBreedingScheme, nCycles=bsp$nCyclesToRun, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp)
 ```
 Then, the object `simOut` will be a list containing three objects:  
 
@@ -359,4 +378,9 @@ Simple plots of gain from selection can be made if you have replicated simulatio
 ```{r Plot replicated simulations, eval=FALSE}
 plotData <- plotRecords(repSimOut)
 ```
-The plots will show the change of the population mean over time and of the genotypic value of the individual that had the highest estimated value (not necessarily the indvidual with the true highest genotypic value, since the estimated value will have error).
+The plots will show:
+
+1. The change of the population mean over time.  
+2. The genotypic value of the individual that had the highest estimated value (not necessarily the indvidual with the true highest genotypic value, since the estimated value will have error).  
+3. The change of the population genetic standard deviation over time.  
+4. The average _increase_ of F1 population mean going from one year to the next, and the average change of genotypic value _within a cycle_ going from F1 population mean to genotypic value of the individual with the highest estimated value in the last cycle, then divided by the number of years the product pipeline takes (nStages + 1, where the +1 comes from the assumption that it takes a year to make a cross).

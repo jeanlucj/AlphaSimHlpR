@@ -424,7 +424,7 @@ calcDerivedParms <- function(bsp){
 #' bsp <- adjustEntriesToBudget(bsp, targetBudget=50000, fixedEntryStages=c(PYT=100), adjustStages=c("CET", "AYT", "UYT"))
 #'
 #' @export
-adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adjustStages=bsp$stageNames){
+adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adjustStages=setdiff(bsp$stageNames, fixedEntryStages)){
   if (!is.null(fixedEntryStages)){
     bsp$nEntries[names(fixedEntryStages)] <- fixedEntryStages
   }
