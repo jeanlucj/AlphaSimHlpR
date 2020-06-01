@@ -4,7 +4,12 @@
 \alias{adjustEntriesToBudget}
 \title{adjustEntriesToBudget function}
 \usage{
-adjustEntriesToBudget(bsp, targetBudget, fixedEntryStages, adjustStages)
+adjustEntriesToBudget(
+  bsp,
+  targetBudget,
+  fixedEntryStages = NULL,
+  adjustStages = bsp$stageNames
+)
 }
 \arguments{
 \item{bsp}{A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters}

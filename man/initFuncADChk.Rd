@@ -7,23 +7,14 @@
 initFuncADChk(bsp)
 }
 \arguments{
-\item{bsp}{A list of breeding scheme parameters.  See \code{specifyPipeline} and \code{specifyPopulation}}
+\item{bsp}{A list of breeding scheme parameters}
 }
 \value{
-A list containing: 1. The simulation parameters in \code{SP}; 2. The initial records of the breeding program in \code{records}. See \code{fillPipeline} for details; 3. A completed \code{bsp} object
+The return of \code{initializeScheme}
 }
 \description{
-function to initialize simulation of a breeding program. A single additive-dominance trait is simulated. Check are used in this scheme
+Deprecated function to initialize simulation of a breeding program
 }
 \details{
-Creates the founders and the initial records at the beginning of the simulation of a breeding program.
-}
-\examples{
-bsp <- specifyPipeline()
-bsp <- specifyPopulation(bsp)
-initList <- initializeFunc(bsp)
-SP <- initList$SP
-bsp <- initList$bsp
-records <- initList$records
-
+Deprecated in favor of the simply-named \code{initializeScheme}
 }

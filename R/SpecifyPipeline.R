@@ -26,10 +26,11 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     gxlVar <- 10
     gxyxlVar <- 5
     meanDD <- 0.8; varDD <- 0.01 # Mean and variance of dominance degree
+    relAA <- 0 # Relative variance that is AxA
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD")
+    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD", "relAA")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
@@ -356,6 +357,11 @@ calcDerivedParms <- function(bsp){
       stop("The stageToGenotype is not one of the pipeline stages")
   }
   
+  # Genetic architecture defaults
+  if (is.null(bsp$meanDD)) bsp$meanDD <- 0
+  if (is.null(bsp$varDD)) bsp$varDD <- 0
+  if (is.null(bsp$relAA)) bsp$relAA <- 0
+  
   # Figure out how many checks to add to each stage
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
@@ -380,6 +386,7 @@ calcDerivedParms <- function(bsp){
     }
   }
   if (length(bsp$nCyclesToKeepRecords) == 0) bsp$nCyclesToKeepRecords <- 5
+  if (length(bsp$analyzeInbreeding) == 0) bsp$analyzeInbreeding <- 0
   
   # Defaults for GxE variance
   if (any(is.null(bsp$gxyVar), is.null(bsp$gxlVar), is.null(bsp$gxyxlVar))){
@@ -418,7 +425,7 @@ calcDerivedParms <- function(bsp){
 #'
 #' @export
 adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adjustStages=bsp$stageNames){
-  if (!is.null(fixedEntryStages){
+  if (!is.null(fixedEntryStages)){
     bsp$nEntries[names(fixedEntryStages)] <- fixedEntryStages
   }
   bsp <- calculateChkReps(bsp)

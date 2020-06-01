@@ -1,4 +1,17 @@
 #' prodPipeFncChk function
+#' @param records The breeding program \code{records} object
+#' @param bsp A list of breeding scheme parameters
+#' @param SP the AlphaSimR SimParam object
+#' @return The return from \code{productPipeline}
+#' 
+#' @details Function deprecated in favor of the simply named \code{productPipeline}
+#' @export
+prodPipeFncChk <- function(records, bsp, SP){
+  print("prodPipeFncChk deprecated. Please use productPipeline")
+  return(productPipeline(records, bsp, SP))
+}
+
+#' productPipeline function
 #'
 #' function to advance a simulated breeding product pipeline forward by one generation. See Gaynor et al. 2017 for the general idea.
 #'
@@ -16,11 +29,11 @@
 #' SP <- initList$SP
 #' bsp <- initList$bsp
 #' records <- initList$records
-#' records <- prodPipeFncChk(records, bsp, SP)
+#' records <- productPipeline(records, bsp, SP)
 #' records <- popImprov1(records, bsp, SP)
 #'
 #' @export
-prodPipeFncChk <- function(records, bsp, SP){
+productPipeline <- function(records, bsp, SP){
   # Calculate the selection criterion. selCritPipeAdv has to be given in bsp
   candidates <- records$F1@id
   selCrit <- bsp$selCritPipeAdv(records, candidates, bsp, SP)

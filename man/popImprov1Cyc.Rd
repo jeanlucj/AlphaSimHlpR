@@ -29,7 +29,7 @@ initList <- initializeFunc(bsp)
 SP <- initList$SP
 bsp <- initList$bsp
 records <- initList$records
-records <- prodPipeSimp(records, bsp, SP)
+records <- productPipeline(records, bsp, SP)
 records <- popImprov1(records, bsp, SP)
 
 }

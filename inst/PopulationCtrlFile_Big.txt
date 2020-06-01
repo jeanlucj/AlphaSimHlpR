@@ -33,3 +33,5 @@ meanDD
 0.8
 varDD
 0.01
+relAA
+0.5
