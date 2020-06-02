@@ -166,7 +166,8 @@ grmPhenoEval <- function(phenoDF, grm){
              rcov= ~ units,
              weights=errVar,
              data=phenoDF,
-             verbose=F)
+             verbose=F,
+             date.warning=F)
   return(fm$U[[1]][[1]])
 }
 
