@@ -318,6 +318,11 @@ specifyBSP <- function(schemeDF,
 #' DONE nCyclesToKeepRecords=5
 #' DONE selCritPipeAdv=selCritPopImprov=selCritIID
 calcDerivedParms <- function(bsp){
+  # Function to check if a parameter has no value
+  nv <- function(parm){
+    is.null(parm) | length(parm) == 0
+  }
+  
   # Prevent some errors having to do with inconsistent parameters
   if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
     print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites has been set to nSNP + nQTL + 1")
@@ -326,7 +331,7 @@ calcDerivedParms <- function(bsp){
   
   # Some parms have to be logical
   makeLogical <- function(parm){
-    if (is.null(parm)) parm <- FALSE else parm <- as.logical(parm)
+    if (nv(parm)) parm <- FALSE else parm <- as.logical(parm)
     return(parm)
   }
   bsp$useCurrentPhenoTrain <- makeLogical(bsp$useCurrentPhenoTrain)
@@ -334,8 +339,8 @@ calcDerivedParms <- function(bsp){
   bsp$phenoF1toStage1 <- makeLogical(bsp$phenoF1toStage1)
 
   # In case the function is referred by name, replace with actual function
-  if (length(bsp$selCritPipeAdv) == 0) bsp$selCritPipeAdv <- selCritIID
-  if (length(bsp$selCritPopImprov) == 0) bsp$selCritPopImprov <- selCritIID
+  if (nv(bsp$selCritPipeAdv)) bsp$selCritPipeAdv <- selCritIID
+  if (nv(bsp$selCritPopImprov)) bsp$selCritPopImprov <- selCritIID
   if ("character" %in% class(bsp$selCritPipeAdv))
     bsp$selCritPipeAdv <- get(bsp$selCritPipeAdv)
   if ("character" %in% class(bsp$selCritPopImprov))
@@ -350,7 +355,7 @@ calcDerivedParms <- function(bsp){
   }
   
   # Stop and warn user if stageToGenotype is not a named stage
-  if (length(bsp$stageToGenotype)==0){
+  if (nv(bsp$stageToGenotype)){
     bsp$stageToGenotype <- bsp$stageNames[1]
   }
   if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
@@ -358,15 +363,15 @@ calcDerivedParms <- function(bsp){
   }
   
   # Genetic architecture defaults
-  if (is.null(bsp$meanDD)) bsp$meanDD <- 0
-  if (is.null(bsp$varDD)) bsp$varDD <- 0
-  if (is.null(bsp$relAA)) bsp$relAA <- 0
+  if (nv(bsp$meanDD)) bsp$meanDD <- 0
+  if (nv(bsp$varDD)) bsp$varDD <- 0
+  if (nv(bsp$relAA)) bsp$relAA <- 0
   
   # Figure out how many checks to add to each stage
   pairwiseComp <- function(vec1, vec2, fnc){
     return(apply(cbind(vec1, vec2), 1, fnc))
   }
-  if (is.null(bsp$entryToChkRatio)) bsp$entryToChkRatio <- integer(bsp$nStages)
+  if (nv(bsp$entryToChkRatio)) bsp$entryToChkRatio <- integer(bsp$nStages)
   nPlots <- bsp$nEntries * bsp$nReps
   nChkPlots <- nPlots / bsp$entryToChkRatio
   nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
@@ -377,27 +382,27 @@ calcDerivedParms <- function(bsp){
   
   # Enforce other defaults
   if (bsp$useOptContrib){
-    if (length(bsp$nCandOptCont) == 0) bsp$nCandOptCont <- min(bsp$nEntries[1], bsp$nParents*10)
-    if (length(bsp$targetEffPopSize) == 0) bsp$targetEffPopSize <- bsp$nParents
+    if (nv(bsp$nCandOptCont)) bsp$nCandOptCont <- min(bsp$nEntries[1], bsp$nParents*10)
+    if (nv(bsp$targetEffPopSize)) bsp$targetEffPopSize <- bsp$nParents
   }
   if (bsp$phenoF1toStage1){
-    if (length(bsp$errVarPreStage1) == 0){
+    if (nv(bsp$errVarPreStage1)){
       bsp$errVarPreStage1 <- bsp$errVars[1] * 20
     }
   }
-  if (length(bsp$nCyclesToKeepRecords) == 0) bsp$nCyclesToKeepRecords <- 5
-  if (length(bsp$analyzeInbreeding) == 0) bsp$analyzeInbreeding <- 0
+  if (nv(bsp$nCyclesToKeepRecords)) bsp$nCyclesToKeepRecords <- 5
+  if (nv(bsp$analyzeInbreeding)) bsp$analyzeInbreeding <- 0
   
   # Defaults for GxE variance
-  if (any(is.null(bsp$gxyVar), is.null(bsp$gxlVar), is.null(bsp$gxyxlVar))){
-    if (!is.null(bsp$gxeVar)){
-      if (is.null(bsp$gxyVar)) bsp$gxyVar <- bsp$gxeVar / 3
-      if (is.null(bsp$gxlVar)) bsp$gxlVar <- bsp$gxeVar / 3
-      if (is.null(bsp$gxyxlVar)) bsp$gxyxlVar <- bsp$gxeVar / 3
+  if (any(nv(bsp$gxyVar), nv(bsp$gxlVar), nv(bsp$gxyxlVar))){
+    if (!nv(bsp$gxeVar)){
+      if (nv(bsp$gxyVar)) bsp$gxyVar <- bsp$gxeVar / 3
+      if (nv(bsp$gxlVar)) bsp$gxlVar <- bsp$gxeVar / 3
+      if (nv(bsp$gxyxlVar)) bsp$gxyxlVar <- bsp$gxeVar / 3
     } else{
-      if (is.null(bsp$gxyVar)) bsp$gxyVar <- 0
-      if (is.null(bsp$gxlVar)) bsp$gxlVar <- 0
-      if (is.null(bsp$gxyxlVar)) bsp$gxyxlVar <- 0
+      if (nv(bsp$gxyVar)) bsp$gxyVar <- 0
+      if (nv(bsp$gxlVar)) bsp$gxlVar <- 0
+      if (nv(bsp$gxyxlVar)) bsp$gxyxlVar <- 0
     }
   }
 
