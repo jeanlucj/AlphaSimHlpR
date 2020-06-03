@@ -418,7 +418,7 @@ calcDerivedParms <- function(bsp){
 #'
 #' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
 #' @param targetBudget Numeric value that you want the budget adjusted to
-#' @param fixedEntryStages Named integer vector indicating entry numbers for specific stages
+#' @param fixedEntryStages Named integer vector indicating entry numbers for specific stages. Names must be names of the specific stages
 #' @param adjustStages Character vector with names of stages to be changed such that the target budget is achieved
 #' 
 #' @return A revised bsp with the sizes of the target stages changed to match.
@@ -453,9 +453,9 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
   # Check to make sure no later stages are bigger than earlier stages
   for (stage in 1:bsp$nStages){
     if (stage == 1){
-      if (bsp$nEntries[stage] > bsp$nCrosses * bsp$nProgeny) stop("Stage 1 requires more individuals than the number of F1 progeny created")
+      if (bsp$nEntries[stage] > bsp$nCrosses * bsp$nProgeny) stop("adjustEntriesToBudget: Stage 1 requires more individuals than the number of F1 progeny created")
     } else{
-      if (bsp$nEntries[stage] > bsp$nEntries[stage-1]) stop(paste("Stage", stage, " requires more individuals than available from stage", stage - 1))
+      if (bsp$nEntries[stage] > bsp$nEntries[stage-1]) stop(paste("adjustEntriesToBudget: Stage", stage, " requires more individuals than available from stage", stage - 1))
     }
   }
   return(bsp)
