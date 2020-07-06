@@ -8,7 +8,7 @@ adjustEntriesToBudget(
   bsp,
   targetBudget,
   fixedEntryStages = NULL,
-  adjustStages = bsp$stageNames
+  adjustStages = setdiff(bsp$stageNames, names(fixedEntryStages))
 )
 }
 \arguments{
@@ -16,7 +16,7 @@ adjustEntriesToBudget(
 
 \item{targetBudget}{Numeric value that you want the budget adjusted to}
 
-\item{fixedEntryStages}{Named integer vector indicating entry numbers for specific stages}
+\item{fixedEntryStages}{Named integer vector indicating entry numbers for specific stages. Names must be names of the specific stages}
 
 \item{adjustStages}{Character vector with names of stages to be changed such that the target budget is achieved}
 }

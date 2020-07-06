@@ -7,23 +7,14 @@
 initFuncSimp(bsp)
 }
 \arguments{
-\item{bsp}{A list of breeding scheme parameters.  See \code{specifyPipeline} and \code{specifyPopulation}}
+\item{bsp}{A list of breeding scheme parameters}
 }
 \value{
-A list containing: 1. The simulation parameters in \code{SP}; 2. The initial records of the breeding program in \code{records}. See \code{fillPipeline} for details; 3. A completed \code{bsp} object
+The return of \code{initializeScheme}
 }
 \description{
-Function to initialize simulation of a breeding program. A single additive trait is simulated. No checks are used in this scheme
+Deprecated function to initialize simulation of a breeding program
 }
 \details{
-Creates the founders and the initial records at the beginning of the simulation of a breeding program. The initialization function you use needs to be consistent with the functions for advancing the pipeline and improving the population. At a minimum, the SP has to be able to generate a phenotype, so SP$addTraitCCC needs to be invoked. the \code{records} object needs to be "filled" in the sense that there are phenotypes of individuals in all stages of the pipeline that can be advanced to the next stage.
-}
-\examples{
-bsp <- specifyPipeline()
-bsp <- specifyPopulation(bsp)
-initList <- initializeFunc(bsp)
-SP <- initList$SP
-bsp <- initList$bsp
-records <- initList$records
-
+Deprecated in favor of the simply-named \code{initializeScheme}
 }

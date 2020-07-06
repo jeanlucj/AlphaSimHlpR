@@ -142,7 +142,6 @@ specifyCosts <- function(bsp=NULL, ctrlFileName=NULL){
 #' Once the costs are specified in bsp, this function calculates the total annual budget for the breeding scheme
 #'
 #' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
-#' @param ctrlFileName The name of the text file with parameter values specifying the breeding costs. Must include the path to the file. If NULL a toy example simulation will be set up
 #' @return The bsp list with augmented or modified intermediate and total costs
 #'
 #' @details Call this function once costs have been specified
@@ -414,7 +413,7 @@ calcDerivedParms <- function(bsp){
 
 #' adjustEntriesToBudget function
 #'
-#' Specify a budget, the number of entries for a set of stages, and the stages to adjust to hit the budget. The rules coming out are that the first stage can't be bigger than the number of F1s, and no later stage can be bigger than an earlier stage. The function will not adjust if the rules are broken but will report.
+#' Specify a budget, the number of entries for a set of stages, and the stages to adjust to hit the budget. The rules are that the first stage can't be bigger than the number of F1s, and no later stage can be bigger than an earlier stage. The function will not adjust if the rules are broken but will report.
 #'
 #' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
 #' @param targetBudget Numeric value that you want the budget adjusted to
