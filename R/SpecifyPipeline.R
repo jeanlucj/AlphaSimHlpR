@@ -460,6 +460,65 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
   return(bsp)
 }
 
+#' sampleEntryNumbers function
+#'
+#' Specify a range of percentages that are allowable for the stages. Function will sample within those percentages and generate a consistent scheme to test. For the stage that gets genotyped, the budget is forced to be the sum of the genotyping + trialling costs.
+#'
+#' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
+#' @param targetBudget Numeric value that you want the budget adjusted to
+#' @param percentRanges Numeric matrix with nStages+2 rows and two columns. Columns are min and max percentage of budget. Rows are costs for crossing, genotyping, trialing each stage.
+#' 
+#' @return A revised bsp with the sizes of the stages within the percentage ranges specified.
+#'
+#' @details Call this function after running specifyCosts.
+#'
+#' @examples
+#' # Assume stages of CET, PYT, UYT, so percentRanges needs 5 rows
+#' percentRanges <- matrix(c(0.02, 0.12, 0.12, 0.12, 0.12, 0.04, 0.24, 0.30, 0.30, 0.30), nrow=5)
+#' bsp <- sampleEntryNumbers(bsp, targetBudget=50000, percentRanges=percentRanges)
+#'
+#' @export
+sampleEntryNumbers <- function(bsp, targetBudget, percentRanges){
+  samplingDone <- FALSE
+  while (!samplingDone){
+    percentages <- apply(percentRanges, 1, function(r) runif(1, r[1], r[2]))
+    percentages <- percentages / sum(percentages)
+    whchStgGeno <- which(bsp$stageNames == bsp$stageToGenotype)
+    percentages[2 + whchStgGeno] <- percentages[2 + whchStgGeno] + percentages[2]
+    percentages <- percentages[-2]
+    names(percentages) <- c("Crossing", bsp$stageNames)
+    budgets <- targetBudget * percentages
+    
+    # How many progeny per cross to make
+    totProg <- budgets[1] / bsp$crossingCost
+    bsp$nProgeny <- round(totProg / bsp$nCrosses)
+    
+    for (stage in 1:bsp$nStages){
+      costPerInd <- bsp$nReps[stage] * bsp$nLocs[stage] * bsp$plotCost[stage]
+      if (bsp$entryToChkRatio[stage] > 0) costPerInd <- costPerInd * (1 + 1 / bsp$entryToChkRatio[stage])
+      if (stage == whchStgGeno){
+        costPerInd <- costPerInd + bsp$qcGenoCost + bsp$wholeGenomeCost
+      }
+      bsp$nEntries[stage] <- round(budgets[stage+1] / costPerInd)
+    }
+    
+    # Check to make sure no later stages are bigger than earlier stages
+    samplingDone <- TRUE
+    for (stage in 1:bsp$nStages){
+      if (stage == 1){
+        if (bsp$nEntries[stage] > bsp$nCrosses * bsp$nProgeny) samplingDone <- FALSE
+      } else{
+        if (bsp$nEntries[stage] > bsp$nEntries[stage-1]) samplingDone <- FALSE
+      }
+    }
+    
+    bsp$budgetPercentages <- percentages
+  }#END samplingDone
+  
+  bsp <- calculateBudget(bsp)
+  return(bsp)
+}
+
 #' function to read a text control file
 #'
 #' The text file should be organized as follows

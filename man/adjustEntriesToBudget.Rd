@@ -24,7 +24,7 @@ adjustEntriesToBudget(
 A revised bsp with the sizes of the target stages changed to match.
 }
 \description{
-Specify a budget, the number of entries for a set of stages, and the stages to adjust to hit the budget. The rules coming out are that the first stage can't be bigger than the number of F1s, and no later stage can be bigger than an earlier stage. The function will not adjust if the rules are broken but will report.
+Specify a budget, the number of entries for a set of stages, and the stages to adjust to hit the budget. The rules are that the first stage can't be bigger than the number of F1s, and no later stage can be bigger than an earlier stage. The function will not adjust if the rules are broken but will report.
 }
 \details{
 Call this function after running specifyCosts.

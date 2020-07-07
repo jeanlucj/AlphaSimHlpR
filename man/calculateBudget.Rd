@@ -8,8 +8,6 @@ calculateBudget(bsp)
 }
 \arguments{
 \item{bsp}{A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters}
-
-\item{ctrlFileName}{The name of the text file with parameter values specifying the breeding costs. Must include the path to the file. If NULL a toy example simulation will be set up}
 }
 \value{
 The bsp list with augmented or modified intermediate and total costs
