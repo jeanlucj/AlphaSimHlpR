@@ -467,6 +467,7 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
 #' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
 #' @param targetBudget Numeric value that you want the budget adjusted to
 #' @param percentRanges Numeric matrix with nStages+2 rows and two columns. Columns are min and max percentage of budget. Rows are costs for crossing, genotyping, trialing each stage.
+#' @param nAttempts Integer maximum number of attempts to sample percentages and have them follow the rules of stages becoming progressively smaller.
 #' 
 #' @return A revised bsp with the sizes of the stages within the percentage ranges specified.
 #'
@@ -478,19 +479,22 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
 #' bsp <- sampleEntryNumbers(bsp, targetBudget=50000, percentRanges=percentRanges)
 #'
 #' @export
-sampleEntryNumbers <- function(bsp, targetBudget, percentRanges){
+sampleEntryNumbers <- function(bsp, targetBudget, percentRanges, nAttempts=5){
+  attemptNo <- 0
   samplingDone <- FALSE
-  while (!samplingDone){
+  while (!samplingDone & attemptNo < nAttempts){
     percentages <- apply(percentRanges, 1, function(r) runif(1, r[1], r[2]))
     percentages <- percentages / sum(percentages)
-    whchStgGeno <- which(bsp$stageNames == bsp$stageToGenotype)
-    percentages[2 + whchStgGeno] <- percentages[2 + whchStgGeno] + percentages[2]
-    percentages <- percentages[-2]
-    names(percentages) <- c("Crossing", bsp$stageNames)
+    names(percentages) <- c("F1", bsp$stageNames)
+    whchStgGeno <- which(bsp$stageToGenotype == names(percentages)) - 1
+    if (length(whchStgGeno) == 0) whchStgGeno <- -1
+    
     budgets <- targetBudget * percentages
     
     # How many progeny per cross to make
-    totProg <- budgets[1] / bsp$crossingCost
+    f1cost <- bsp$crossingCost
+    if (whchStgGeno == 0) f1cost <- f1cost + bsp$qcGenoCost + bsp$wholeGenomeCost
+    totProg <- budgets[1] / f1cost
     bsp$nProgeny <- round(totProg / bsp$nCrosses)
     
     for (stage in 1:bsp$nStages){
@@ -511,8 +515,9 @@ sampleEntryNumbers <- function(bsp, targetBudget, percentRanges){
         if (bsp$nEntries[stage] > bsp$nEntries[stage-1]) samplingDone <- FALSE
       }
     }
-    
+    bsp$budgetSamplingDone <- samplingDone
     bsp$budgetPercentages <- percentages
+    attemptNo <- attemptNo + 1
   }#END samplingDone
   
   bsp <- calculateBudget(bsp)

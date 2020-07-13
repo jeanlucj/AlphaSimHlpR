@@ -35,8 +35,3 @@ function to run a two-part strategy breeding scheme. See Gaynor et al. 2017 for 
 \details{
 A wrapper to initiate the breeding program then iterate cycles of product pipeline and population improvement
 }
-\examples{
-bsp <- specifyPipeline()
-bsp <- specifyPopulation(bsp)
-records <- runBreedingScheme(replication=NULL, nCycles=5, initializeFunc=initFuncSimp, productPipeline=prodPipeSimp, populationImprovement=popImprov1, bsp)
-}
