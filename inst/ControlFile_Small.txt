@@ -9,14 +9,14 @@ SDN CET PYT
 # specify F1, which will cause all nCrosses * nProgeny individuals to be 
 # genotyped. If nothing is specified, the default will be to genotype all F1
 stageToGenotype
-SDN
+CET
 
 # Number of parents in the crossing nursery
 nParents
-20
+15
 # Number of crosses entering the pipeline
 nCrosses
-50
+30
 # Number of progeny per cross
 nProgeny
 10
@@ -31,7 +31,7 @@ targetEffPopSize
 
 # Vector of number of number of entries in each stage
 nEntries
-300 90 30
+200 75 20
 
 # Vector of number of checks used in each stage
 # Checks are replicated the same as experimental entries
@@ -39,7 +39,7 @@ nChks
 5 4 2
 # How many entry plots do you have per check plot
 entryToChkRatio
-50 30 15
+50 25 20
 
 # Vector of number of reps used in each stage
 nReps
@@ -51,7 +51,7 @@ nLocs
 # Vector of error variances estimated from historical data 
 # 200 for SDN is a guess
 errVars
-200 146 82
+200 100 70
 
 # Parameters to control how seeds are moved from F1 to the Stage 1 trial
 phenoF1toStage1
@@ -62,7 +62,7 @@ errVarPreStage1
 # Are the current year phenotypes available for model training
 # when parents are chosen to send to the crossing nursery? YES / NO
 useCurrentPhenoTrain
-TRUE
+FALSE
 
 # How many cycles to keep records. Must be > nStages
 nCyclesToKeepRecords

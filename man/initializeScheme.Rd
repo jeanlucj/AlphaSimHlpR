@@ -19,8 +19,8 @@ function to initialize simulation of a breeding program. A single additive-domin
 Creates the founders and the initial records at the beginning of the simulation of a breeding program.
 }
 \examples{
-bsp <- specifyPipeline()
 bsp <- specifyPopulation(bsp)
+bsp <- specifyPipeline()
 initList <- initializeScheme(bsp)
 SP <- initList$SP
 bsp <- initList$bsp

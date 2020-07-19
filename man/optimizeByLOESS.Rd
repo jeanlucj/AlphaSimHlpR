@@ -24,7 +24,7 @@ optimizeByLOESS(
 
 \item{targetBudget}{Numeric value that you want the budget adjusted to}
 
-\item{percentRanges}{Numeric matrix of percentage budget allocation to crossing (F1) and all of the stages.  If there is a stage that is genotyped, the genotyping cost is added to that stage}
+\item{percentRanges}{Numeric matrix (nStages + 1 rows and 2 columns) of percentage budget allocation to crossing (F1) and all of the stages.  If there is a stage that is genotyped, the genotyping cost is added to that stage}
 
 \item{startCycle}{Integer the start cycle from which to measure gain. The end cycle will just be the last cycle}
 

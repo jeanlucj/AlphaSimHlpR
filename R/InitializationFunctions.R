@@ -38,8 +38,8 @@ initFuncADChk <- function(bsp){
 #' @details Creates the founders and the initial records at the beginning of the simulation of a breeding program.
 #' 
 #' @examples
-#' bsp <- specifyPipeline()
 #' bsp <- specifyPopulation(bsp)
+#' bsp <- specifyPipeline()
 #' initList <- initializeScheme(bsp)
 #' SP <- initList$SP
 #' bsp <- initList$bsp
@@ -49,7 +49,15 @@ initFuncADChk <- function(bsp){
 initializeScheme <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
   nF1 <- bsp$nCrosses * bsp$nProgeny
-  founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
+  if (exists("quickHaplo", bsp)){
+    if (bsp$quickHaplo){
+      founderHap <- quickHaplo(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites)
+    } else{
+      founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
+    }
+  } else{
+    founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
+  }
   
   # New global simulation parameters from founder haplotypes
   SP <- SimParam$new(founderHap)

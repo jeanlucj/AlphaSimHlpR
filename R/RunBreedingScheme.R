@@ -45,7 +45,7 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 #'
 #' @param batchSize Integer number of simulations between LOESS fits
 #' @param targetBudget Numeric value that you want the budget adjusted to
-#' @param percentRanges Numeric matrix of percentage budget allocation to crossing (F1) and all of the stages.  If there is a stage that is genotyped, the genotyping cost is added to that stage
+#' @param percentRanges Numeric matrix (nStages + 1 rows and 2 columns) of percentage budget allocation to crossing (F1) and all of the stages.  If there is a stage that is genotyped, the genotyping cost is added to that stage
 #' @param startCycle Integer the start cycle from which to measure gain. The end cycle will just be the last cycle
 #' @param tolerance Numerical difference between min amd max percentage budgets for all stages
 #' @param initializeFunc Function to initialize the breeding program
@@ -64,7 +64,21 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, nCores=1){
   # Run the breeding scheme and return the relevant information
   runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, bsp){
-    bsp <- sampleEntryNumbers(bsp, targetBudget, percentRanges)
+    bsp$budgetSamplingDone <- FALSE
+    while (!bsp$budgetSamplingDone){
+      bsp <- sampleEntryNumbers(bsp, targetBudget, percentRanges)
+      if (!bsp$budgetSamplingDone){
+        # Sampling failed, so shift some budget from later stages to earlier stages
+        for (i in nrow(percentRanges):2){
+          for (j in 1:2){
+            if (percentRanges[i, j] > percentRanges[i-1, j]){
+              percentRanges[i, j] <- percentRanges[i, j] - 1
+              percentRanges[i-1, j] <- percentRanges[i-1, j] + 1
+            }
+          }
+        }
+      }#END make sure proper sampling of budgets was done
+    }# Carry on
     rbsOut <- runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp=bsp)
     return(list(bsp=bsp, stageOutputs=rbsOut$records$stageOutputs))
   }
@@ -80,7 +94,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
   
   allBatches <- tibble()
 
-  allPR <- c(unlist(percentRanges), nSimClose=NA, bestSE=NA)
+  allPR <- c(unlist(percentRanges), nSimClose=NA, bestGain=NA, bestSE=NA)
   batchesDone <- 0
   toleranceMet <- FALSE
   while (batchesDone < maxNumBatches & !toleranceMet){
@@ -100,8 +114,8 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     bestFit <- which.max(loPred$fit)
     bestSE <- loPred$se.fit[bestFit]
     bestClose <- which(max(loPred$fit) - loPred$fit < 2*bestSE)
-    percentRanges <- apply(allBatches[bestClose, ] %>% dplyr::select(contains("budget")), 2, range)
-    allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestSE=bestSE))
+    percentRanges <- t(apply(allBatches[bestClose, ] %>% dplyr::select(contains("budget")), 2, range))
+    allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))
     
     # Save batches and results
     if (!is.null(baseFile)){
@@ -110,7 +124,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     }
     
     batchesDone <- batchesDone + 1
-    toleranceMet <- all(percentRanges[2,] - percentRanges[1,] < tolerance)
+    toleranceMet <- all(percentRanges[,2] - percentRanges[,1] < tolerance)
   }#END keep going until stop instructions
   return(list(allBatches=allBatches, allPercentRanges=allPR))
 }

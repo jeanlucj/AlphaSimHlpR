@@ -11,7 +11,7 @@ sampleEntryNumbers(bsp, targetBudget, percentRanges, nAttempts = 5)
 
 \item{targetBudget}{Numeric value that you want the budget adjusted to}
 
-\item{percentRanges}{Numeric matrix with nStages+2 rows and two columns. Columns are min and max percentage of budget. Rows are costs for crossing, genotyping, trialing each stage.}
+\item{percentRanges}{Numeric matrix with nStages+1 rows and two columns. Columns are min and max percentage of budget. Rows are costs for crossing, genotyping, trialing each stage.}
 
 \item{nAttempts}{Integer maximum number of attempts to sample percentages and have them follow the rules of stages becoming progressively smaller.}
 }
@@ -25,8 +25,9 @@ Specify a range of percentages that are allowable for the stages. Function will 
 Call this function after running specifyCosts.
 }
 \examples{
-# Assume stages of CET, PYT, UYT, so percentRanges needs 5 rows
-percentRanges <- matrix(c(0.02, 0.12, 0.12, 0.12, 0.12, 0.04, 0.24, 0.30, 0.30, 0.30), nrow=5)
+Assume stages of CET, PYT, UYT, so percentRanges needs 4 rows
+Assume CET is genotyped so more budget there
+percentRanges <- matrix(c(0.02, 0.24, 0.12, 0.12, 0.06, 0.55, 0.30, 0.30), nrow=4)
 bsp <- sampleEntryNumbers(bsp, targetBudget=50000, percentRanges=percentRanges)
 
 }

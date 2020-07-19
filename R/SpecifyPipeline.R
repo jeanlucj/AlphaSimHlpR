@@ -466,7 +466,7 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
 #'
 #' @param bsp A list of objects to combine with the species and population parameters. bsp is short for breeding sheme parameters
 #' @param targetBudget Numeric value that you want the budget adjusted to
-#' @param percentRanges Numeric matrix with nStages+2 rows and two columns. Columns are min and max percentage of budget. Rows are costs for crossing, genotyping, trialing each stage.
+#' @param percentRanges Numeric matrix with nStages+1 rows and two columns. Columns are min and max percentage of budget. Rows are costs for crossing, genotyping, trialing each stage.
 #' @param nAttempts Integer maximum number of attempts to sample percentages and have them follow the rules of stages becoming progressively smaller.
 #' 
 #' @return A revised bsp with the sizes of the stages within the percentage ranges specified.
@@ -474,8 +474,9 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
 #' @details Call this function after running specifyCosts.
 #'
 #' @examples
-#' # Assume stages of CET, PYT, UYT, so percentRanges needs 5 rows
-#' percentRanges <- matrix(c(0.02, 0.12, 0.12, 0.12, 0.12, 0.04, 0.24, 0.30, 0.30, 0.30), nrow=5)
+#' Assume stages of CET, PYT, UYT, so percentRanges needs 4 rows
+#' Assume CET is genotyped so more budget there
+#' percentRanges <- matrix(c(0.02, 0.24, 0.12, 0.12, 0.06, 0.55, 0.30, 0.30), nrow=4)
 #' bsp <- sampleEntryNumbers(bsp, targetBudget=50000, percentRanges=percentRanges)
 #'
 #' @export
