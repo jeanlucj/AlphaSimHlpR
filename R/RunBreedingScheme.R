@@ -61,9 +61,18 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 #' @examples
 #' 
 #' @export
-optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, nCores=1){
+optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, nCores=1){
+  require(foreach)
+  require(doParallel)
+  cl <- makeCluster(nCores)
+  registerDoParallel(cl)
+  
+  # Guardrails
+  nByPareto <- min(batchSize, nByPareto)
+  
+  ### Define functions
   # Run the breeding scheme and return the relevant information
-  runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, bsp){
+  runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp){
     bsp$budgetSamplingDone <- FALSE
     while (!bsp$budgetSamplingDone){
       bsp <- sampleEntryNumbers(bsp, targetBudget, percentRanges)
@@ -81,6 +90,13 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     }# Carry on
     rbsOut <- runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp=bsp)
     return(list(bsp=bsp, stageOutputs=rbsOut$records$stageOutputs))
+  }#END runOneRep
+  
+  # run a simulation in the vicinity of a previous simulation
+  repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp){
+    budg <- parmRow %>% dplyr::select(contains("budget"))
+    percentRanges <- t(sapply(unlist(budg), function(prc) c(max(0, prc - radius), min(1, prc + radius))))
+    runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp)
   }
   
   # Pull interesting parameters from from the stageOutputs
@@ -92,22 +108,32 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     return(unlist(c(parms, resp)))
   }
   
+  ### Run optimization
+  # Repeatedly simulate the scheme to identify budget allocations optimizing gain
   allBatches <- tibble()
-
   allPR <- c(unlist(percentRanges), nSimClose=NA, bestGain=NA, bestSE=NA)
   batchesDone <- 0
   toleranceMet <- FALSE
   while (batchesDone < maxNumBatches & !toleranceMet){
-    # Get a new batch of simulations
-    if (nCores == 1){
-      newBatch <- lapply(nrow(allBatches) + 1:batchSize, runOneRep, percentRanges=percentRanges, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp=bsp)
-    } else{
-      newBatch <- mclapply(nrow(allBatches) + 1:batchSize, runOneRep, percentRanges=percentRanges, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp=bsp, mc.cores=nCores)
+    strtRep <- nrow(allBatches)
+    # Repeat a batch of simulations
+    if (nrow(toRepeat) > 0){
+      repeatBatch <- foreach(i=1:nrow(toRepeat)) %dopar% {
+        repeatSim(toRepeat[i,], strtRep+i, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, targetBudget=targetBudget, bsp=bsp)
+      }
     }
-    newBatch <- as_tibble(t(sapply(newBatch, getParmsResponse, startCycle=startCycle)), .name_repair="universal")
+    
+    strtRep <- strtRep + nrow(toRepeat)
+    # Get a new batch of simulations
+    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dopar% {
+        runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, targetBudget=targetBudget, bsp=bsp)
+    }
+    
+    # Put together with previous simulatinos
+    newBatch <- as_tibble(t(sapply(c(repeatBatch, newBatch), getParmsResponse, startCycle=startCycle)), .name_repair="universal")
     allBatches <- allBatches %>% bind_rows(newBatch)
     
-    # Non-Parametric Loess response
+    # Non-Parametric LOESS response
     loFormula <- paste0("genValMean ~ ", paste0(bsp$stageNames, collapse=" + "))
     loFM <- loess(loFormula, data=allBatches)
     loPred <- predict(loFM, se=T)
@@ -115,6 +141,19 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     bestSE <- loPred$se.fit[bestFit]
     bestClose <- which(max(loPred$fit) - loPred$fit < 2*bestSE)
     percentRanges <- t(apply(allBatches[bestClose, ] %>% dplyr::select(contains("budget")), 2, range))
+    
+    # choose which have high response and high std. err. of response
+    nRepeat <- 0
+    toRepeat <- tibble()
+    while (nRepeat < nByPareto){
+      fitStdErr <- cbind(loPred$fit, loPred$se.fit)
+      tst <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F)
+      rows <- which(rownames(fitStdErr) %in% rownames(tst)) 
+      rows <- sample(rows, size=min(length(rows), nByPareto - nRepeat))
+      fitStdErr <- fitStdErr[-rows,]
+      toRepeat <- toRepeat %>% bind_rows(allBatches[as.integer(rownames(tst)),])
+    }
+    
     allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))
     
     # Save batches and results
