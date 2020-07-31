@@ -37,7 +37,7 @@ productPipeline <- function(records, bsp, SP){
   # Calculate the selection criterion. selCritPipeAdv has to be given in bsp
   candidates <- records$F1@id
   selCrit <- bsp$selCritPipeAdv(records, candidates, bsp, SP)
-  
+
   # Make summary for the incoming F1s
   year <- max(records$stageOutputs$year)+1 # Add a year relative to last year
   nF1 <- bsp$nCrosses * bsp$nProgeny 
@@ -45,14 +45,13 @@ productPipeline <- function(records, bsp, SP){
   # Analyze the most-recent F1s
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
-  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year))
-
+  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year, stageNames=bsp$stageNames))
   # Will be added to the phenotype records
   toAdd <- list()
   for (stage in 1:bsp$nStages){
     # Make a summary for this stage
     id <- last(records[[stage+1]])$id[1:bsp$nEntries[stage]]
-    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year))
+    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year, stageNames=bsp$stageNames))
 
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
       # Use phenotypes to select the F1 going into Stage 1?
@@ -94,7 +93,7 @@ productPipeline <- function(records, bsp, SP){
 
   # Remove old records if needed
   if (length(records[[2]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp)
-  
+
   return(records)
 }
 
@@ -107,15 +106,16 @@ productPipeline <- function(records, bsp, SP){
 #' @param selCrit Named vector of the selection criterion being used to advance individuals
 #' @param stage Integer stage (1 to bsp$nStages) being summarized
 #' @param year The current year of the breeding scheme
+#' @param stageNames Character vector of stage names
 #' @return A tibble with whatever information from the data you want to store for analysis after simulation is done
 #' 
 #' @details Trying to provide some flexibility in what results AlphaSimHlpR generates from a given simulation.
 #' 
 #' @examples
-#' records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year))
+#' records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year, bsp$stageNames))
 #' 
-stageOutputs <- function(id, f1, selCrit, stage, year){
-  stageName <- c("F1", bsp$stageNames)[stage+1]
+stageOutputs <- function(id, f1, selCrit, stage, year, stageNames){
+  stageName <- c("F1", stageNames)[stage+1]
   f1 <- f1[id]
   selCrit <- selCrit[id]
   bestCrit <- which.max(selCrit)
@@ -156,12 +156,12 @@ lastCycStgOut <- function(records, bsp, SP){
   nGenoRec <- nInd(records$F1)
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
-  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year))
+  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year, stageNames=bsp$stageNames))
   
   for (stage in 1:bsp$nStages){
     # Make a summary for this stage
     id <- last(records[[stage+1]])$id[1:bsp$nEntries[stage]]
-    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year))
+    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year, stageNames=bsp$stageNames))
   }
   
   return(records)

@@ -4,7 +4,7 @@
 \alias{stageOutputs}
 \title{stageOutputs function}
 \usage{
-stageOutputs(id, f1, selCrit, stage, year)
+stageOutputs(id, f1, selCrit, stage, year, stageNames)
 }
 \arguments{
 \item{id}{Vector of the AlphaSimR ids of the individuals in the stage}
@@ -16,6 +16,8 @@ stageOutputs(id, f1, selCrit, stage, year)
 \item{stage}{Integer stage (1 to bsp$nStages) being summarized}
 
 \item{year}{The current year of the breeding scheme}
+
+\item{stageNames}{Character vector of stage names}
 }
 \value{
 A tibble with whatever information from the data you want to store for analysis after simulation is done
@@ -27,6 +29,6 @@ To create a row for a tibble for each cycle and each stage. The tibble will be k
 Trying to provide some flexibility in what results AlphaSimHlpR generates from a given simulation.
 }
 \examples{
-records$stageOutputs <- records$stageOutputs \%>\% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year))
+records$stageOutputs <- records$stageOutputs \%>\% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year, bsp$stageNames))
 
 }

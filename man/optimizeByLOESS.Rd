@@ -6,6 +6,7 @@
 \usage{
 optimizeByLOESS(
   batchSize,
+  nByPareto = round(batchSize * 0.7),
   targetBudget,
   percentRanges,
   startCycle,
