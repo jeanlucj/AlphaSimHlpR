@@ -4,13 +4,17 @@
 \alias{checkAddRemove}
 \title{checkAddRemove function}
 \usage{
-checkAddRemove(cand, nonDom)
+checkAddRemove(cand, nonDom, var1name, var2name)
 }
 \arguments{
 \item{cand}{Real double that you want to check if it is dominated or not}
 
 \item{nonDom}{Real two-column matrix, with vectors in rows that are 
 non-dominated and sorted from low to high for their first column}
+
+\item{var1name}{Character: name of the column of column 1}
+
+\item{var2name}{Character: name of the column of column 2}
 }
 \value{
 A new nonDom matrix, adding cand if it is non-dominated and

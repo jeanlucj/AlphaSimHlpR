@@ -148,13 +148,15 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     
     # choose which have high response and high std. err. of response
     toRepeat <- tibble()
-    fitStdErr <- cbind(loPred$fit, loPred$se.fit)
+    fitStdErr <- tibble(batchID=1:nrow(allBatches), fit=loPred$fit, se=loPred$se.fit)
     while (nrow(toRepeat) < nByPareto){
-      nonDomSim <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F)
-      rows <- which(rownames(fitStdErr) %in% rownames(nonDomSim)) 
-      rows <- sample(rows, size=min(length(rows), nByPareto - nrow(toRepeat)))
-      toRepeat <- toRepeat %>% bind_rows(allBatches[as.integer(rownames(fitStdErr[rows,])),])
-      fitStdErr <- fitStdErr[-rows,]
+      nonDomSim <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, "fit", "se")
+      rows <- nonDomSim$batchID
+      if (nrow(nonDomSim) > nByPareto - nrow(toRepeat)){
+        rows <- sample(rows, nByPareto - nrow(toRepeat))
+      }
+      toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
+      fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
     }
     
     allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))

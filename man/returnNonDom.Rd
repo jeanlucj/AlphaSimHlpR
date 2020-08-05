@@ -4,7 +4,7 @@
 \alias{returnNonDom}
 \title{returnNonDom function}
 \usage{
-returnNonDom(mat, dir1Low = T, dir2Low = T)
+returnNonDom(mat, dir1Low = T, dir2Low = T, var1name = NULL, var2name = NULL)
 }
 \arguments{
 \item{mat}{Real two-column matrix}
@@ -12,6 +12,10 @@ returnNonDom(mat, dir1Low = T, dir2Low = T)
 \item{dir1Low}{Logical: desired direction in down for column 1}
 
 \item{dir2Low}{Logical: desired direction in down for column 2}
+
+\item{var1name}{Character: name of the column of column 1}
+
+\item{var2name}{Character: name of the column of column 2}
 }
 \value{
 nonDom Real two-column matrix, with vectors in rows that are 
