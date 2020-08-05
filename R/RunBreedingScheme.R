@@ -108,7 +108,7 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     bsp <- oneSim$bsp
     parms <- c(budget=bsp$budgetPercentages, nProgeny=bsp$nProgeny, bsp$nEntries, totCost=bsp$totalCosts)
     so <- oneSim$stageOutputs
-    resp <- (filter(so, stage=="F1" & year==bsp$nCyclesToRun) %>% dplyr::select(genValMean, genValSD)) - (filter(so, stage=="F1" & year==startCycle) %>% dplyr::select(genValMean, genValSD))
+    resp <- (dplyr::filter(so, stage=="F1" & year==bsp$nCyclesToRun) %>% dplyr::select(genValMean, genValSD)) - (dplyr::filter(so, stage=="F1" & year==startCycle) %>% dplyr::select(genValMean, genValSD))
     return(unlist(c(parms, resp)))
   }
   
@@ -148,13 +148,13 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     
     # choose which have high response and high std. err. of response
     toRepeat <- tibble()
+    fitStdErr <- cbind(loPred$fit, loPred$se.fit)
     while (nrow(toRepeat) < nByPareto){
-      fitStdErr <- cbind(loPred$fit, loPred$se.fit)
-      tst <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F)
-      rows <- which(rownames(fitStdErr) %in% rownames(tst)) 
+      nonDomSim <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F)
+      rows <- which(rownames(fitStdErr) %in% rownames(nonDomSim)) 
       rows <- sample(rows, size=min(length(rows), nByPareto - nrow(toRepeat)))
+      toRepeat <- toRepeat %>% bind_rows(allBatches[as.integer(rownames(fitStdErr[rows,])),])
       fitStdErr <- fitStdErr[-rows,]
-      toRepeat <- toRepeat %>% bind_rows(allBatches[as.integer(rownames(tst)),])
     }
     
     allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))
