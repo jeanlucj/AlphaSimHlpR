@@ -125,14 +125,14 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-      repeatBatch <- foreach(i=1:nrow(toRepeat)) %dorng% {
+      repeatBatch <- foreach(i=1:nrow(toRepeat), .verbose=T) %dorng% {
         repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
       }
     } else repeatBatch <- list()
     
     strtRep <- strtRep + nrow(toRepeat)
     # Get a new batch of simulations
-    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dorng% {
+    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat)), .verbose=T) %dorng% {
       runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
     }
     

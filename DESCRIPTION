@@ -15,7 +15,11 @@ Depends:
   plotrix,
   lme4,
   sommer,
-  optiSel
+  optiSel,
+  foreach,
+  doParallel,
+  iterators,
+  doRNG
 RoxygenNote: 7.1.0
 Suggests: 
     knitr,
