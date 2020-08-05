@@ -62,13 +62,15 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 #' @examples
 #' 
 #' @export
-optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, nCores=1){
+optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
   require(parallel)
   require(foreach)
   require(doParallel)
+  require(doRNG)
   cl <- makeCluster(nCores, outfile="")
   registerDoParallel(cl)
-  
+  set.seed(randomSeed)
+  randSeeds <- round(runif(maxNumBatches, min=-1e9, max=1e9))
   # Guardrails
   nByPareto <- min(batchSize, nByPareto)
   
@@ -119,17 +121,18 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
   batchesDone <- 0
   toleranceMet <- FALSE
   while (batchesDone < maxNumBatches & !toleranceMet){
+    set.seed(randSeeds[batchesDone+1])
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-      repeatBatch <- foreach(i=1:nrow(toRepeat)) %dopar% {
-        repeatSim(toRepeat[i,], strtRep+i, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
+      repeatBatch <- foreach(i=1:nrow(toRepeat)) %dorng% {
+        repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
       }
     } else repeatBatch <- list()
     
     strtRep <- strtRep + nrow(toRepeat)
     # Get a new batch of simulations
-    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dopar% {
+    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dorng% {
       runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
     }
     
@@ -150,11 +153,12 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     toRepeat <- tibble()
     fitStdErr <- tibble(batchID=1:nrow(allBatches), fit=loPred$fit, se=loPred$se.fit)
     while (nrow(toRepeat) < nByPareto){
-      nonDomSim <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, "fit", "se")
+      nonDomSim <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, var1name="fit", var2name="se")
       rows <- nonDomSim$batchID
       if (nrow(nonDomSim) > nByPareto - nrow(toRepeat)){
         rows <- sample(rows, nByPareto - nrow(toRepeat))
       }
+      cat("\n", Sys.getpid(), rows, "\n")
       toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
       fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
     }
