@@ -125,14 +125,17 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-      repeatBatch <- foreach(i=1:nrow(toRepeat), .verbose=T) %dorng% {
+      repeatBatch <- foreach(i=1:nrow(toRepeat)) %dorng% {
+        cat("\n", "@@@@@ Repeat Batch Replication", strtRep+i, "\n")
         repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
       }
     } else repeatBatch <- list()
     
     strtRep <- strtRep + nrow(toRepeat)
+    cat("\n", "@@@@@ nrow(toRepeat)", nrow(toRepeat), "\n")
     # Get a new batch of simulations
-    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat)), .verbose=T) %dorng% {
+    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dorng% {
+      cat("\n", "@@@@@ New Batch Replication", strtRep+i, "\n")
       runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
     }
     
@@ -158,7 +161,6 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
       if (nrow(nonDomSim) > nByPareto - nrow(toRepeat)){
         rows <- sample(rows, nByPareto - nrow(toRepeat))
       }
-      cat("\n", Sys.getpid(), rows, "\n")
       toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
       fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
     }
