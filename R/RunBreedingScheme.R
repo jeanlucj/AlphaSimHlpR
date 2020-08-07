@@ -54,6 +54,7 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 #' @param productPipeline Function to advance the product pipeline by one generation
 #' @param populationImprovement Function to improve the breeding population and select parents to initiate the next cycle of the breeding scheme
 #' @param bsp  A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains species / population parameters: nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP
+#' @param randomSeed Integer seed for random number generator
 #' @param nCores Integer number of cores to use for parallel simulation
 #' @return Numeric matix with all simulations budget allocations, gen mean change, gen std dev change, total cost.
 #' 
@@ -63,21 +64,29 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 #' 
 #' @export
 optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
-  require(parallel)
-  require(foreach)
-  require(doParallel)
-  require(doRNG)
-  cl <- makeCluster(nCores, outfile="")
-  registerDoParallel(cl)
-  set.seed(randomSeed)
-  randSeeds <- round(runif(maxNumBatches, min=-1e9, max=1e9))
+  if (nCores > 1){
+    require(foreach)
+    require(doParallel)
+    require(doRNG)
+    cl <- makeCluster(nCores, outfile="")
+    registerDoParallel(cl)
+  }
+  
+  if (length(randomSeed == batchSize * maxNumBatches)){
+    randSeeds <- randomSeed
+  } else{
+    set.seed(randomSeed)
+    randSeeds <- round(runif(batchSize * maxNumBatches, min=-1e9, max=1e9))
+    saveRDS(randSeeds, file=paste0(baseFile, "randSeeds.rds"))
+  }
+  
   # Guardrails
   nByPareto <- min(batchSize, nByPareto)
   
   ### Define functions
   # Run the breeding scheme and return the relevant information
-  runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp){
-    
+  runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed=NULL){
+    if (!is.null(seed)) set.seed(seed)
     bsp$budgetSamplingDone <- FALSE
     while (!bsp$budgetSamplingDone){
       bsp <- sampleEntryNumbers(bsp, targetBudget, percentRanges)
@@ -99,10 +108,10 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
   }#END runOneRep
   
   # run a simulation in the vicinity of a previous simulation
-  repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp){
+  repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed=NULL){
     budg <- parmRow %>% dplyr::select(contains("budget"))
     percentRanges <- t(sapply(unlist(budg), function(prc) c(max(0, prc - radius), min(1, prc + radius))))
-    runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp)
+    runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed)
   }
   
   # Pull interesting parameters from from the stageOutputs
@@ -125,18 +134,35 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-      repeatBatch <- foreach(i=1:nrow(toRepeat)) %dorng% {
-        cat("\n", "@@@@@ Repeat Batch Replication", strtRep+i, "\n")
-        repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
+      if (nCores > 1){
+        repeatBatch <- foreach(i=1:nrow(toRepeat)) %dorng% {
+          cat("\n", "@@@@@ Repeat Batch Replication", strtRep+i, "\n")
+          repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])
+        }
+      } else{
+        repeatBatch <- list()
+        for(i in 1:nrow(toRepeat)){
+          cat("\n", "@@@@@ Repeat Batch Replication", strtRep+i, "\n")
+          repeatBatch <- c(repeatBatch, list(repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])))
+        }
       }
     } else repeatBatch <- list()
     
     strtRep <- strtRep + nrow(toRepeat)
     cat("\n", "@@@@@ nrow(toRepeat)", nrow(toRepeat), "\n")
     # Get a new batch of simulations
-    newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dorng% {
-      cat("\n", "@@@@@ New Batch Replication", strtRep+i, "\n")
-      runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp)
+    if (nCores > 1){
+      newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dorng% {
+        cat("\n", "@@@@@ New Batch Replication", strtRep+i, "\n")
+        runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])
+      }
+    }
+    else{
+      newBatch <- list()
+      for(i in 1:(batchSize - nrow(toRepeat))){
+        cat("\n", "@@@@@ New Batch Replication", strtRep+i, "\n")
+        newBatch <- c(newBatch, list(runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])))
+      }
     }
     
     # Put together with previous simulatinos
@@ -176,6 +202,6 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     batchesDone <- batchesDone + 1
     toleranceMet <- all(percentRanges[,2] - percentRanges[,1] < tolerance)
   }#END keep going until stop instructions
-  stopCluster(cl)
+  if (nCores > 1) stopCluster(cl)
   return(list(allBatches=allBatches, allPercentRanges=allPR))
 }
