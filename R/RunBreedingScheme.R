@@ -64,14 +64,8 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 #' 
 #' @export
 optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBudget, percentRanges, startCycle, tolerance, baseFile=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
-  if (nCores > 1){
-    require(foreach)
-    require(doParallel)
-    require(doRNG)
-    cl <- makeCluster(nCores, outfile="")
-    registerDoParallel(cl)
-  }
-  
+  require(parallel)
+
   if (length(randomSeed == batchSize * maxNumBatches)){
     randSeeds <- randomSeed
   } else{
@@ -130,41 +124,17 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
   batchesDone <- 0
   toleranceMet <- FALSE
   while (batchesDone < maxNumBatches & !toleranceMet){
-    set.seed(randSeeds[batchesDone+1])
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-      if (nCores > 1){
-        repeatBatch <- foreach(i=1:nrow(toRepeat)) %dorng% {
-          cat("\n", "@@@@@ Repeat Batch Replication", strtRep+i, "\n")
-          repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])
-        }
-      } else{
-        repeatBatch <- list()
-        for(i in 1:nrow(toRepeat)){
-          cat("\n", "@@@@@ Repeat Batch Replication", strtRep+i, "\n")
-          repeatBatch <- c(repeatBatch, list(repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])))
-        }
-      }
+      repeatBatch <- mclapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]))
     } else repeatBatch <- list()
     
     strtRep <- strtRep + nrow(toRepeat)
     cat("\n", "@@@@@ nrow(toRepeat)", nrow(toRepeat), "\n")
     # Get a new batch of simulations
-    if (nCores > 1){
-      newBatch <- foreach(i=1:(batchSize - nrow(toRepeat))) %dorng% {
-        cat("\n", "@@@@@ New Batch Replication", strtRep+i, "\n")
-        runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])
-      }
-    }
-    else{
-      newBatch <- list()
-      for(i in 1:(batchSize - nrow(toRepeat))){
-        cat("\n", "@@@@@ New Batch Replication", strtRep+i, "\n")
-        newBatch <- c(newBatch, list(runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i])))
-      }
-    }
-    
+    newBatch <- mclapply(1:(batchSize - nrow(toRepeat)), function(i) runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]))
+
     # Put together with previous simulatinos
     newBatch <- as_tibble(t(sapply(c(repeatBatch, newBatch), getParmsResponse, startCycle=startCycle)), .name_repair="universal")
     allBatches <- allBatches %>% bind_rows(newBatch)
@@ -201,7 +171,7 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     
     batchesDone <- batchesDone + 1
     toleranceMet <- all(percentRanges[,2] - percentRanges[,1] < tolerance)
-  }#END keep going until stop instructions
-  if (nCores > 1) stopCluster(cl)
+  }#END keep going until maxNumBatches or tolerance
+
   return(list(allBatches=allBatches, allPercentRanges=allPR))
 }
