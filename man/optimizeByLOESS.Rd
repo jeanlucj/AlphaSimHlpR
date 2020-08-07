@@ -17,6 +17,7 @@ optimizeByLOESS(
   productPipeline,
   populationImprovement,
   bsp,
+  randomSeed = 1234,
   nCores = 1
 )
 }
@@ -40,6 +41,8 @@ optimizeByLOESS(
 \item{populationImprovement}{Function to improve the breeding population and select parents to initiate the next cycle of the breeding scheme}
 
 \item{bsp}{A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains species / population parameters: nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP}
+
+\item{randomSeed}{Integer seed for random number generator}
 
 \item{nCores}{Integer number of cores to use for parallel simulation}
 }
