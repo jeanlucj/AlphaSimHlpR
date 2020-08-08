@@ -108,8 +108,9 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     on.exit(expr=saveRDS(list(parmRow, replication, radius, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed), file="~/repeatSim.rds"))
     budg <- parmRow %>% dplyr::select(contains("budget"))
     percentRanges <- t(sapply(unlist(budg), function(prc) c(max(0, prc - radius), min(1, prc + radius))))
+    rorOut <- runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed)
+    return(rorOut)
     on.exit()
-    runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed)
   }
   
   # Pull interesting parameters from from the stageOutputs
