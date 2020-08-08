@@ -133,7 +133,8 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-#      repeatBatch <- lapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]))
+      saveRDS(toRepeat, file=paste0(baseFile, "toRepeat.rds"))
+      #      repeatBatch <- lapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]))
       repeatBatch <- mclapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]), mc.cores=nCores)
     } else repeatBatch <- list()
     
