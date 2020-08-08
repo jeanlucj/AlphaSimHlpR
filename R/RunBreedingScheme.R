@@ -80,6 +80,7 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
   ### Define functions
   # Run the breeding scheme and return the relevant information
   runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed=NULL){
+    on.exit(expr=saveRDS(list(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed), file="~/runOneRep.rds"))
     if (!is.null(seed)) set.seed(seed)
     bsp$budgetSamplingDone <- FALSE
     while (!bsp$budgetSamplingDone){
@@ -97,23 +98,28 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
       }#END make sure proper sampling of budgets was done
     }# Carry on
     rbsOut <- runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, bsp=bsp)
-
+    
+    on.exit()
     return(list(bsp=bsp, stageOutputs=rbsOut$records$stageOutputs))
   }#END runOneRep
   
   # run a simulation in the vicinity of a previous simulation
   repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed=NULL){
+    on.exit(expr=saveRDS(list(parmRow, replication, radius, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed), file="~/repeatSim.rds"))
     budg <- parmRow %>% dplyr::select(contains("budget"))
     percentRanges <- t(sapply(unlist(budg), function(prc) c(max(0, prc - radius), min(1, prc + radius))))
+    on.exit()
     runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed)
   }
   
   # Pull interesting parameters from from the stageOutputs
   getParmsResponse <- function(oneSim, startCycle){
+    on.exit(expr=saveRDS(list(oneSim, startCycle), file="~/getParmsResp.rds"))
     bsp <- oneSim$bsp
     parms <- c(budget=bsp$budgetPercentages, nProgeny=bsp$nProgeny, bsp$nEntries, totCost=bsp$totalCosts)
     so <- oneSim$stageOutputs
     resp <- (dplyr::filter(so, stage=="F1" & year==bsp$nCyclesToRun) %>% dplyr::select(genValMean, genValSD)) - (dplyr::filter(so, stage=="F1" & year==startCycle) %>% dplyr::select(genValMean, genValSD))
+    on.exit()
     return(unlist(c(parms, resp)))
   }
   
