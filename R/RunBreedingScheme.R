@@ -90,8 +90,8 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
         for (i in nrow(percentRanges):2){
           for (j in 1:2){
             if (percentRanges[i, j] > percentRanges[i-1, j]){
-              percentRanges[i, j] <- percentRanges[i, j] - 1
-              percentRanges[i-1, j] <- percentRanges[i-1, j] + 1
+              percentRanges[i, j] <- max(0.01, percentRanges[i, j] - 0.01)
+              percentRanges[i-1, j] <- min(0.99, percentRanges[i-1, j] + 0.01)
             }
           }
         }
@@ -109,8 +109,8 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     budg <- parmRow %>% dplyr::select(contains("budget"))
     percentRanges <- t(sapply(unlist(budg), function(prc) c(max(0, prc - radius), min(1, prc + radius))))
     rorOut <- runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed)
-    return(rorOut)
     on.exit()
+    return(rorOut)
   }
   
   # Pull interesting parameters from from the stageOutputs
@@ -135,14 +135,11 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
       saveRDS(toRepeat, file=paste0(baseFile, "toRepeat.rds"))
-      #      repeatBatch <- lapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]))
       repeatBatch <- mclapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]), mc.cores=nCores)
     } else repeatBatch <- list()
     
     strtRep <- strtRep + nrow(toRepeat)
-    cat("\n", "@@@@@ nrow(toRepeat)", nrow(toRepeat), "\n")
     # Get a new batch of simulations
-#    newBatch <- lapply(1:(batchSize - nrow(toRepeat)), function(i) runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]))
     newBatch <- mclapply(1:(batchSize - nrow(toRepeat)), function(i) runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]), mc.cores=nCores)
     
     # Put together with previous simulatinos
