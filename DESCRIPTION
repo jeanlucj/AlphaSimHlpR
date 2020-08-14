@@ -16,10 +16,7 @@ Depends:
   lme4,
   sommer,
   optiSel,
-  foreach,
-  doParallel,
-  iterators,
-  doRNG
+  parallel
 RoxygenNote: 7.1.0
 Suggests: 
     knitr,

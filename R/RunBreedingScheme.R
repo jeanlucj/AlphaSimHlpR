@@ -75,7 +75,10 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
   }
   
   # Guardrails
-  nByPareto <- min(batchSize, nByPareto)
+  nByPareto <- min(batchSize - 1, nByPareto)
+  # Sample half by Pareto, and half by probability of beating current best
+  nByHiProb <- nByPareto %/% 2
+  nByPareto <- nByPareto - nByHiProb
   
   ### Define functions
   # Run the breeding scheme and return the relevant information
@@ -142,7 +145,7 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     # Get a new batch of simulations
     newBatch <- mclapply(1:(batchSize - nrow(toRepeat)), function(i) runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]), mc.cores=nCores)
     
-    # Put together with previous simulatinos
+    # Put together with previous simulations
     newBatch <- as_tibble(t(sapply(c(repeatBatch, newBatch), getParmsResponse, startCycle=startCycle)), .name_repair="universal")
     allBatches <- allBatches %>% bind_rows(newBatch)
     
@@ -155,7 +158,7 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     bestClose <- which(max(loPred$fit) - loPred$fit < 2*bestSE)
     percentRanges <- t(apply(allBatches[bestClose, ] %>% dplyr::select(contains("budget")), 2, range))
     
-    # choose which have high response and high std. err. of response
+    # Choose on Pareto frontier of high response and high std. err. of response
     toRepeat <- tibble()
     fitStdErr <- tibble(batchID=1:nrow(allBatches), fit=loPred$fit, se=loPred$se.fit)
     while (nrow(toRepeat) < nByPareto){
@@ -167,6 +170,11 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
       toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
       fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
     }
+    # Choose settings that have the best chance of beating the current best
+    bestGain <- max(fitStdErr$fit)
+    probBetter <- pnorm(bestGain, fitStdErr$fit, fitStdErr$se, lower.tail=FALSE)
+    hiProb <- order(probBetter, decreasing=T)[1:nByHiProb]
+    toRepeat <- toRepeat %>% bind_rows(allBatches[fitStdErr$batchID[hiProb],])
     
     allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))
     
