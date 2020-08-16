@@ -47,6 +47,9 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
   nByHiProb <- nByPareto %/% 2
   nByPareto <- nByPareto - nByHiProb
 
+  # Implement cockamamie scheme to sample different numbers of repeats
+  nuts <- tibble(ratio=6:16, rand=0.6-0.05*0:10, hiGain=0.085*0:10, pareto=0.2-0.015*0:10, hiStEr=0.2-0.02*0:10)
+  
   ### Run optimization
   # Repeatedly simulate the scheme to identify budget allocations optimizing gain
   allBatches <- toRepeat <- tibble()
@@ -57,7 +60,6 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     strtRep <- nrow(allBatches)
     # Repeat a batch of simulations
     if (nrow(toRepeat) > 0){
-      if (!is.null(baseDir)) saveRDS(toRepeat, file=paste0(baseDir, "toRepeat.rds"))
       repeatBatch <- mclapply(1:nrow(toRepeat), function(i) repeatSim(toRepeat[i,], strtRep+i, radius=0.04, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]), mc.cores=nCores)
     } else repeatBatch <- list()
     
@@ -73,35 +75,63 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
     loFormula <- paste0("genValMean ~ ", paste0(bsp$stageNames, collapse=" + "))
     loFM <- loess(loFormula, data=allBatches)
     loPred <- predict(loFM, se=T)
-    bestFit <- which.max(loPred$fit)
-    bestSE <- loPred$se.fit[bestFit]
+    whichBest <- which.max(loPred$fit)
+    bestSE <- loPred$se.fit[whichBest]
     bestClose <- which(max(loPred$fit) - loPred$fit < 2*bestSE)
     percentRanges <- t(apply(allBatches[bestClose, ] %>% dplyr::select(contains("budget")), 2, range))
     
-    # Choose on Pareto frontier of high response and high std. err. of response
+    # Cockamamie
+    ratio <- round(diff(range(loPred$fit)) / mean(loPred$se.fit))
+    percRow <- which(nuts$ratio == ratio)
+    if (ratio < min(nuts$ratio)) percRow <- 1
+    if (ratio > max(nuts$ratio)) percRow <- 11
+    nByPareto <- round(nuts$pareto[percRow] * batchSize)
+    nByHiGain <- round(nuts$hiGain[percRow] * batchSize)
+    nByStdErr <- round(nuts$hiStEr[percRow] * batchSize)
+    
+    # Choose settings to repeat to get more information there
     toRepeat <- tibble()
     fitStdErr <- tibble(batchID=1:nrow(allBatches), fit=loPred$fit, se=loPred$se.fit)
-    while (nrow(toRepeat) < nByPareto){
-      nonDomSim <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, var1name="fit", var2name="se")
-      rows <- nonDomSim$batchID
-      if (nrow(nonDomSim) > nByPareto - nrow(toRepeat)){
-        rows <- sample(rows, nByPareto - nrow(toRepeat))
+    # Repeat settings on Pareto frontier
+    rows <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, var1name="fit", var2name="se")$batchID
+    # If too many rows, keep only those with the highest gain
+    if (length(rows) > nByPareto){
+      rows <- rows[order(allBatches$genValMean[rows], decreasing=T)[1:nByPareto]]
+    }
+    toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
+    nByPareto <- nByPareto - length(rows)
+    
+    # Repeat settings that have the best chance of beating the current best
+    bestGain <- max(fitStdErr$fit)
+    probBetter <- pnorm(bestGain, fitStdErr$fit, fitStdErr$se, lower.tail=FALSE)
+    hiProb <- order(probBetter, decreasing=T)[1:nByHiGain]
+    toRepeat <- toRepeat %>% bind_rows(allBatches[fitStdErr$batchID[hiProb],])
+    fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
+    
+    # Some more with high Pareto ranks
+    while (nByPareto > 0){
+      rows <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, var1name="fit", var2name="se")$batchID
+      if (length(rows) > nByPareto){
+        rows <- rows[order(allBatches$genValMean[rows], decreasing=T)[1:nByPareto]]
       }
       toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
       fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
+      nByPareto <- nByPareto - length(rows)
     }
-    # Choose settings that have the best chance of beating the current best
-    bestGain <- max(fitStdErr$fit)
-    probBetter <- pnorm(bestGain, fitStdErr$fit, fitStdErr$se, lower.tail=FALSE)
-    hiProb <- order(probBetter, decreasing=T)[1:nByHiProb]
-    toRepeat <- toRepeat %>% bind_rows(allBatches[fitStdErr$batchID[hiProb],])
     
+    # Some with high Std Error: we need more information there
+    if (nByStdErr > 0){
+      rows <- fitStdErr$batchID[order(fitStdErr$se, decreasing=T)[1:nByStdErr]]
+    }
+    toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
+
     allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))
     
     # Save batches and results
     if (!is.null(baseDir)){
       saveRDS(allBatches, file=paste0(baseDir, "allBatches.rds"))
       saveRDS(allPR, file=paste0(baseDir, "allPercentRanges.rds"))
+      saveRDS(toRepeat, file=paste0(baseDir, paste0("toRepeat", batchesDone, ".rds")))
     }
     
     batchesDone <- batchesDone + 1
