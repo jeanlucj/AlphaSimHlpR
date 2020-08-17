@@ -61,9 +61,13 @@ errVarPreStage1
 useCurrentPhenoTrain
 TRUE
 
+# How many cycles to run the breeding scheme
+nCyclesToRun
+10
+
 # How many cycles to keep records. Must be > nStages
 nCyclesToKeepRecords
-4
+7
 
 # Name of function to advance individuals from one stage to the next
 selCritPipeAdv

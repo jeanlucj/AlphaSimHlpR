@@ -18,6 +18,7 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     nChr <- 2 # Number of chromosomes
     # Population characteristics
     effPopSize <- 100 # Effective size of population generating founders
+    quickHaplo <- TRUE # Whether to use AlphaSimR feature to go fast
     segSites <- 20 # Number of segregating sites per chromosome
     nQTL <- 5 # Number of QTL per chromosome
     nSNP <- 5 # Number of observed SNP per chromosome
@@ -30,7 +31,7 @@ specifyPopulation <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nChr", "effPopSize", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD", "relAA")
+    parmNames <- c("nChr", "effPopSize", "quickHaplo", "segSites", "nQTL", "nSNP", "genVar", "gxeVar", "gxyVar", "gxlVar", "gxyxlVar", "meanDD", "varDD", "relAA")
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
   bsp <- c(bsp, bspNew)
@@ -84,13 +85,14 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
     useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
+    nCyclesToRun <- 6 # How many cycles to run the breeding scheme
     # Function to advance individuals from one stage to the next
     selCritPipeAdv <- selCritIID
     selCritPopImprov <- selCritIID
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
     # Any parameter not specified will have a default set in calcDerivedParms
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
@@ -313,8 +315,10 @@ specifyBSP <- function(schemeDF,
 #' DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
 #' DONE nChks=0, entryToChkRatio=0
 #' DONE phenoF1toStage1=FALSE, errVarPreStage1=genoVar*20
+#' DONE quickHaplo=FALSE
 #' DONE useCurrentPhenoTrain=FALSE
-#' DONE nCyclesToKeepRecords=5
+#' DONE nCyclesToKeepRecords=max(nStages+1, 5)
+#' DONE nCyclesToRun=nCyclesToKeepRecords+1
 #' DONE selCritPipeAdv=selCritPopImprov=selCritIID
 calcDerivedParms <- function(bsp){
   # Function to check if a parameter has no value
@@ -331,12 +335,14 @@ calcDerivedParms <- function(bsp){
   # Some parms have to be logical
   makeLogical <- function(parm){
     if (nv(parm)) parm <- FALSE else parm <- as.logical(parm)
+    if (is.na(parm)) parm <- FALSE
     return(parm)
   }
   bsp$useCurrentPhenoTrain <- makeLogical(bsp$useCurrentPhenoTrain)
   bsp$useOptContrib <- makeLogical(bsp$useOptContrib)
   bsp$phenoF1toStage1 <- makeLogical(bsp$phenoF1toStage1)
-
+  bsp$quickHaplo <- makeLogical(bsp$quickHaplo)
+  
   # In case the function is referred by name, replace with actual function
   if (nv(bsp$selCritPipeAdv)) bsp$selCritPipeAdv <- selCritIID
   if (nv(bsp$selCritPopImprov)) bsp$selCritPopImprov <- selCritIID
@@ -389,7 +395,10 @@ calcDerivedParms <- function(bsp){
       bsp$errVarPreStage1 <- bsp$errVars[1] * 20
     }
   }
-  if (nv(bsp$nCyclesToKeepRecords)) bsp$nCyclesToKeepRecords <- 5
+  if (nv(bsp$nCyclesToKeepRecords))
+    bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, 5)
+  if (nv(bsp$nCyclesToRun))
+    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
   if (nv(bsp$analyzeInbreeding)) bsp$analyzeInbreeding <- 0
   
   # Defaults for GxE variance
@@ -481,6 +490,8 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
 #'
 #' @export
 sampleEntryNumbers <- function(bsp, targetBudget, percentRanges, nAttempts=5){
+  targetBudget <- targetBudget - max(bsp$nLocs) * bsp$perLocationCost
+  if (targetBudget < 0) stop("Location costs are above the target budget")
   attemptNo <- 0
   samplingDone <- FALSE
   while (!samplingDone & attemptNo < nAttempts){

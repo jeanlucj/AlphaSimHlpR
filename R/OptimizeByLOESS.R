@@ -127,14 +127,15 @@ optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBud
 
     allPR <- cbind(allPR, c(unlist(percentRanges), nSimClose=length(bestClose), bestGain=max(loPred$fit), bestSE=bestSE))
     
-    # Save batches and results
+    batchesDone <- batchesDone + 1
+
+        # Save batches and results
     if (!is.null(baseDir)){
       saveRDS(allBatches, file=paste0(baseDir, "allBatches.rds"))
       saveRDS(allPR, file=paste0(baseDir, "allPercentRanges.rds"))
       saveRDS(toRepeat, file=paste0(baseDir, paste0("toRepeat", batchesDone, ".rds")))
     }
     
-    batchesDone <- batchesDone + 1
     toleranceMet <- all(percentRanges[,2] - percentRanges[,1] < tolerance)
   }#END keep going until maxNumBatches or tolerance
   

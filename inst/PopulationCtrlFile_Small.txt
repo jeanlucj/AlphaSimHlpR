@@ -8,6 +8,12 @@ nChr
 effPopSize
 100
 
+# Whether to use the AlphaSimR "quickHaplo" feature
+# It is less realistic but greatly accelerates the 
+# creation of founders. Useful for quick tests. TRUE/FALSE
+quickHaplo
+TRUE
+
 # Number of segregating sites per chromosome
 segSites
 400
