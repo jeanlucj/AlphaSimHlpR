@@ -99,17 +99,31 @@ makeGRM <- function(records, bsp, SP){
   require(sommer)
   
   allPop <- records$F1
-  # Only make GRM of individuals that are actually genotyped
-  stageNum <- which(names(records) == bsp$stageToGenotype)
-  if (stageNum > 1){ # If stageNum == 1 just stay with records$F1
+  # Only make GRM of individuals that are specified in the TP
+  if (!is.null(bsp$trainingPopCycles)){
     allID <- NULL
-    for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
-    for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
+    tpc <- bsp$trainingPopCycles[1]
+    if (tpc){
+      lastGen <- max(records$F1@fixEff)
+      tpc <- min(lastGen, tpc)
+      allID <- records$F1@id[records$F1@fixEff %in% lastGen + (1 - tpc):0]
+    }
+    for (stageNum in 1 + 1:bsp$nStages){
+      tpc <- bsp$trainingPopCycles[stageNum]
+      if (tpc){
+        lastGen <- length(records[[stageNum]])
+        tpc <- min(lastGen, tpc)
+        for (cyc in lastGen + (1 - tpc):0){
+          allID <- c(allID, records[[stageNum]][[cyc]]$id)
+        }
+      }
+    }
     allID <- unique(allID)
     if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
     allID <- allID[order(as.integer(allID))]
     allPop <- allPop[allID]
   }
+
   if (!is.null(bsp$checks)){
     putInChks <- setdiff(bsp$checks@id, allPop@id)
     if (length(putInChks > 0)) allPop <- c(allPop, bsp$checks[putInChks])

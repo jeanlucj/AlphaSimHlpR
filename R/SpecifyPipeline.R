@@ -310,7 +310,7 @@ specifyBSP <- function(schemeDF,
 #' @details This function is only called internally by other functions used to specify the pipeline
 #'
 #' Should have default if not specified
-#' DONE stageToGenotype=SDN
+#' DONE stageToGenotype=stageNames[1]
 #' DONE useOptContrib=FALSE, 
 #' DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
 #' DONE nChks=0, entryToChkRatio=0
@@ -328,8 +328,8 @@ calcDerivedParms <- function(bsp){
   
   # Prevent some errors having to do with inconsistent parameters
   if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
-    print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites has been set to nSNP + nQTL + 1")
-    bsp$segSites <- bsp$nSNP + bsp$nQTL + 1
+    print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites set 10% bigger than nSNP + nQTL")
+    bsp$segSites <- round((bsp$nSNP + bsp$nQTL) * 1.1) + 1
   }
   
   # Some parms have to be logical
@@ -353,11 +353,8 @@ calcDerivedParms <- function(bsp){
   
   # Make sure you keep enough cycles
   bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, bsp$nCyclesToKeepRecords)
-  
-  # Stop and warn user if not enough crosses specified
-  if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
-    stop("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
-  }
+  if (nv(bsp$nCyclesToRun))
+    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
   
   # Stop and warn user if stageToGenotype is not a named stage
   if (nv(bsp$stageToGenotype)){
@@ -365,6 +362,22 @@ calcDerivedParms <- function(bsp){
   }
   if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
       stop("The stageToGenotype is not one of the pipeline stages")
+  }
+  
+  # Set up trainingPopCycles
+  if (nv(bsp$trainingPopCycles)){
+    bsp$trainingPopCycles <- integer(bsp$nStages + 1)
+    names(bsp$trainingPopCycles) <- c("F1", bsp$stageNames)
+    stageNum <- which(bsp$stageNames == bsp$stageToGenotype) + 1
+    bsp$trainingPopCycles[stageNum:(bsp$nStages + 1)] <- bsp$nCyclesToKeepRecords
+  } else{
+    cycF1 <- if_else(bsp$stageToGenotype == "F1", 2, 0)
+    bsp$trainingPopCycles <- c(F1=cycF1, bsp$trainingPopCycles)
+  }
+  
+  # Stop and warn user if not enough crosses specified
+  if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
+    stop("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
   }
   
   # Genetic architecture defaults
@@ -395,10 +408,8 @@ calcDerivedParms <- function(bsp){
       bsp$errVarPreStage1 <- bsp$errVars[1] * 20
     }
   }
-  if (nv(bsp$nCyclesToKeepRecords))
-    bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, 5)
-  if (nv(bsp$nCyclesToRun))
-    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
+  
+  # Not in use yet...
   if (nv(bsp$analyzeInbreeding)) bsp$analyzeInbreeding <- 0
   
   # Defaults for GxE variance
