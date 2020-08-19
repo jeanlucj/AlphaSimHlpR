@@ -413,12 +413,14 @@ calcDerivedParms <- function(bsp){
   
   # Check that these vectors are of the right length
   rightLength <- function(vec) length(vec) == bsp$nStages
-  v <- list(bsp$stageNames, bsp$nEntries, bsp$entryToChkRatio, bsp$nReps, bsp$nLocs, bsp$errVars, bsp$trainingPopCycles)
-  names(v) <- c("stageNames", "nEntries", "entryToChkRatio", "nReps", "nLocs", "errVars", "trainingPopCycles")
+  v <- list(bsp$stageNames, bsp$nEntries, bsp$entryToChkRatio, bsp$nReps, bsp$nLocs, bsp$errVars)
+  names(v) <- c("stageNames", "nEntries", "entryToChkRatio", "nReps", "nLocs", "errVars")
   rl <- sapply(v, rightLength)
   if (any(!rl)){
     stop(paste("These vectors do not have the right length:", paste(names(v)[!rl], collapse=" ")))
   }
+  if (length(bsp$trainingPopCycles) != bsp$nStages+1)
+    stop("trainingPopCycles does not have the right length")
   
   # Not in use yet...
   if (nv(bsp$analyzeInbreeding)) bsp$analyzeInbreeding <- 0
