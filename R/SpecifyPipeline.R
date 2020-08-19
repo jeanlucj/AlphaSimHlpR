@@ -161,6 +161,9 @@ calculateBudget <- function(bsp){
   # 2. The number of plots in each trial is nEntries*nReps + nChks*chkReps so 
   # the cost of the trial is (nEntries*nReps + nChks*chkReps)*plotCost*nLocs
   # NOTE for develCosts not accounting for number of rapid cycles
+  if (length(bsp$plotCosts) != bsp$nStages)
+    stop("plotCosts does not have the right length")
+  
   bsp$develCosts <- bsp$nCrosses * bsp$nProgeny * bsp$crossingCost
   
   if (is.null(bsp$stageToGenotype) | bsp$stageToGenotype == "F1"){
@@ -367,7 +370,6 @@ calcDerivedParms <- function(bsp){
   # Set up trainingPopCycles
   if (nv(bsp$trainingPopCycles)){
     bsp$trainingPopCycles <- integer(bsp$nStages + 1)
-    names(bsp$trainingPopCycles) <- c("F1", bsp$stageNames)
     stageNum <- which(bsp$stageNames == bsp$stageToGenotype) + 1
     bsp$trainingPopCycles[stageNum:(bsp$nStages + 1)] <- bsp$nCyclesToKeepRecords
   } else{
@@ -409,6 +411,15 @@ calcDerivedParms <- function(bsp){
     }
   }
   
+  # Check that these vectors are of the right length
+  rightLength <- function(vec) length(vec) == bsp$nStages
+  v <- list(bsp$stageNames, bsp$nEntries, bsp$entryToChkRatio, bsp$nReps, bsp$nLocs, bsp$errVars, bsp$trainingPopCycles)
+  names(v) <- c("stageNames", "nEntries", "entryToChkRatio", "nReps", "nLocs", "errVars", "trainingPopCycles")
+  rl <- sapply(v, rightLength)
+  if (any(!rl)){
+    stop(paste("These vectors do not have the right length:", paste(names(v)[!rl], collapse=" ")))
+  }
+  
   # Not in use yet...
   if (nv(bsp$analyzeInbreeding)) bsp$analyzeInbreeding <- 0
   
@@ -427,6 +438,7 @@ calcDerivedParms <- function(bsp){
 
   # Make sure everything has names
   names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- names(bsp$entryToChkRatio) <- bsp$stageNames
+  names(bsp$trainingPopCycles) <- c("F1", bsp$stageNames)
   bsp <- c(bsp, list(chkReps=chkReps), list(checks=NULL))
   return(bsp)
 }
