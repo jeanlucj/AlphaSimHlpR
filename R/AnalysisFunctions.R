@@ -154,11 +154,17 @@ iidPhenoEval <- function(phenoDF){
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
   phenoDF <- phenoDF %>% dplyr::mutate(entryChk=if_else(isChk=="check", id, "-1"))
   fm <- lmer(pheno ~ entryChk + (1|id:isChk), weights=errVar, data=phenoDF)
-  blup <- as.matrix(ranef(fm)[[1]])[,1]
+  blup <- as.matrix(ranef(fm)[[1]])[,1] # Make into matrix to get names
   names(blup) <- (names(blup) %>% strsplit(":", fixed=T) %>% unlist %>%
                   matrix(nrow=2))[1,]
+  # Ensure output has variation: needed for optimal contributions
+  if (sd(blup) == 0){
+    namesBlup <- names(blup)
+    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
+    names(blup) <- namesBlup
+  }
   cat("idPEE", "\n")
-  return(blup) # Make into matrix to get names
+  return(blup)
 }
 
 #' grmPhenoEval function
@@ -180,17 +186,24 @@ grmPhenoEval <- function(phenoDF, grm){
   cat("grPES", "\n")
   require(sommer)
   phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-  phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
+  phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
   fm <- mmer(pheno ~ 1,
              random= ~ vs(id, Gu=grm),
              method="EMMA",
              rcov= ~ units,
-             weights=errVar,
+             weights=wgt,
              data=phenoDF,
              verbose=F,
              date.warning=F)
+  blup <- fm$U[[1]][[1]]
+  # Ensure output has variation: needed for optimal contributions
+  if (sd(blup) == 0){
+    namesBlup <- names(blup)
+    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
+    names(blup) <- namesBlup
+  }
   cat("grPEE", "\n")
-  return(fm$U[[1]][[1]])
+  return(blup)
 }
 
 #' selCritIID function
