@@ -62,7 +62,10 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     nParents <- 20 # Number of parents in the crossing nursery
     nCrosses <- 20 # Number of crosses entering the pipeline
     nProgeny <- 10 # Number of progeny per cross
-    # Don't use optimum contributions in simple default. Define other parms in case
+    usePolycrossNursery <- FALSE # If TRUE then completely random mating
+    nSeeds <- 200 # Number of seeds if usePolycrossNursery
+    
+    # Don't use optimum contributions in simple default. Define parms in case
     useOptContrib <- FALSE
     nCandOptCont <- 100
     targetEffPopSize <- 30
@@ -92,7 +95,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "usePolycrossNursery", "nSeeds", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
     # Any parameter not specified will have a default set in calcDerivedParms
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
@@ -342,6 +345,7 @@ calcDerivedParms <- function(bsp){
   bsp$useOptContrib <- makeLogical(bsp$useOptContrib)
   bsp$phenoF1toStage1 <- makeLogical(bsp$phenoF1toStage1)
   bsp$quickHaplo <- makeLogical(bsp$quickHaplo)
+  bsp$usePolycrossNursery <- makeLogical(bsp$usePolycrossNursery)
   
   # In case the function is referred by name, replace with actual function
   if (nv(bsp$selCritPipeAdv)) bsp$selCritPipeAdv <- selCritIID
@@ -353,6 +357,15 @@ calcDerivedParms <- function(bsp){
   
   # Make sure you keep enough cycles
   bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, bsp$nCyclesToKeepRecords)
+  
+  # If usePolycrossNursery then one seed per cross
+  if (bsp$userPolycrossNursery){
+    if (nv(bsp$nSeeds)){
+      bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
+    }
+    bsp$nCrosses <- bsp$nSeeds
+    bsp$nProgeny <- 1
+  }
   
   # Stop and warn user if not enough crosses specified
   if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){

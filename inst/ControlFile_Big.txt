@@ -18,6 +18,14 @@ nCrosses
 nProgeny
 20
 
+# Whether to use a polycross nursery. If it is used, nSeeds are made
+# using completely random mating
+usePolycrossNursery
+FALSE
+# Parameter to determine the number of seeds only if usePolycrossNursery TRUE
+nSeeds
+4000
+
 # Optimum contributions parameters
 useOptContrib
 TRUE
