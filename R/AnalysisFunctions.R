@@ -47,7 +47,6 @@ elementWise <- function(arrayList, fnc=mean){
 #' 
 #' @export
 framePhenoRec <- function(records, bsp){
-  cat("frPRS", "\n")
   allPheno <- tibble()
   for (stage in 1 + 1:bsp$nStages){
     for (year in 1:length(records[[stage]])){
@@ -55,7 +54,6 @@ framePhenoRec <- function(records, bsp){
       allPheno <- bind_rows(allPheno, thisPheno)
     }
   }
-  cat("frPRE", "\n")
   return(allPheno)
 }
 
@@ -75,13 +73,11 @@ framePhenoRec <- function(records, bsp){
 #' 
 #' @export
 phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
-  cat("pRFPS", "\n")
   # Entries and replicates have different numbers of stages
   nReps <- if_else(checks, bsp$chkReps[stage], bsp$nReps[stage])
   varE <- bsp$gxyVar + (bsp$gxlVar + bsp$gxyxlVar + bsp$errVars[stage] / nReps) / bsp$nLocs[stage]
   # Set this up for the lmer method distinguishing checks from experimentals
   phenoRec <- tibble(id=pop@id, mother=pop@mother, father=pop@father, stage=bsp$stageNames[stage], isChk=if_else(checks, "check", "exptl"), pheno=pheno(pop), genoVal=gv(pop), errVar=varE)
-  cat("pRFPE", "\n")
   return(phenoRec)
 }
 
@@ -100,7 +96,6 @@ phenoRecFromPop <- function(pop, bsp, stage, checks=FALSE){
 #' 
 #' @export
 makeGRM <- function(records, bsp, SP){
-  cat("mkGRS", "\n")
   require(sommer)
   
   allPop <- records$F1
@@ -131,7 +126,6 @@ makeGRM <- function(records, bsp, SP){
     putInChks <- setdiff(bsp$checks@id, allPop@id)
     if (length(putInChks > 0)) allPop <- c(allPop, bsp$checks[putInChks])
   }
-  cat("mkGRE", "\n")
   return(A.mat(pullSnpGeno(allPop, simParam=SP) - 1))
 }
 
@@ -149,7 +143,6 @@ makeGRM <- function(records, bsp, SP){
 #' 
 #' @export
 iidPhenoEval <- function(phenoDF){
-  cat("idPES", "\n")
   require(lme4)
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
   phenoDF <- phenoDF %>% dplyr::mutate(entryChk=if_else(isChk=="check", id, "-1"))
@@ -163,7 +156,6 @@ iidPhenoEval <- function(phenoDF){
     blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
     names(blup) <- namesBlup
   }
-  cat("idPEE", "\n")
   return(blup)
 }
 
@@ -183,7 +175,6 @@ iidPhenoEval <- function(phenoDF){
 #' 
 #' @export
 grmPhenoEval <- function(phenoDF, grm){
-  cat("grPES", "\n")
   require(sommer)
   phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
   phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
@@ -202,7 +193,6 @@ grmPhenoEval <- function(phenoDF, grm){
     blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
     names(blup) <- namesBlup
   }
-  cat("grPEE", "\n")
   return(blup)
 }
 
@@ -224,7 +214,6 @@ grmPhenoEval <- function(phenoDF, grm){
 #' 
 #' @export
 selCritIID <- function(records, candidates, bsp, SP){
-  cat("sCIDS", "\n")
   phenoDF <- framePhenoRec(records, bsp)
   # Candidates don't have phenotypes so return random vector
   if (!any(candidates %in% phenoDF$id)){ 
@@ -234,7 +223,6 @@ selCritIID <- function(records, candidates, bsp, SP){
     crit <- iidPhenoEval(phenoDF)
     crit <- crit[candidates]
   }
-  cat("sCIDE", "\n")
   return(crit)
 }
 
@@ -254,7 +242,6 @@ selCritIID <- function(records, candidates, bsp, SP){
 #' 
 #' @export
 selCritGRM <- function(records, candidates, bsp, SP){
-  cat("sCGRS", "\n")
   grm <- makeGRM(records, bsp, SP)
   if (!any(candidates %in% rownames(grm))){ 
     crit <- runif(length(candidates))
@@ -266,6 +253,5 @@ selCritGRM <- function(records, candidates, bsp, SP){
     crit <- grmPhenoEval(phenoDF, grm)
     crit <- crit[candidates]
   }
-  cat("sCGRE", "\n")
   return(crit)
 }

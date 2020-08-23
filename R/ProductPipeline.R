@@ -34,7 +34,6 @@ prodPipeFncChk <- function(records, bsp, SP){
 #'
 #' @export
 productPipeline <- function(records, bsp, SP){
-  cat("prPiS", "\n")
   # Calculate the selection criterion. selCritPipeAdv has to be given in bsp
   candidates <- records$F1@id
   selCrit <- bsp$selCritPipeAdv(records, candidates, bsp, SP)
@@ -95,7 +94,6 @@ productPipeline <- function(records, bsp, SP){
   # Remove old records if needed
   if (length(records[[2]]) > bsp$nCyclesToKeepRecords) records <- removeOldestCyc(records, bsp)
 
-  cat("prPiE", "\n")
   return(records)
 }
 
@@ -117,7 +115,6 @@ productPipeline <- function(records, bsp, SP){
 #' records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year, bsp$stageNames))
 #' 
 stageOutputs <- function(id, f1, selCrit, stage, year, stageNames){
-  cat("stOtS", "\n")
   stageName <- c("F1", stageNames)[stage+1]
   f1 <- f1[id]
   selCrit <- selCrit[id]
@@ -128,7 +125,6 @@ stageOutputs <- function(id, f1, selCrit, stage, year, stageNames){
     gvOfBestCrit <- gv(f1[names(selCrit)[bestCrit]])
   }
   highestGV <- max(gv(f1))
-  cat("stOtE", "\n")
   return(tibble(cycle=year-stage, year=year, stage=stageName, first=first(id), last=last(id), genValMean=mean(gv(f1)), genValSD=sd(gv(f1)), evalAtSelMean=mean(selCrit, na.rm=T), evalAtSelSD=sd(selCrit, na.rm=T), accAtSel=cor(gv(f1), selCrit), gvOfBestCrit=gvOfBestCrit, highestGV=highestGV, nContribToPar=list(NA)))
 }
 
