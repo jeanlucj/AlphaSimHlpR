@@ -21,6 +21,7 @@
 #' 
 #' @export
 popImprov1Cyc <- function(records, bsp, SP){
+  cat("pI1cS", "\n")
   # Include current year phenotypes for model training?
   trainRec <- records
   if (!bsp$useCurrentPhenoTrain){
@@ -47,6 +48,7 @@ popImprov1Cyc <- function(records, bsp, SP){
     records$stageOutputs$nContribToPar[[strtStgOut + stage]] <- tibble(cycle=as.integer(colnames(stgCyc)), nContribToPar=stgCyc[i,])
   }
   records$F1 <- c(records$F1, progeny)
+  cat("pI1cE", "\n")
   return(records)
 }
 
@@ -143,6 +145,7 @@ popImprov2Cyc <- function(records, bsp, SP){
 #' progeny <- optContrib(records, bsp, SP, crit)
 #' @export
 optContrib <- function(records, bsp, SP, crit){
+  cat("oCntS", "\n")
   require(optiSel)
   candidates <- names(crit)[order(crit, decreasing=T)[1:bsp$nCandOptCont]]
   grm <- sommer::A.mat(pullSnpGeno(records$F1[candidates], simParam=SP) - 1)
@@ -196,5 +199,6 @@ optContrib <- function(records, bsp, SP, crit){
     }
   }
   progeny <- makeCross(records[[1]], crossPlan, simParam=SP)
+  cat("oCntE", "\n")
   return(progeny)
 }
