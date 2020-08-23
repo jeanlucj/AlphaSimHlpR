@@ -162,7 +162,7 @@ optContrib <- function(records, bsp, SP, crit){
     ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
   )
   cat("***5\n")
-  
+  saveRDS(mget(ls()), file="~/optContrib.rds")
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
   cat("***6\n")
   totOffspr <- bsp$nCrosses * bsp$nProgeny
