@@ -100,30 +100,28 @@ makeGRM <- function(records, bsp, SP){
   
   allPop <- records$F1
   # Only make GRM of individuals that are specified in the TP
-  if (!is.null(bsp$trainingPopCycles)){
-    allID <- NULL
-    tpc <- bsp$trainingPopCycles[1]
+  allID <- NULL
+  tpc <- bsp$trainingPopCycles[1]
+  if (tpc){
+    lastGen <- max(records$F1@fixEff)
+    tpc <- min(lastGen, tpc)
+    allID <- records$F1@id[records$F1@fixEff %in% lastGen + (1 - tpc):0]
+  }
+  for (stageNum in 1 + 1:bsp$nStages){
+    tpc <- bsp$trainingPopCycles[stageNum]
     if (tpc){
-      lastGen <- max(records$F1@fixEff)
+      lastGen <- length(records[[stageNum]])
       tpc <- min(lastGen, tpc)
-      allID <- records$F1@id[records$F1@fixEff %in% lastGen + (1 - tpc):0]
-    }
-    for (stageNum in 1 + 1:bsp$nStages){
-      tpc <- bsp$trainingPopCycles[stageNum]
-      if (tpc){
-        lastGen <- length(records[[stageNum]])
-        tpc <- min(lastGen, tpc)
-        for (cyc in lastGen + (1 - tpc):0){
-          allID <- c(allID, records[[stageNum]][[cyc]]$id)
-        }
+      for (cyc in lastGen + (1 - tpc):0){
+        allID <- c(allID, records[[stageNum]][[cyc]]$id)
       }
     }
-    allID <- unique(allID)
-    if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
-    allID <- allID[order(as.integer(allID))]
-    allPop <- allPop[allID]
   }
-
+  allID <- unique(allID)
+  if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
+  allID <- allID[order(as.integer(allID))]
+  allPop <- allPop[allID]
+  
   if (!is.null(bsp$checks)){
     putInChks <- setdiff(bsp$checks@id, allPop@id)
     if (length(putInChks > 0)) allPop <- c(allPop, bsp$checks[putInChks])
