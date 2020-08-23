@@ -148,22 +148,29 @@ optContrib <- function(records, bsp, SP, crit){
   cat("oCntS", "\n")
   require(optiSel)
   candidates <- names(crit)[order(crit, decreasing=T)[1:bsp$nCandOptCont]]
+  cat("***1\n")
   grm <- sommer::A.mat(pullSnpGeno(records$F1[candidates], simParam=SP) - 1)
+  cat("***2\n")
   grm <- grm[candidates, candidates] # Put it in the right order
+  cat("***3\n")
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
   invisible(capture.output(cand <- optiSel::candes(phen, grm=grm, quiet=T)))
+  cat("***4\n")
   
   Ne <- bsp$targetEffPopSize
   con <- list(
     ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
   )
+  cat("***5\n")
   
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
+  cat("***6\n")
   totOffspr <- bsp$nCrosses * bsp$nProgeny
   keep <- oc$oc > 1 / totOffspr / 4
   oc <- oc[keep,]
   grm <- grm[keep, keep]
   oc$nOffspr <- oc$oc * 2 * totOffspr
+  cat("***7\n")
   # Make sum to 2*totOffspr: very arcane but it works
   curOffspr <- sum(round(oc$nOffspr))
   if (curOffspr != 2*totOffspr){
@@ -175,9 +182,11 @@ optContrib <- function(records, bsp, SP, crit){
     chng <- chng[order(decim, decreasing=T)[1:abs(nDiff)]]
     oc$nOffspr[oc$Indiv %in% chng] <- oc$nOffspr[oc$Indiv %in% chng] + addOrSub
   }
+  cat("***8\n")
   oc$nOffspr <- round(oc$nOffspr)
   oc$remOffspr <- oc$nOffspr
   crossPlan <- NULL
+  cat("***9\n")
   for (curPar in order(oc$nOffspr, decreasing=T)){
     while(oc$remOffspr[curPar] > 0){
       # find which other has minimum relationship with curPar
@@ -198,7 +207,9 @@ optContrib <- function(records, bsp, SP, crit){
       }
     }
   }
+  cat("**10\n")
   progeny <- makeCross(records[[1]], crossPlan, simParam=SP)
+  cat("**11\n")
   cat("oCntE", "\n")
   return(progeny)
 }
