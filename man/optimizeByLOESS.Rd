@@ -42,7 +42,7 @@ optimizeByLOESS(
 
 \item{populationImprovement}{Function for runBreedingScheme}
 
-\item{bsp}{A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains species / population parameters: nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP}
+\item{bsp}{A list of breeding scheme parameters.}
 
 \item{randomSeed}{Integer seed for random number generator}
 

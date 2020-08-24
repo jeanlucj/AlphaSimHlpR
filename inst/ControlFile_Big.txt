@@ -8,6 +8,13 @@ SDN CET PYT AYT UY1 UY2
 stageToGenotype
 SDN
 
+# How many cycles back to keep records from each stage in the training
+# population. More cycles means bigger training population but also more
+# distant from the selection candidates. Fewer cycles means the simulation
+# runs faster
+trainingPopCycles
+3 3 3 2 1 1
+
 # Number of parents in the crossing nursery
 nParents
 30

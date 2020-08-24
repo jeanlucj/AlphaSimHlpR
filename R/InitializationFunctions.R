@@ -82,7 +82,7 @@ initializeScheme <- function(bsp){
 #' function to create initial records at the start of a simulation
 #'
 #' @param founders Pop-class object of the founders of the breeding program
-#' @param bsp A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details
+#' @param bsp A list of product pipeline parameters. See \code{runBreedingScheme} for details
 #' @return A \code{records} object. A list of lists containing nStages+1 lists. The first list contains one Pop-class of progeny per year of the scheme. The remaining lists contain one matrix per year that has individual id, mother, father, stage, phenotypes, and error variances. The individuals have been phenotyped using \code{setPheno}. The matrix may contain a mix of experimental and check phenotypes with different levels of replication
 #' 
 #' @details This is a structure for a records object that will be used to simulate breeding schemes

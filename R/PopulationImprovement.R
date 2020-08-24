@@ -37,6 +37,7 @@ popImprov1Cyc <- function(records, bsp, SP){
     parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
     progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
   }
+  progeny@fixEff <- rep(as.integer(max(records$stageOutputs$year) + 1), bsp$nSeeds)
   parentsUsed <- unique(c(progeny@mother, progeny@father))
   stgCyc <- sapply(parentsUsed, whereIsID, records=records)
   stgCyc <- table(stgCyc[1,], stgCyc[2,])
@@ -148,22 +149,20 @@ optContrib <- function(records, bsp, SP, crit){
   grm <- grm[candidates, candidates] # Put it in the right order
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])
   invisible(capture.output(cand <- optiSel::candes(phen, grm=grm, quiet=T)))
-  
+
   Ne <- bsp$targetEffPopSize
   con <- list(
     ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
   )
-  
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
-  totOffspr <- bsp$nCrosses * bsp$nProgeny
-  keep <- oc$oc > 1 / totOffspr / 4
+  keep <- oc$oc > 1 / bsp$nSeeds / 4
   oc <- oc[keep,]
   grm <- grm[keep, keep]
-  oc$nOffspr <- oc$oc * 2 * totOffspr
-  # Make sum to 2*totOffspr: very arcane but it works
+  oc$nOffspr <- oc$oc * 2 * bsp$nSeeds
+  # Make sum to 2*bsp$nSeeds: very arcane but it works
   curOffspr <- sum(round(oc$nOffspr))
-  if (curOffspr != 2*totOffspr){
-    nDiff <- 2*totOffspr - curOffspr
+  if (curOffspr != 2*bsp$nSeeds){
+    nDiff <- 2*bsp$nSeeds - curOffspr
     addOrSub <- sign(nDiff)
     decim <- addOrSub * (oc$nOffspr - floor(oc$nOffspr))
     keep <- decim + (addOrSub < 0) < 0.5
@@ -182,7 +181,7 @@ optContrib <- function(records, bsp, SP, crit){
         redis <- sample(nrow(crossPlan), ceiling(oc$remOffspr[mate]/2))
         redisPar <- c(crossPlan[redis,])
         crossPlan <- rbind(crossPlan[-redis,], cbind(oc$Indiv[mate], redisPar))
-        oc$remOffspr[mate] <- 0
+        oc$remOffspr[curPar] <- 0
       } else{
         nProg <- min(oc$remOffspr[curPar], oc$remOffspr[mate], bsp$nProgeny)
         if (nProg > 0){
@@ -193,6 +192,14 @@ optContrib <- function(records, bsp, SP, crit){
         grm[curPar, mate] <- grm[mate, curPar] <- 1e6
       }
     }
+  }
+  if (nrow(crossPlan) > bsp$nSeeds){
+    remRow <- sample(nrow(crossPlan), nrow(crossPlan) - bsp$nSeeds)
+    crossPlan <- crossPlan[-remRow,]
+  }
+  if (nrow(crossPlan) < bsp$nSeeds){
+    addRow <- sample(nrow(crossPlan), bsp$nSeeds - nrow(crossPlan))
+    crossPlan <- rbind(crossPlan, crossPlan[addRow,])
   }
   progeny <- makeCross(records[[1]], crossPlan, simParam=SP)
   return(progeny)

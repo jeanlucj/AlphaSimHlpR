@@ -59,6 +59,8 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     
     stageToGenotype <- "SDN"
     
+    trainingPopCycles <- c(3, 3, 2, 1)
+    
     nParents <- 20 # Number of parents in the crossing nursery
     nCrosses <- 20 # Number of crosses entering the pipeline
     nProgeny <- 10 # Number of progeny per cross
@@ -85,7 +87,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     phenoF1toStage1 <- FALSE
     errVarPreStage1 <- 500
     
-    names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- stageNames
+    names(nEntries) <- names(nChks) <- names(nReps) <- names(errVars) <- names(trainingPopCycles) <- stageNames
     useCurrentPhenoTrain <- FALSE
     nCyclesToKeepRecords <- 5 # How many cycles to keep records
     nCyclesToRun <- 6 # How many cycles to run the breeding scheme
@@ -95,7 +97,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "stageToGenotype", "nParents", "nCrosses", "nProgeny", "usePolycrossNursery", "nSeeds", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "stageToGenotype", "trainingPopCycles", "nParents", "nCrosses", "nProgeny", "usePolycrossNursery", "nSeeds", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
     # Any parameter not specified will have a default set in calcDerivedParms
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
@@ -164,6 +166,9 @@ calculateBudget <- function(bsp){
   # 2. The number of plots in each trial is nEntries*nReps + nChks*chkReps so 
   # the cost of the trial is (nEntries*nReps + nChks*chkReps)*plotCost*nLocs
   # NOTE for develCosts not accounting for number of rapid cycles
+  if (length(bsp$plotCosts) != bsp$nStages)
+    stop("plotCosts does not have the right length")
+  
   bsp$develCosts <- bsp$nCrosses * bsp$nProgeny * bsp$crossingCost
   
   if (is.null(bsp$stageToGenotype) | bsp$stageToGenotype == "F1"){
@@ -313,7 +318,7 @@ specifyBSP <- function(schemeDF,
 #' @details This function is only called internally by other functions used to specify the pipeline
 #'
 #' Should have default if not specified
-#' DONE stageToGenotype=SDN
+#' DONE stageToGenotype=stageNames[1]
 #' DONE useOptContrib=FALSE, 
 #' DONE nCandOptCont=nEntries[1], targetEffPopSize=nParents
 #' DONE nChks=0, entryToChkRatio=0
@@ -331,8 +336,8 @@ calcDerivedParms <- function(bsp){
   
   # Prevent some errors having to do with inconsistent parameters
   if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
-    print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites has been set to nSNP + nQTL + 1")
-    bsp$segSites <- bsp$nSNP + bsp$nQTL + 1
+    print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites set 10% bigger than nSNP + nQTL")
+    bsp$segSites <- round((bsp$nSNP + bsp$nQTL) * 1.1) + 1
   }
   
   # Some parms have to be logical
@@ -357,20 +362,35 @@ calcDerivedParms <- function(bsp){
   
   # Make sure you keep enough cycles
   bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, bsp$nCyclesToKeepRecords)
-  
+
   # If usePolycrossNursery then one seed per cross
-  if (bsp$userPolycrossNursery){
-    if (nv(bsp$nSeeds)){
-      bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
-    }
+  if (nv(bsp$nSeeds)){
+    bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
+  }
+  if (bsp$usePolycrossNursery){
     bsp$nCrosses <- bsp$nSeeds
     bsp$nProgeny <- 1
+  }
+  
+  # Optimal contributions defaults
+  if (bsp$useOptContrib){
+    if (bsp$usePolycrossNursery) stop("Polycross nursery and optimal contributions cannot be used together")
+    if (nv(bsp$nCandOptCont)) bsp$nCandOptCont <- min(bsp$nEntries[1], bsp$nParents*10)
+    if (nv(bsp$targetEffPopSize)) bsp$targetEffPopSize <- bsp$nParents
+    # Don't want number of progeny to be too small
+    if (bsp$nProgeny < bsp$nSeeds / bsp$targetEffPopSize / 2){
+      bsp$nProgeny <- round(bsp$nSeeds / bsp$targetEffPopSize / 2)
+      bsp$nCrosses <- round(bsp$nSeeds / bsp$nProgeny)
+    }
   }
   
   # Stop and warn user if not enough crosses specified
   if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
     stop("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
   }
+
+  if (nv(bsp$nCyclesToRun))
+    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
   
   # Stop and warn user if stageToGenotype is not a named stage
   if (nv(bsp$stageToGenotype)){
@@ -378,6 +398,21 @@ calcDerivedParms <- function(bsp){
   }
   if (!(bsp$stageToGenotype %in% c("F1", bsp$stageNames))){
       stop("The stageToGenotype is not one of the pipeline stages")
+  }
+  
+  # Set up trainingPopCycles
+  if (nv(bsp$trainingPopCycles)){
+    bsp$trainingPopCycles <- integer(bsp$nStages + 1)
+    stageNum <- which(bsp$stageNames == bsp$stageToGenotype) + 1
+    bsp$trainingPopCycles[stageNum:(bsp$nStages + 1)] <- bsp$nCyclesToKeepRecords
+  } else{
+    cycF1 <- if_else(bsp$stageToGenotype == "F1", 2, 0)
+    bsp$trainingPopCycles <- c(F1=cycF1, bsp$trainingPopCycles)
+  }
+  
+  # Stop and warn user if not enough crosses specified
+  if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
+    stop("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
   }
   
   # Genetic architecture defaults
@@ -399,19 +434,24 @@ calcDerivedParms <- function(bsp){
   chkReps <- if_else(is.infinite(chkReps) | is.nan(chkReps) | is.na(chkReps), 0, chkReps)
   
   # Enforce other defaults
-  if (bsp$useOptContrib){
-    if (nv(bsp$nCandOptCont)) bsp$nCandOptCont <- min(bsp$nEntries[1], bsp$nParents*10)
-    if (nv(bsp$targetEffPopSize)) bsp$targetEffPopSize <- bsp$nParents
-  }
   if (bsp$phenoF1toStage1){
     if (nv(bsp$errVarPreStage1)){
       bsp$errVarPreStage1 <- bsp$errVars[1] * 20
     }
   }
-  if (nv(bsp$nCyclesToKeepRecords))
-    bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, 5)
-  if (nv(bsp$nCyclesToRun))
-    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
+  
+  # Check that these vectors are of the right length
+  rightLength <- function(vec) length(vec) == bsp$nStages
+  v <- list(bsp$stageNames, bsp$nEntries, bsp$entryToChkRatio, bsp$nReps, bsp$nLocs, bsp$errVars)
+  names(v) <- c("stageNames", "nEntries", "entryToChkRatio", "nReps", "nLocs", "errVars")
+  rl <- sapply(v, rightLength)
+  if (any(!rl)){
+    stop(paste("These vectors do not have the right length:", paste(names(v)[!rl], collapse=" ")))
+  }
+  if (length(bsp$trainingPopCycles) != bsp$nStages+1)
+    stop("trainingPopCycles does not have the right length")
+  
+  # Not in use yet...
   if (nv(bsp$analyzeInbreeding)) bsp$analyzeInbreeding <- 0
   
   # Defaults for GxE variance
@@ -429,6 +469,7 @@ calcDerivedParms <- function(bsp){
 
   # Make sure everything has names
   names(bsp$nEntries) <- names(bsp$nChks) <- names(bsp$nReps) <- names(bsp$nLocs) <- names(bsp$errVars) <- names(chkReps) <- names(bsp$entryToChkRatio) <- bsp$stageNames
+  names(bsp$trainingPopCycles) <- c("F1", bsp$stageNames)
   bsp <- c(bsp, list(chkReps=chkReps), list(checks=NULL))
   return(bsp)
 }

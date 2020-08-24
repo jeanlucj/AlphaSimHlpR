@@ -20,7 +20,7 @@
 #' @param initializeFunc Function for runBreedingScheme
 #' @param productPipeline Function for runBreedingScheme
 #' @param populationImprovement Function for runBreedingScheme
-#' @param bsp  A list of breeding scheme parameters. It contains pipeline parameters: nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords. It contains species / population parameters: nChr, segSites, nQTL, genVar, meanDD, varDD, nSNP
+#' @param bsp  A list of breeding scheme parameters.
 #' @param randomSeed Integer seed for random number generator
 #' @param nCores Integer number of cores to use for parallel simulation
 #' @return Numeric matix with all simulations budget allocations, gen mean change, gen std dev change, total cost.

@@ -9,7 +9,7 @@ fillPipeline(founders, bsp = NULL, SP)
 \arguments{
 \item{founders}{Pop-class object of the founders of the breeding program}
 
-\item{bsp}{A list of product pipeline parameters.  It contains nParents, nCrosses, nProgeny, checks, nStages, errVars, nReps, nEntries, nChks, stageNames, and nCyclesToKeepRecords.  See \code{runBreedingScheme} for details}
+\item{bsp}{A list of product pipeline parameters. See \code{runBreedingScheme} for details}
 }
 \value{
 A \code{records} object. A list of lists containing nStages+1 lists. The first list contains one Pop-class of progeny per year of the scheme. The remaining lists contain one matrix per year that has individual id, mother, father, stage, phenotypes, and error variances. The individuals have been phenotyped using \code{setPheno}. The matrix may contain a mix of experimental and check phenotypes with different levels of replication

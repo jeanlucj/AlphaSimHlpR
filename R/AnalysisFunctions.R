@@ -99,17 +99,29 @@ makeGRM <- function(records, bsp, SP){
   require(sommer)
   
   allPop <- records$F1
-  # Only make GRM of individuals that are actually genotyped
-  stageNum <- which(names(records) == bsp$stageToGenotype)
-  if (stageNum > 1){ # If stageNum == 1 just stay with records$F1
-    allID <- NULL
-    for (i in 1:length(records[[stageNum]])) allID <- c(allID, records[[stageNum]][[i]]$id)
-    for (i in 1 + stageNum:bsp$nStages) allID <- c(allID, records[[i]][[1]]$id)
-    allID <- unique(allID)
-    if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
-    allID <- allID[order(as.integer(allID))]
-    allPop <- allPop[allID]
+  # Only make GRM of individuals that are specified in the TP
+  allID <- NULL
+  tpc <- bsp$trainingPopCycles[1]
+  if (tpc){
+    lastGen <- max(records$F1@fixEff)
+    tpc <- min(lastGen, tpc)
+    allID <- records$F1@id[records$F1@fixEff %in% lastGen + (1 - tpc):0]
   }
+  for (stageNum in 1 + 1:bsp$nStages){
+    tpc <- bsp$trainingPopCycles[stageNum]
+    if (tpc){
+      lastGen <- length(records[[stageNum]])
+      tpc <- min(lastGen, tpc)
+      for (cyc in lastGen + (1 - tpc):0){
+        allID <- c(allID, records[[stageNum]][[cyc]]$id)
+      }
+    }
+  }
+  allID <- unique(allID)
+  if (!is.null(bsp$checks)) allID <- setdiff(allID, bsp$checks@id)
+  allID <- allID[order(as.integer(allID))]
+  allPop <- allPop[allID]
+  
   if (!is.null(bsp$checks)){
     putInChks <- setdiff(bsp$checks@id, allPop@id)
     if (length(putInChks > 0)) allPop <- c(allPop, bsp$checks[putInChks])
@@ -135,10 +147,16 @@ iidPhenoEval <- function(phenoDF){
   phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
   phenoDF <- phenoDF %>% dplyr::mutate(entryChk=if_else(isChk=="check", id, "-1"))
   fm <- lmer(pheno ~ entryChk + (1|id:isChk), weights=errVar, data=phenoDF)
-  blup <- as.matrix(ranef(fm)[[1]])[,1]
+  blup <- as.matrix(ranef(fm)[[1]])[,1] # Make into matrix to get names
   names(blup) <- (names(blup) %>% strsplit(":", fixed=T) %>% unlist %>%
                   matrix(nrow=2))[1,]
-  return(blup) # Make into matrix to get names
+  # Ensure output has variation: needed for optimal contributions
+  if (sd(blup) == 0){
+    namesBlup <- names(blup)
+    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
+    names(blup) <- namesBlup
+  }
+  return(blup)
 }
 
 #' grmPhenoEval function
@@ -159,16 +177,23 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
   require(sommer)
   phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-  phenoDF$errVar <- 1/phenoDF$errVar # Make into weights
+  phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
   fm <- mmer(pheno ~ 1,
              random= ~ vs(id, Gu=grm),
              method="EMMA",
              rcov= ~ units,
-             weights=errVar,
+             weights=wgt,
              data=phenoDF,
              verbose=F,
              date.warning=F)
-  return(fm$U[[1]][[1]])
+  blup <- fm$U[[1]][[1]]
+  # Ensure output has variation: needed for optimal contributions
+  if (sd(blup) == 0){
+    namesBlup <- names(blup)
+    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
+    names(blup) <- namesBlup
+  }
+  return(blup)
 }
 
 #' selCritIID function
