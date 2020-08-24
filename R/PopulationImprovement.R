@@ -37,6 +37,10 @@ popImprov1Cyc <- function(records, bsp, SP){
     parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
     progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
   }
+  if (nInd(progeny) != bsp$nCrosses * bsp$nProgeny){
+    cat("uh oh fixEff problem\n")
+    saveRDS(mget(ls()), "~/fixEffProb.rds")
+  }
   progeny@fixEff <- rep(as.integer(max(records$stageOutputs$year) + 1), bsp$nCrosses * bsp$nProgeny)
   parentsUsed <- unique(c(progeny@mother, progeny@father))
   stgCyc <- sapply(parentsUsed, whereIsID, records=records)
@@ -154,7 +158,6 @@ optContrib <- function(records, bsp, SP, crit){
   con <- list(
     ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
   )
-  saveRDS(mget(ls()), file="~/optContrib.rds")
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
   totOffspr <- bsp$nCrosses * bsp$nProgeny
   keep <- oc$oc > 1 / totOffspr / 4
