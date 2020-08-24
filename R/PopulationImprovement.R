@@ -193,6 +193,7 @@ optContrib <- function(records, bsp, SP, crit){
           remPar <- which(oc$remOffspr > 0)
           remPar <- rep(oc$Indiv[remPar], each=oc$remOffspr[remPar])
           crossPlan <- rbind(crossPlan, matrix(sample(remPar), ncol=2))
+          oc$remOffspr <- 0
         }
       } else{
         nProg <- min(oc$remOffspr[curPar], oc$remOffspr[mate], bsp$nProgeny)
