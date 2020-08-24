@@ -184,17 +184,10 @@ optContrib <- function(records, bsp, SP, crit){
       # find which other has minimum relationship with curPar
       mate <- which.min(grm[curPar,])
       if (mate == curPar){ # Happens if last parent somewhat related to all
-        if (sum(oc$remOffspr) == oc$remOffspr[curPar]){
-          redis <- sample(nrow(crossPlan), ceiling(oc$remOffspr[mate]/2))
-          redisPar <- c(crossPlan[redis,])
-          crossPlan <- rbind(crossPlan[-redis,], cbind(oc$Indiv[mate], redisPar))
-          oc$remOffspr[curPar] <- 0
-        } else{ # Can't figure it out so final bit of random mating
-          remPar <- which(oc$remOffspr > 0)
-          remPar <- rep(oc$Indiv[remPar], times=oc$remOffspr[remPar])
-          crossPlan <- rbind(crossPlan, matrix(sample(remPar), ncol=2))
-          oc$remOffspr <- 0
-        }
+        redis <- sample(nrow(crossPlan), ceiling(oc$remOffspr[mate]/2))
+        redisPar <- c(crossPlan[redis,])
+        crossPlan <- rbind(crossPlan[-redis,], cbind(oc$Indiv[mate], redisPar))
+        oc$remOffspr[curPar] <- 0
       } else{
         nProg <- min(oc$remOffspr[curPar], oc$remOffspr[mate], bsp$nProgeny)
         if (nProg > 0){
@@ -205,6 +198,14 @@ optContrib <- function(records, bsp, SP, crit){
         grm[curPar, mate] <- grm[mate, curPar] <- 1e6
       }
     }
+  }
+  if (nrow(crossPlan) > totOffspr){
+    remRow <- sample(nrow(crossPlan), nrow(crossPlan) - totOffspr)
+    crossPlan <- crossPlan[-remRow,]
+  }
+  if (nrow(crossPlan) < totOffspr){
+    addRow <- sample(nrow(crossPlan), totOffspr - nrow(crossPlan))
+    crossPlan <- rbind(crossPlan, crossPlan[addRow,])
   }
   progeny <- makeCross(records[[1]], crossPlan, simParam=SP)
   return(progeny)
