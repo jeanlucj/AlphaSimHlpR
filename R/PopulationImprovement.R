@@ -191,7 +191,7 @@ optContrib <- function(records, bsp, SP, crit){
           oc$remOffspr[curPar] <- 0
         } else{ # Can't figure it out so final bit of random mating
           remPar <- which(oc$remOffspr > 0)
-          remPar <- rep(oc$Indiv[remPar], each=oc$remOffspr[remPar])
+          remPar <- rep(oc$Indiv[remPar], times=oc$remOffspr[remPar])
           crossPlan <- rbind(crossPlan, matrix(sample(remPar), ncol=2))
           oc$remOffspr <- 0
         }
