@@ -1,6 +1,6 @@
 #' optimizeByLOESS function
 #'
-#' function to optimize a two-part strategy breeding scheme:
+#' Function to optimize a two-part strategy breeding scheme:
 #' 1. Simulate a batch using given percentage ranges
 #' 2. Perform LOESS fit to the gains
 #' 3. Find budget with best estimated gain
@@ -30,7 +30,7 @@
 #' @examples
 #' 
 #' @export
-optimizeByLOESS <- function(batchSize, nByPareto=round(batchSize*0.7), targetBudget, percentRanges, startCycle, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
+optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
   require(parallel)
   
   if (length(randomSeed) == batchSize * maxNumBatches){
