@@ -8,6 +8,10 @@ SDN CET PYT AYT UY1 UY2
 stageToGenotype
 SDN
 
+# How many cycles back should the model go to source observations for training?
+trainingPopCycles
+4 4 4 3 2 1
+
 # Number of parents in the crossing nursery
 nParents
 30

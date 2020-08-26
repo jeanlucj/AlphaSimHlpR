@@ -11,6 +11,10 @@ SDN CET PYT
 stageToGenotype
 CET
 
+# How many cycles back should the model go to source observations for training?
+trainingPopCycles
+3 3 3
+
 # Number of parents in the crossing nursery
 nParents
 15
