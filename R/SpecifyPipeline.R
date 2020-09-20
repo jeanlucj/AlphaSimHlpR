@@ -369,8 +369,8 @@ calcDerivedParms <- function(bsp){
     bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
   
   # How many clones will go to the National Coordinated Research Program
+  nEndProd <- dplyr::last(bsp$nEntries)
   if (nv(bsp$nClonesToNCRP)){
-    nEndProd <- dplyr::last(bsp$nEntries)
     bsp$nClonesToNCRP <- min(ceiling(nEndProd/2), 3)
   } else{ # Don't specify more clones than there are in the last stage
     bsp$nClonesToNCRP <- min(nEndProd, bsp$nClonesToNCRP)
