@@ -16,7 +16,7 @@ CET
 # distant from the selection candidates. Fewer cycles means the simulation
 # runs faster
 trainingPopCycles
-3 3 3
+3 3 2
 
 # Number of parents in the crossing nursery
 nParents
