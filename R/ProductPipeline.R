@@ -45,7 +45,7 @@ productPipeline <- function(records, bsp, SP){
   # Analyze the most-recent F1s
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
-  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year, stageNames=bsp$stageNames))
+  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year, bsp=bsp))
   # Will be added to the phenotype records
   toAdd <- list()
   for (stage in 1:bsp$nStages){
@@ -106,23 +106,23 @@ productPipeline <- function(records, bsp, SP){
 #' @param selCrit Named vector of the selection criterion being used to advance individuals
 #' @param stage Integer stage (1 to bsp$nStages) being summarized
 #' @param year The current year of the breeding scheme
-#' @param stageNames Character vector of stage names
+#' @param bsp A list of breeding scheme parameters
 #' @return A tibble with whatever information from the data you want to store for analysis after simulation is done
 #' 
 #' @details Trying to provide some flexibility in what results AlphaSimHlpR generates from a given simulation.
 #' 
 #' @examples
-#' records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year, bsp$stageNames))
+#' records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id, records$F1, selCrit, stage, year, bsp))
 #' 
-stageOutputs <- function(id, f1, selCrit, stage, year, stageNames){
-  stageName <- c("F1", stageNames)[stage+1]
+stageOutputs <- function(id, f1, selCrit, stage, year, bsp){
+  stageName <- c("F1", bsp$stageNames)[stage+1]
   f1 <- f1[id]
   selCrit <- selCrit[id]
-  bestCrit <- which.max(selCrit)
-  if (length(bestCrit) == 0){
+  if (length(selCrit) == 0){
     gvOfBestCrit <- NA
   } else{
-    gvOfBestCrit <- gv(f1[names(selCrit)[bestCrit]])
+    bestCrit <- order(selCrit, decreasing=T)[1:bsp$nClonesToNCRP]
+    gvOfBestCrit <- mean(gv(f1[names(selCrit)[bestCrit]]))
   }
   highestGV <- max(gv(f1))
   return(tibble(cycle=year-stage, year=year, stage=stageName, first=first(id), last=last(id), genValMean=mean(gv(f1)), genValSD=sd(gv(f1)), evalAtSelMean=mean(selCrit, na.rm=T), evalAtSelSD=sd(selCrit, na.rm=T), accAtSel=cor(gv(f1), selCrit), gvOfBestCrit=gvOfBestCrit, highestGV=highestGV, nContribToPar=list(NA)))

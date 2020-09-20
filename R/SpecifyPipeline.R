@@ -75,6 +75,8 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     nEntries <- c(nCrosses*nProgeny, 60, 20, 10)
     nReps <- c(1, 1, 2, 2) # Number of reps used in each stage
     nLocs <- c(1, 2, 2, 3) # Number of locations used in each stage
+    # Number of clones that are sent to NCRP at end of product development
+    nClonesToNCRP <- 3
     # Number of checks used in each stage
     # Checks are replicated the same as experimental entries
     nChks <- c(2, 1, 1, 1)
@@ -97,7 +99,7 @@ specifyPipeline <- function(bsp=NULL, ctrlFileName=NULL){
     bspNew <- mget(setdiff(ls(), "bspNew"))
     #END no control file
   } else{
-    parmNames <- c("nStages", "stageNames", "stageToGenotype", "trainingPopCycles", "nParents", "nCrosses", "nProgeny", "usePolycrossNursery", "nSeeds", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
+    parmNames <- c("nStages", "stageNames", "stageToGenotype", "trainingPopCycles", "nParents", "nCrosses", "nProgeny", "usePolycrossNursery", "nSeeds", "useOptContrib", "nCandOptCont", "targetEffPopSize", "nEntries", "nReps", "nLocs", "nClonesToNCRP", "nChks", "entryToChkRatio", "errVars", "phenoF1toStage1", "errVarPreStage1", "useCurrentPhenoTrain", "nCyclesToKeepRecords", "nCyclesToRun", "selCritPipeAdv", "selCritPopImprov")
     # Any parameter not specified will have a default set in calcDerivedParms
     bspNew <- readControlFile(ctrlFileName, parmNames)
   }
@@ -334,7 +336,7 @@ calcDerivedParms <- function(bsp){
     is.null(parm) | length(parm) == 0
   }
   
-  # Prevent some errors having to do with inconsistent parameters
+  # Prevent errors having to do with inconsistent parameters
   if (bsp$nSNP + bsp$nQTL >= bsp$segSites){
     print("The number of segregating sites (segSites) has to be greater than the number of SNPs (nSNP) and the number of QTL (nQTL). segSites set 10% bigger than nSNP + nQTL")
     bsp$segSites <- round((bsp$nSNP + bsp$nQTL) * 1.1) + 1
@@ -360,9 +362,20 @@ calcDerivedParms <- function(bsp){
   if ("character" %in% class(bsp$selCritPopImprov))
     bsp$selCritPopImprov <- get(bsp$selCritPopImprov)
   
-  # Make sure you keep enough cycles
+  # Make sure you keep enough cycles WARNING: not sure this is needed anymore
   bsp$nCyclesToKeepRecords <- max(bsp$nStages+1, bsp$nCyclesToKeepRecords)
-
+  
+  if (nv(bsp$nCyclesToRun))
+    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
+  
+  # How many clones will go to the National Coordinated Research Program
+  if (nv(bsp$nClonesToNCRP)){
+    nEndProd <- dplyr::last(bsp$nEntries)
+    bsp$nClonesToNCRP <- min(ceiling(nEndProd/2), 3)
+  } else{ # Don't specify more clones than there are in the last stage
+    bsp$nClonesToNCRP <- min(nEndProd, bsp$nClonesToNCRP)
+  }
+  
   # If usePolycrossNursery then one seed per cross
   if (nv(bsp$nSeeds)){
     bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
@@ -388,9 +401,6 @@ calcDerivedParms <- function(bsp){
   if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
     stop("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
   }
-
-  if (nv(bsp$nCyclesToRun))
-    bsp$nCyclesToRun <- bsp$nCyclesToKeepRecords + 1
   
   # Stop and warn user if stageToGenotype is not a named stage
   if (nv(bsp$stageToGenotype)){
@@ -408,11 +418,6 @@ calcDerivedParms <- function(bsp){
   } else{
     cycF1 <- if_else(bsp$stageToGenotype == "F1", 2, 0)
     bsp$trainingPopCycles <- c(F1=cycF1, bsp$trainingPopCycles)
-  }
-  
-  # Stop and warn user if not enough crosses specified
-  if((bsp$nCrosses * bsp$nProgeny) < bsp$nEntries[1]){
-    stop("Not enough F1s to fill up Stage 1 trial. [nCrosses * nProgeny >= nEntries for Stage 1] is required")
   }
   
   # Genetic architecture defaults

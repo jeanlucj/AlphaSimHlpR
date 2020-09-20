@@ -14,6 +14,7 @@
 #' @param targetBudget Numeric value that you want the budget adjusted to
 #' @param percentRanges Numeric matrix (nStages + 1 rows and 2 columns) of percentage budget allocation to crossing (F1) and all of the stages.  If there is a stage that is genotyped, the genotyping cost is added to that stage
 #' @param startCycle Integer the start cycle from which to measure gain. The end cycle will be the last cycle. Set the startCycle so there is enough burn-in
+#' @param wgtPopImprov Two components contribute to the utility: yearly population improvement and yearly gain in the product development. This is the weight for the first. The other has weight 1 - wgtPopImprov
 #' @param tolerance Numerical difference between min amd max percentage budgets for all stages
 #' @param baseDir Directory if you want to have progress saved by batch. Relative  to R working directory. If not empty string, include final /
 #' @param maxNumBatches Integer to stop the simulations eventually if the algorithm is not narrowing in on optimal parameter values
@@ -30,7 +31,7 @@
 #' @examples
 #' 
 #' @export
-optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
+optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, wgtPopImprov, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
   require(parallel)
   
   if (length(randomSeed) == batchSize * maxNumBatches){
@@ -43,6 +44,8 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
   
   # Guardrails
   nByPareto <- min(batchSize - 1, nByPareto)
+  if (wgtPopImprov < 0 | wgtPopImprov > 1) wgtPopImprov <- 0.5
+  
   # Sample half by Pareto, and half by probability of beating current best
   nByHiProb <- nByPareto %/% 2
   nByPareto <- nByPareto - nByHiProb
@@ -68,7 +71,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     newBatch <- mclapply(1:(batchSize - nrow(toRepeat)), function(i) runOneRep(strtRep+i, percentRanges=percentRanges, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, targetBudget=targetBudget, bsp=bsp, seed=randSeeds[strtRep+i]), mc.cores=nCores)
     
     # Put together with previous simulations
-    newBatch <- as_tibble(t(sapply(c(repeatBatch, newBatch), getParmsResponse, startCycle=startCycle)), .name_repair="universal")
+    newBatch <- as_tibble(t(sapply(c(repeatBatch, newBatch), getParmsResponse, startCycle=startCycle, wgtPopImprov=wgtPopImprov)), .name_repair="universal")
     allBatches <- allBatches %>% bind_rows(newBatch)
     
     # Non-Parametric LOESS response
@@ -215,16 +218,23 @@ repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, product
 #'
 #' @param oneSim Output of runBreedingScheme
 #' @param startCycle Integer first cycle after burn-in is done
+#' @param wgtPopImprov Two components contribute to the utility: yearly population improvement and yearly gain in the product development. This is the weight for the first. The other has weight 1 - wgtPopImprov
 #' 
 #' @details Takes a simulation output and returns a vector
 #' 
-getParmsResponse <- function(oneSim, startCycle){
+getParmsResponse <- function(oneSim, startCycle, wgtPopImprov=1){
   on.exit(expr=saveRDS(mget(ls()), file="~/getParmsResp.rds"))
   bsp <- oneSim$bsp
   parms <- c(budget=bsp$budgetPercentages, nProgeny=bsp$nProgeny, bsp$nEntries, totCost=bsp$totalCosts)
   so <- oneSim$stageOutputs
-  resp <- (dplyr::filter(so, stage=="F1" & year==bsp$nCyclesToRun) %>% dplyr::select(genValMean, genValSD)) - (dplyr::filter(so, stage=="F1" & year==startCycle) %>% dplyr::select(genValMean, genValSD))
+  
+  # Gain across versus within cycles
+  soLast <- so %>% dplyr::filter(stage==last(bsp$stageNames) & cycle >= startCycle)
+  soF1 <- so %>% dplyr::filter(stage=="F1" & cycle > startCycle & cycle <= max(soLastBest$cycle)+1)
+  popImpr <- mean(dplyr::lead(soF1$genValMean) - soF1$genValMean, na.rm=T)
+  prodDev <- mean((soLast$gvOfBestCrit - soF1$genValMean) / bsp$nStage, na.rm=T)
+  resp <- wgtPopImprov * popImpr + (1 - wgtPopImprov) * prodDev
+  
   on.exit()
-  return(unlist(c(parms, resp)))
+  return(unlist(c(parms, response=resp)))
 }
-

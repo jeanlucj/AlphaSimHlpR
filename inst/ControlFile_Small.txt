@@ -48,6 +48,9 @@ targetEffPopSize
 nEntries
 200 75 20
 
+# Number of clones that will be sent to NCRP for potential variety release
+3
+
 # Vector of number of checks used in each stage
 # Checks are replicated the same as experimental entries
 nChks

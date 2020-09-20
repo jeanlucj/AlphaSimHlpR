@@ -39,7 +39,7 @@ plotRecords <- function(replicRecords){
   # Gain across versus within cycles
   soLastBest <- allStgOut %>% dplyr::filter(stage==last(bsp$stageNames) & cycle >= 0)
   soF1mean <- allStgOut %>% dplyr::filter(stage=="F1" & cycle <= max(soLastBest$cycle)+1)
-  soF1mean <- soF1mean %>% dplyr::mutate(acrossCycGain=lead(genValMean) - genValMean)
+  soF1mean <- soF1mean %>% dplyr::mutate(acrossCycGain=dplyr::lead(genValMean) - genValMean)
   soF1mean <- soF1mean %>% dplyr::filter(cycle <= max(soLastBest$cycle))
   soF1mean <- soF1mean %>% dplyr::mutate(withinCycGain=(soLastBest$gvOfBestCrit - genValMean) / (bsp$nStages + 1))
   
