@@ -51,7 +51,7 @@ productPipeline <- function(records, bsp, SP){
   for (stage in 1:bsp$nStages){
     # Make a summary for this stage
     id <- last(records[[stage+1]])$id[1:bsp$nEntries[stage]]
-    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year, stageNames=bsp$stageNames))
+    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year, bsp=bsp))
 
     if (stage == 1){ # Stage 1 different: no phenotypes but full Pop-class
       # Use phenotypes to select the F1 going into Stage 1?
@@ -156,12 +156,12 @@ lastCycStgOut <- function(records, bsp, SP){
   nGenoRec <- nInd(records$F1)
   newF1Idx <- nGenoRec - nF1 + 1:nF1
   id <- records$F1[newF1Idx]@id
-  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year, stageNames=bsp$stageNames))
+  records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=0, year=year, bsp=bsp))
   
   for (stage in 1:bsp$nStages){
     # Make a summary for this stage
     id <- last(records[[stage+1]])$id[1:bsp$nEntries[stage]]
-    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year, stageNames=bsp$stageNames))
+    records$stageOutputs <- records$stageOutputs %>% bind_rows(stageOutputs(id=id, f1=records$F1, selCrit=selCrit, stage=stage, year=year, bsp=bsp))
   }
   
   return(records)

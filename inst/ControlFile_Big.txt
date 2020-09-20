@@ -46,6 +46,7 @@ nEntries
 3000 1000 300 60 40 40
 
 # Number of clones that will be sent to NCRP for potential variety release
+nClonesToNCRP
 3
 
 # Vector of number of checks used in each stage
