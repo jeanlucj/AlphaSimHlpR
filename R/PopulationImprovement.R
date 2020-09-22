@@ -144,7 +144,8 @@ popImprov2Cyc <- function(records, bsp, SP){
 #' @export
 optContrib <- function(records, bsp, SP, crit){
   require(optiSel)
-  candidates <- names(crit)[order(crit, decreasing=T)[1:bsp$nCandOptCont]]
+  nCandOptCont <- min(bsp$nCandOptCont, sum(!is.na(crit)))
+  candidates <- names(crit)[order(crit, decreasing=T)[1:nCandOptCont]]
   grm <- sommer::A.mat(pullSnpGeno(records$F1[candidates], simParam=SP) - 1)
   grm <- grm[candidates, candidates] # Put it in the right order
   phen <- data.frame(Indiv=candidates, crit=crit[candidates])

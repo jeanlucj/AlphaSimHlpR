@@ -411,13 +411,13 @@ calcDerivedParms <- function(bsp){
   }
   
   # Set up trainingPopCycles
+  stageToGeno <- which(c("F1", bsp$stageNames) == bsp$stageToGenotype)
   if (nv(bsp$trainingPopCycles)){
     bsp$trainingPopCycles <- integer(bsp$nStages + 1)
-    stageNum <- which(bsp$stageNames == bsp$stageToGenotype) + 1
-    bsp$trainingPopCycles[stageNum:(bsp$nStages + 1)] <- bsp$nCyclesToKeepRecords
+    bsp$trainingPopCycles[stageToGeno:(bsp$nStages + 1)] <- bsp$nCyclesToKeepRecords
   } else{
-    cycF1 <- if_else(bsp$stageToGenotype == "F1", 2, 0)
-    bsp$trainingPopCycles <- c(F1=cycF1, bsp$trainingPopCycles)
+    bsp$trainingPopCycles <- c(F1=0, bsp$trainingPopCycles)
+    bsp$trainingPopCycles[stageToGeno] <- max(bsp$trainingPopCycles[stageToGeno], 2)
   }
   
   # Genetic architecture defaults
