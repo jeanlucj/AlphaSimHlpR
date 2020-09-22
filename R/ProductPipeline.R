@@ -118,7 +118,7 @@ stageOutputs <- function(id, f1, selCrit, stage, year, bsp){
   stageName <- c("F1", bsp$stageNames)[stage+1]
   f1 <- f1[id]
   selCrit <- selCrit[id]
-  if (length(selCrit) == 0){
+  if (length(selCrit) == 0 | all(is.na(selCrit))){
     gvOfBestCrit <- NA
   } else{
     bestCrit <- order(selCrit, decreasing=T)[1:bsp$nClonesToNCRP]

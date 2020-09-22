@@ -218,11 +218,11 @@ selCritIID <- function(records, candidates, bsp, SP){
   # Candidates don't have phenotypes so return random vector
   if (!any(candidates %in% phenoDF$id)){ 
     crit <- runif(length(candidates))
-    names(crit) <- candidates
   } else{
     crit <- iidPhenoEval(phenoDF)
     crit <- crit[candidates]
   }
+  names(crit) <- candidates
   return(crit)
 }
 
