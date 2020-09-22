@@ -245,7 +245,6 @@ selCritGRM <- function(records, candidates, bsp, SP){
   grm <- makeGRM(records, bsp, SP)
   if (!any(candidates %in% rownames(grm))){ 
     crit <- runif(length(candidates))
-    names(crit) <- candidates
   } else{
     phenoDF <- framePhenoRec(records, bsp)
     # Remove individuals with phenotypes but who do not have geno records
@@ -253,5 +252,6 @@ selCritGRM <- function(records, candidates, bsp, SP){
     crit <- grmPhenoEval(phenoDF, grm)
     crit <- crit[candidates]
   }
+  names(crit) <- candidates
   return(crit)
 }
