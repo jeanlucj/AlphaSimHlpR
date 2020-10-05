@@ -43,13 +43,8 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
   }
   
   # Guardrails
-  nByPareto <- min(batchSize - 1, nByPareto)
   if (wgtPopImprov < 0 | wgtPopImprov > 1) wgtPopImprov <- 0.5
   
-  # Sample half by Pareto, and half by probability of beating current best
-  nByHiProb <- nByPareto %/% 2
-  nByPareto <- nByPareto - nByHiProb
-
   # Implement cockamamie scheme to sample different numbers of repeats
   nuts <- tibble(ratio=6:16, rand=0.6-0.05*0:10, hiGain=0.085*0:10, pareto=0.2-0.015*0:10, hiStEr=0.2-0.02*0:10)
   
