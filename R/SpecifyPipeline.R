@@ -567,6 +567,7 @@ sampleEntryNumbers <- function(bsp, targetBudget, percentRanges, nAttempts=5){
     if (whchStgGeno == 0) f1cost <- f1cost + bsp$qcGenoCost + bsp$wholeGenomeCost
     bsp$nSeeds <- budgets[1] / f1cost
     bsp$nProgeny <- round(bsp$nSeeds / bsp$nCrosses)
+    bsp$nSeeds <- bsp$nProgeny * bsp$nCrosses
     
     for (stage in 1:bsp$nStages){
       costPerInd <- bsp$nReps[stage] * bsp$nLocs[stage] * bsp$plotCost[stage]
