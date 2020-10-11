@@ -121,7 +121,8 @@ stageOutputs <- function(id, f1, selCrit, stage, year, bsp){
   if (length(selCrit) == 0 | all(is.na(selCrit))){
     gvOfBestCrit <- NA
   } else{
-    bestCrit <- order(selCrit, decreasing=T)[1:bsp$nClonesToNCRP]
+    nToNCRP <- min(bsp$nClonesToNCRP, bsp$nEntries[stage])
+    bestCrit <- order(selCrit, decreasing=T)[1:nToNCRP]
     gvOfBestCrit <- mean(gv(f1[names(selCrit)[bestCrit]]))
   }
   highestGV <- max(gv(f1))
