@@ -565,8 +565,8 @@ sampleEntryNumbers <- function(bsp, targetBudget, percentRanges, nAttempts=5){
     # How many progeny per cross to make
     f1cost <- bsp$crossingCost
     if (whchStgGeno == 0) f1cost <- f1cost + bsp$qcGenoCost + bsp$wholeGenomeCost
-    totProg <- budgets[1] / f1cost
-    bsp$nProgeny <- round(totProg / bsp$nCrosses)
+    bsp$nSeeds <- budgets[1] / f1cost
+    bsp$nProgeny <- round(bsp$nSeeds / bsp$nCrosses)
     
     for (stage in 1:bsp$nStages){
       costPerInd <- bsp$nReps[stage] * bsp$nLocs[stage] * bsp$plotCost[stage]
