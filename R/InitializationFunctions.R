@@ -132,7 +132,7 @@ fillPipeline <- function(founders, bsp=NULL, SP){
     # Make the next F1s with mild selection using gv
     lastGen <- nInd(records[[1]]) - nF1 + 1:nF1
     parents <- selectInd(records[[1]][lastGen], nInd=nF1/1.5, use="gv", simParam=SP)
-    toAdd <- c(list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)), toAdd)
+    toAdd <- c(list(randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreSexes=T, simParam=SP)), toAdd)
     
     # Actually fill the records
     records[[1]] <- c(records[[1]], toAdd[[1]])

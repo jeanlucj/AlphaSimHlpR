@@ -35,7 +35,7 @@ popImprov1Cyc <- function(records, bsp, SP){
     progeny <- optContrib(records, bsp, SP, crit)
   } else{
     parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
-    progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
+    progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreSexes=T, simParam=SP)
   }
   progeny@fixEff <- rep(as.integer(max(records$stageOutputs$year) + 1), bsp$nSeeds)
   parentsUsed <- unique(c(progeny@mother, progeny@father))
@@ -119,7 +119,7 @@ popImprov2Cyc <- function(records, bsp, SP){
     candidates <- records$F1@id
     crit <- bsp$selCritPopImprov(trainRec, candidates, bsp, SP)
     parents <- records$F1[candidates[order(crit, decreasing=T)[1:bsp$nParents]]]
-    progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreGender=T, simParam=SP)
+    progeny <- randCross(parents, nCrosses=bsp$nCrosses, nProgeny=bsp$nProgeny, ignoreSexes=T, simParam=SP)
     records$F1 <- c(records$F1, progeny)
     useCurrentPhenoTrain <- TRUE
   }
