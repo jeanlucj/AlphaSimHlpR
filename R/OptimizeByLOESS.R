@@ -225,7 +225,7 @@ getParmsResponse <- function(oneSim, startCycle, wgtPopImprov=1){
   
   # Gain across versus within cycles
   soLast <- so %>% dplyr::filter(stage==last(bsp$stageNames) & cycle >= startCycle)
-  soF1 <- so %>% dplyr::filter(stage=="F1" & cycle > startCycle & cycle <= max(soLastBest$cycle)+1)
+  soF1 <- so %>% dplyr::filter(stage=="F1" & cycle > startCycle & cycle <= max(soLast$cycle)+1)
   popImpr <- mean(dplyr::lead(soF1$genValMean) - soF1$genValMean, na.rm=T)
   prodDev <- mean((soLast$gvOfBestCrit - soF1$genValMean) / bsp$nStage, na.rm=T)
   resp <- wgtPopImprov * popImpr + (1 - wgtPopImprov) * prodDev
