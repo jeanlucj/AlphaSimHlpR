@@ -32,6 +32,7 @@
 #' 
 #' @export
 optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, wgtPopImprov, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
+  on.exit(expr=saveRDS(mget(ls()), file="~/optimizeByLOESS.rds"))
   require(parallel)
   
   if (length(randomSeed) == batchSize * maxNumBatches){
@@ -70,7 +71,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     allBatches <- allBatches %>% bind_rows(newBatch)
     
     # Non-Parametric LOESS response
-    loFormula <- paste0("genValMean ~ ", paste0(bsp$stageNames, collapse=" + "))
+    loFormula <- paste0("response ~ ", paste0(bsp$stageNames, collapse=" + "))
     loFM <- loess(loFormula, data=allBatches)
     loPred <- predict(loFM, se=T)
     whichBest <- which.max(loPred$fit)
@@ -94,7 +95,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     rows <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, var1name="fit", var2name="se")$batchID
     # If too many rows, keep only those with the highest gain
     if (length(rows) > nByPareto){
-      rows <- rows[order(allBatches$genValMean[rows], decreasing=T)[1:nByPareto]]
+      rows <- rows[order(allBatches$response[rows], decreasing=T)[1:nByPareto]]
     }
     toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
     nByPareto <- nByPareto - length(rows)
@@ -110,7 +111,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     while (nByPareto > 0){
       rows <- returnNonDom(fitStdErr, dir1Low=F, dir2Low=F, var1name="fit", var2name="se")$batchID
       if (length(rows) > nByPareto){
-        rows <- rows[order(allBatches$genValMean[rows], decreasing=T)[1:nByPareto]]
+        rows <- rows[order(allBatches$response[rows], decreasing=T)[1:nByPareto]]
       }
       toRepeat <- toRepeat %>% bind_rows(allBatches[rows,])
       fitStdErr <- fitStdErr %>% dplyr::filter(!(batchID %in% rows))
@@ -137,6 +138,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     toleranceMet <- all(percentRanges[,2] - percentRanges[,1] < tolerance)
   }#END keep going until maxNumBatches or tolerance
   
+  on.exit()
   return(list(allBatches=allBatches, allPercentRanges=allPR))
 }
 
