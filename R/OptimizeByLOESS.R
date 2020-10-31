@@ -32,7 +32,7 @@
 #' 
 #' @export
 optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, wgtPopImprov, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
-  on.exit(expr=saveRDS(mget(ls()), file="~/optimizeByLOESS.rds"))
+  on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/optimizeByLOESS.rds")})
   require(parallel)
   
   if (length(randomSeed) == batchSize * maxNumBatches){
@@ -159,7 +159,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
 #' @details Allows sampling the budget and running the simulation in one function
 #' 
 runOneRep <- function(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed=NULL){
-  on.exit(expr=saveRDS(mget(ls()), file="~/runOneRep.rds"))
+  on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/runOneRep.rds")})
   if (!is.null(seed)) set.seed(seed)
   bsp$budgetSamplingDone <- FALSE
   while (!bsp$budgetSamplingDone){
@@ -200,7 +200,7 @@ runOneRep <- function(replication, percentRanges, initializeFunc, productPipelin
 #' @details Sample the budget and run a simulation close to a previous one. Useful to rerun where the prediction is particularly high (we need to know if that prediction is for real) or where the standard error is particularly high (we need more info in that vicinity)
 #' 
 repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed=NULL){
-  on.exit(expr=saveRDS(mget(ls()), file="~/repeatSim.rds"))
+  on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/repeatSim.rds")})
   budg <- parmRow %>% dplyr::select(contains("budget"))
   percentRanges <- t(sapply(unlist(budg), function(prc) c(max(0, prc - radius), min(1, prc + radius))))
   rorOut <- runOneRep(replication, percentRanges, initializeFunc, productPipeline, populationImprovement, targetBudget, bsp, seed)
@@ -220,7 +220,7 @@ repeatSim <- function(parmRow, replication, radius=0.02, initializeFunc, product
 #' @details Takes a simulation output and returns a vector
 #' 
 getParmsResponse <- function(oneSim, startCycle, wgtPopImprov=1){
-  on.exit(expr=saveRDS(mget(ls()), file="~/getParmsResp.rds"))
+  on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/getParmsResp.rds")})
   bsp <- oneSim$bsp
   parms <- c(budget=bsp$budgetPercentages, nProgeny=bsp$nProgeny, bsp$nEntries, totCost=bsp$totalCosts)
   so <- oneSim$stageOutputs
