@@ -176,10 +176,18 @@ runOneRep <- function(replication, percentRanges, initializeFunc, productPipelin
       }
     }#END make sure proper sampling of budgets was done
   }# Carry on
-  rbsOut <- runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, bsp=bsp)
+  # Dealing with errors
+  nTry <- 0
+  badRBS <- TRUE
+  while (badRBS){
+    rbsOut <- runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, bsp=bsp)
+    badRBS <- "try-error" %in% class(rbsOut)
+    nTry <- nTry + 1
+    if (nTry > 10) stop("Too many runBreedingScheme tries")
+  }
   
   on.exit()
-  return(list(bsp=bsp, stageOutputs=rbsOut$records$stageOutputs))
+  return(list(bsp=bsp, stageOutputs=rbsOut$records$stageOutputs, nTry=nTry))
 }#END runOneRep
 
 #' repeatSim function
