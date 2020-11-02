@@ -16,6 +16,8 @@
 
 #' @export
 runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, productPipeline, populationImprovement, bsp){
+  
+  on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/runBreedingScheme.rds")})
 
   cat("******", replication, "\n")
   initList <- initializeFunc(bsp)
@@ -32,5 +34,6 @@ runBreedingScheme <- function(replication=NULL, nCycles=2, initializeFunc, produ
 
   # Finalize the stageOutputs
   records <- lastCycStgOut(records, bsp, SP)
+  on.exit()
   return(list(records=records, bsp=bsp, SP=SP))
 }

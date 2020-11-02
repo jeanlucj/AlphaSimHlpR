@@ -98,11 +98,11 @@ returnNonDom <- function(mat, dir1Low=T, dir2Low=T, var1name=NULL, var2name=NULL
   if (!dir2Low) mat[, var2name] <- -mat[, var2name]
   # find the minima of columns 1 and 2
   min1 <- which(mat[, var1name] == min(mat[, var1name]))
-  if (length(min1) > 1) min1 <- min1[which.min(mat[min1, var2name])]
+  if (length(min1) > 1) min1 <- min1[which.min(unlist(mat[min1, var2name]))]
   nonDom <- mat[min1,,drop=F]
   mat <- mat[-min1,,drop=F]
   min2 <- which(mat[, var2name] == min(mat[, var2name]))
-  if (length(min2) > 1) min2 <- min2[which.min(mat[min2, var1name])]
+  if (length(min2) > 1) min2 <- min2[which.min(unlist(mat[min2, var1name]))]
   nonDom <- rbind(nonDom, mat[min2,,drop=F])
   mat <- mat[-min2,,drop=F]
   for (i in 1:nrow(mat)){

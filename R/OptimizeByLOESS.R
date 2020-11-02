@@ -177,12 +177,14 @@ runOneRep <- function(replication, percentRanges, initializeFunc, productPipelin
     }#END make sure proper sampling of budgets was done
   }# Carry on
   # Dealing with errors
+  options(try.outFile = stdout())
   nTry <- 0
   badRBS <- TRUE
   while (badRBS){
-    rbsOut <- runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, bsp=bsp)
+    rbsOut <- try(runBreedingScheme(replication=replication, nCycles=bsp$nCyclesToRun, initializeFunc=initializeFunc, productPipeline=productPipeline, populationImprovement=populationImprovement, bsp=bsp))
     badRBS <- "try-error" %in% class(rbsOut)
     nTry <- nTry + 1
+    cat("\n nTry", nTry, "\n")
     if (nTry > 10) stop("Too many runBreedingScheme tries")
   }
   
