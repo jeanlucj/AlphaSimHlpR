@@ -152,8 +152,10 @@ optContrib <- function(records, bsp, SP, crit){
   invisible(capture.output(cand <- optiSel::candes(phen, grm=grm, quiet=T)))
 
   Ne <- bsp$targetEffPopSize
+  # ub.grm is the upper bound for the expected next generation grm relatedness
+  # it could be negative because of starting point but opticont doesn't allow
   con <- list(
-    ub.grm = 1-(1-cand$mean$grm)*(1-1/(2*Ne))
+    ub.grm = max(1-(1-cand$mean$grm)*(1-1/(2*Ne)), 0)
   )
   oc <- opticont("max.crit", cand, con, quiet=T, trace=F)$parent[, c("Indiv", "oc")]
   keep <- oc$oc > 1 / bsp$nSeeds / 4

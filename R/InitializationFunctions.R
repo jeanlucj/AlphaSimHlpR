@@ -48,15 +48,11 @@ initFuncADChk <- function(bsp){
 #' @export
 initializeScheme <- function(bsp){
   # Create haplotypes for founder population of outbred individuals
-  nF1 <- bsp$nCrosses * bsp$nProgeny
-  if (exists("quickHaplo", bsp)){
-    if (bsp$quickHaplo){
-      founderHap <- quickHaplo(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites)
-    } else{
-      founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
-    }
+  nF1 <- bsp$nCrosses * bsp$nProgeny + max(bsp$nChks)
+  if (bsp$quickHaplo){
+    founderHap <- quickHaplo(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites)
   } else{
-    founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, bsp$effPopSize)
+    founderHap <- runMacs2(nInd=nF1, nChr=bsp$nChr, segSites=bsp$segSites, Ne=bsp$effPopSize)
   }
   
   # New global simulation parameters from founder haplotypes
@@ -70,6 +66,8 @@ initializeScheme <- function(bsp){
   founders <- newPop(founderHap, simParam=SP)
   if (any(bsp$nChks > 0)){
     bsp$checks <- selectInd(founders, nInd=max(bsp$nChks), use="rand", simParam=SP)
+    # remove checks from founders
+    founders <- founders[-which(founders@id %in% bsp$checks@id)]
   } else bsp$checks <- NULL
   
   records <- fillPipeline(founders, bsp, SP)

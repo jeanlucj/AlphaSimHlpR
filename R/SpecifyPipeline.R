@@ -430,6 +430,7 @@ calcDerivedParms <- function(bsp){
     return(apply(cbind(vec1, vec2), 1, fnc))
   }
   if (nv(bsp$entryToChkRatio)) bsp$entryToChkRatio <- integer(bsp$nStages)
+  if (nv(bsp$nChks)) bsp$nChks <- integer(bsp$nStages)
   nPlots <- bsp$nEntries * bsp$nReps
   nChkPlots <- nPlots / bsp$entryToChkRatio
   nChkPlots <- pairwiseComp(nChkPlots, bsp$nReps, max) # At least one check / rep
