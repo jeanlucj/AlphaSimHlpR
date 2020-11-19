@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 ```
 
 ## Introduction
-`AlphaSimHlpR` is an R package that is not on CRAN but can be installed from [github](www.github.com):
+`AlphaSimHlpR` is an R package that is **not** on CRAN but can be installed from [github](www.github.com):
 ```{r Install AlphaSimHlpR, eval=FALSE}
 if (!require("devtools")) install.packages("devtools")
 devtools::install_github("jeanlucj/AlphaSimHlpR")
@@ -113,7 +113,7 @@ The genetic variance among founders is given in the population control file. The
 > 40
 
 #### Genotype by environment interaction variance  
-AlphaSimHlpR deals with GxE in a very simple way. All GxE deviations are assumed to be IID. Each stage is characterized by a number of locations ($n_l$) and a number of reps within locations ($n_r$). Since an individual is evaluated in one stage for one year (then either removed or advanced to the next stage), the error variance for the mean of observations on an individual for a stage is:  
+AlphaSimHlpR deals with GxE in a very simple way. All GxE deviations are assumed to be Independently and Identically Distributed. Each stage is characterized by a number of locations ($n_l$) and a number of reps within locations ($n_r$). Since an individual is evaluated in one stage for one year (then either removed or advanced to the next stage), the error variance for the mean of observations on an individual for a stage is:  
 $$
 errVar(\bar{y}_{stage}) = \sigma^2_{g \times y} + \frac{\sigma^2_{g \times l} + \sigma^2_{g \times y \times l} + \frac{\sigma^2_{plot(stage)}}{n_r}}{n_l}
 $$
@@ -241,7 +241,7 @@ As for the selection of entries to advance between stages, a selection criterion
 > selCritPopImprov  
 > selCritGRM  
 
-By default, `AlphaSimHlpR` provides the same functions here as for advancing within product development, that is `selCritIID` and `selCritGRM`. For population improvement, `selCritGRM` makes more sense, since it estimates breeding values with information sharing among clones. But it is substantially slower than `selCritIID`.  
+`AlphaSimHlpR` provides the same functions here as for advancing within product development, that is `selCritIID` and `selCritGRM`. For population improvement, `selCritGRM` makes more sense, since it estimates breeding values with information sharing among clones. But it is substantially slower than `selCritIID`.  If no function is given, `selCritIID` is the default.
 
 #### Truncation selection or optimal contributions  
 `AlphaSimHlpR` enables optimal contributions selection through the R package `optiSel`. The default, however, is truncation selection: a number of parents are selected, crosses are made between parents at random, each cross generates a fixed number of progeny:  
@@ -267,11 +267,20 @@ Based on `targetEffPopSize`, the analysis calculates a maximum increase in the a
 Also if `useOptContrib` is `TRUE`, the specific crosses made between parents are chosen so the inbreeding coefficient of the F1 individuals is low. That is, pairs of parents are chosen to cross that have a low coefficient of coancestry. A simple greedy algorithm is used to choose the crosses, so it probably does not lead to a global minimum inbreeding coefficient.  
 Finally, the optimal contributions algorithm is slow if applied to many many selection candidates. So selection candidates are prefiltered by truncation on the selection criterion leaving the best `nCandOptCont` individuals. Functionally, `nCandOptCont` is a guess at how low in the rankings optimal contributions might go. If `nCandOptCont` is small then optimal contributions might be prevented from finding individuals lower in the rankings that contribute unique diversity. If `nCandOptCont` is big, the analysis will be very slow without providing any extra benefit. As a guess, `nCandOptCont` = 10 * `targetEffPopSize` is OK.  
 
-#### Using this year's phenotypes for model training
+#### Using a polycross nursery  
+The default for `usePolycrossNursery` is FALSE. Then, `AlphaSimHlpR` simulates biparental crosses generating families of size `nProgeny` (see above). If `usePolycrossNursery` is TRUE, `AlphaSimHlpR` simulates random crosses, each producing one seed. A second parameter `nSeeds` determines the number of polycrossed seeds produced. By default, `nSeeds` is set to `nCrosses` * `nProgeny`.  NOTE: if you set `usePolycrossNursery` to TRUE, you should probably do so in the context of setting `crossingCost` to a low value: collecting open-pollinated seed is less expensive than making biparental crosses. NOTE: you cannot do optimal contributions and polycross nursery at the same time.
+
+> usePolycrossNursery  
+> FALSE  
+> nSeeds  
+> 300  
+
+#### Using this year's phenotypes for model training  
 AlphaSimHlpR proceeds as follows:  
 
 1. Simulate the phenotypic evaluations for the year  
 2. Select parents and make crosses to create F1 seeds for the next year  
+3. Go back to step 1 for `nCyclesToRun`  
 
 Logisitically, it is sometimes difficult to use phenotypes collected this year for model training to select parents. In cassava, for example, there is a very short time span between when plots are harvested and when they need to be replanted because the stakes will die. The variable `useCurrentPhenoTrain` determines whether the phenotypes from step 1 are available for step 2 in the same year. Generally in NextGen Cassava programs, phenotypes have not been immediately available. Thus, such programs should set:  
 
@@ -280,12 +289,24 @@ Logisitically, it is sometimes difficult to use phenotypes collected this year f
 
 For a counter example, if a program planted a full set of clones in the crossing nursery immediately and then took it's time to chose which clones to cross based on this year’s phenotype, it would be correct to set `useCurrentPhenoTrain <- TRUE`.  
 
-#### Number of cycles to keep records  
+#### Years of records to train prediction models  
 Phenotypes are used to estimate selection criteria with `selCritIID` or `selCritGRM`.
-In principle, the more phenotypes you have the more accurate the criteria will be, up to a point (phenotypes of very distantly related individuals will not help, for example).  BUT, the more phenotypes, the slower the simulation. To balance cost / benefit, `nCyclesToKeepRecords` determines how many years of records to keep and use in estimating selection criteria.  Low values of `nCyclesToKeepRecords` will make simulations go faster, but possibly underestimate the gain that the breeding scheme can achieve. If you plan to run many many replicates of a particular breeding scheme, it may be worth evaluating the cost benefit explicitly and setting `nCyclesToKeepRecords` to a minimum value that nevertheless generates the same gain as a large value. Set this with:  
+In principle, the more phenotypes you have the more accurate the criteria will be, up to a point (phenotypes of very distantly related individuals will not help, for example).  BUT, the more phenotypes, the slower the simulation. To balance cost / benefit, `trainingPopCycles` determines how many years of records to keep and use in estimating selection criteria _for each phenotyping stage_. That is, a separate number of years is given for each stage: `trainingPopCycles` is a vector `nStages` long.  Low values of `trainingPopCycles` will make simulations go faster, but possibly underestimate the gain that the breeding scheme can achieve. If you plan to run many many replicates of a particular breeding scheme, it may be worth evaluating the cost benefit explicitly and setting `trainingPopCycles` to a minimum value that nevertheless generates the same gain as a large value. The default is that `nCyclesToKeepRecords` will be used to train prediction models for all stages including and after `stageToGenotype`. To change the default, include something like:
+
+> trainingPopCycles  
+> 4 4 3 2  
+
+#### How many cycles to keep records  
+When you go back to analyze simulation results, you will want to look at records some generations back. `nCyclesToKeepRecords` determines how far back records are saved.  The default forces at least `nStages`+1 cycles to be kept.
 
 > nCyclesToKeepRecords  
-> 4  
+> 5  
+
+#### How many clones to send for variety release testing (NCRP)  
+`AlphaSimHlpR` assumes that at the end of the stages specified, a number of clones thought to be the best will be sent for testing for variety release. One of the criteria for success of a breeding scheme is the mean of those clones (the higher the better). The user has to decide how many clones to send.  The default is 3, indicating that each year, 3 new clones will be tested for possible variety release. If the last stage has fewer than 3 clones, the default is half the number in that stage, rounded up.
+
+> nClonesToNCRP  
+> 3
 
 ## Breeding scheme costs  
 A cost control file contains parameters that determine how much the breeding scheme will cost:  
@@ -381,6 +402,34 @@ plotData <- plotRecords(repSimOut)
 The plots will show:
 
 1. The change of the population mean over time.  
-2. The genotypic value of the individual that had the highest estimated value (not necessarily the indvidual with the true highest genotypic value, since the estimated value will have error).  
+2. The mean genotypic value of the individuals that were sent to national variety release testing (not necessarily those with the highest **true** genotypic values, because of error in selection).  
 3. The change of the population genetic standard deviation over time.  
-4. The average _increase_ of F1 population mean going from one year to the next, and the average change of genotypic value _within a cycle_ going from F1 population mean to genotypic value of the individual with the highest estimated value in the last cycle, then divided by the number of years the product pipeline takes (nStages + 1, where the +1 comes from the assumption that it takes a year to make a cross).
+4. The average _increase_ of F1 population mean going from one year to the next, and the average change of genotypic value _within a cycle_ going from F1 population mean to genotypic value of the individual with the highest estimated value in the last cycle, then divided by the number of years the product pipeline takes = `nStages`.
+
+## Optimization of budget allocations
+Given a specific breeding scheme, but an unknown budget allocation for the stages of that scheme, `AlphaSimHlpR` can run simulations repeatedly until it finds budget allocations that lead to reliably high response to selection. Note that this function is experimental and slow: in my analyses so far, it can take over 2,000 simulations to figure out optimum budgets. The function `optimizeByLOESS` works like this:
+
+1. Specify _ranges_ for the budget allocations for each stage  
+2. `optimizeByLOESS` first runs a batch of simulations covering the budget allocation ranges  
+3. Locally estimated scatterplot smoothing (LOESS) is run on the outputs  
+4. The budget allocations leading to the best estimated gain is calculated  
+5. New ranges are calculated: the range of budgets across any simulations that had gains within 2 std. errors of the best, as calculated in step 4.  
+6. Go back to step 2. and iterate until a tolerance is reached  
+
+```{r optimizeByLOESS, eval=FALSE}
+optimizeByLOESS(batchSize=200, targetBudget=8000, percentRanges=percentRanges, startCycle=4, wgtPopImprov=0.5, tolerance=0.40, baseDir=baseDir, maxNumBatches=50, initializeFunc=initializeScheme, productPipeline=productPipeline, populationImprovement=popImprov1Cyc, bsp=bsp, randomSeed=rs, nCores=10)
+```
+
+Parameters are:  
+
+* batchSize: how many simulations to run per iteration between steps 2 and 6 above  
+* targeBudget: What is the total cost of the budgets to be optimized?  
+* percentRanges: Numeric matrix (nStages + 1 rows by 2 columns) of percentage budget allocation to crossing (F1) and all of the stages.  _If there is a stage that is genotyped, the genotyping cost is added to that stage_. It is important to note this last issue. The budget for the stage that is genotyped will be therefore higher than just the cost of the phenotypic evaluations.  
+* startCycle: `optimizeByLOESS` seeks to maximize an objective based on the steady state gain of the breeding scheme. For a given simulation, there should be a burn-in to reach that steady state. At what cycle does the user think the steady state is achieved?  
+* wgtPopImprov: The breeding scheme has population improvement and product development parts. You can emphasize the one to the detriment of the other. Population improvement is calculated as the year over year increase in the mean of the F1 population created. Product development is calculated as the difference in genotypic value between the clones sent to variety release and the F1 population they came from, divided by the number of stages (this assumes each Product development stage takes one year). In the objective that `optimizeByLOESS` maximizes, these two values can be differentially weighted. The sum of weights is 1. 0 < `wgtPopImprov` < 1 gives the weight of the population improvement part and the weight for the product development part is 1 - `wgtPopImprov`.  
+* tolerance: In step 5, `optimizeByLOESS` calculates new budget ranges. The tolerance is the difference between the top and bottom of the range for each stage. Once that difference is less than `tolerance` for **ALL** stages, `optimizeByLOESS` stops and returns results.  
+* basedir: `optimizeByLOESS` saves the results of batches as it goes along. `basedir` is the directory where to save those results, relative to the R working directory. If not empty string, include final /  
+* maxNumBatches: A stoping point in case `tolerance` is never reached.  
+* nCores: To run simulations in parallel, specify a number of cores > 1.  
+* randomSeed: Integer seed for random number generator to be able to reproduce an optimization.  Can be a vector, batchSize * maxNumBatches in length, in case you want to specify the starting seed for every simulation.  
+* Other parameters: as for `runBreedingScheme`  

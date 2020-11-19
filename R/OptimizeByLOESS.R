@@ -31,13 +31,14 @@
 #' @examples
 #' 
 #' @export
-optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, wgtPopImprov, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=1234, nCores=1){
+optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, wgtPopImprov, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=NULL, nCores=1){
   on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/optimizeByLOESS.rds")})
   require(parallel)
   
   if (length(randomSeed) == batchSize * maxNumBatches){
     randSeeds <- randomSeed
   } else{
+    if (is.null(randomSeed)) randomSeed <- round(runif(1)*1e9)
     set.seed(randomSeed)
     randSeeds <- round(runif(batchSize * maxNumBatches, min=-1e9, max=1e9))
     if (!is.null(baseDir)) saveRDS(randSeeds, file=paste0(baseDir, "randSeeds.rds"))

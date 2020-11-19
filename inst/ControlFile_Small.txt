@@ -87,7 +87,7 @@ FALSE
 nCyclesToRun
 7
 
-# How many cycles to keep records. Must be > nStages
+# How many cycles to keep records
 nCyclesToKeepRecords
 4
 

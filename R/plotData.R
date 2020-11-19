@@ -30,7 +30,7 @@ plotRecords <- function(replicRecords){
   bp <- brkdn.plot(genValMean ~ so + year, data=allStgOut, lwd=2, cex=1, col=order(so), md="std.error", stagger=1/(nYears+1)/3/nStages, xlab="Year", ylab="Mean Genotypic Value", main="")
   legend("topleft", legend=stageNames, col=1:(nStages), lwd = 2, cex=0.5, horiz = T)
   
-  bp <- brkdn.plot(gvOfBestCrit ~ so + year, data=allStgOut, lwd=2, cex=1, col=order(so), md="std.error", stagger=1/(nYears+1)/3/nStages, xlab="Year", ylab="Clone Evaluated Best", main="")
+  bp <- brkdn.plot(gvOfBestCrit ~ so + year, data=allStgOut, lwd=2, cex=1, col=order(so), md="std.error", stagger=1/(nYears+1)/3/nStages, xlab="Year", ylab="Geno. Val. Clones to NCRP", main="")
   legend("topleft", legend=stageNames, col=1:(nStages), lwd = 2, cex=0.5, horiz = T)
   
   bp <- brkdn.plot(genValSD ~ so + year, data=allStgOut, lwd=2, cex=1, col=order(so), md="std.error", stagger=1/(nYears+1)/3/nStages, xlab="Year", ylab="Genotypic Value Std. Dev.", main="")
@@ -41,7 +41,7 @@ plotRecords <- function(replicRecords){
   soF1mean <- allStgOut %>% dplyr::filter(stage=="F1" & cycle <= max(soLastBest$cycle)+1)
   soF1mean <- soF1mean %>% dplyr::mutate(acrossCycGain=dplyr::lead(genValMean) - genValMean)
   soF1mean <- soF1mean %>% dplyr::filter(cycle <= max(soLastBest$cycle))
-  soF1mean <- soF1mean %>% dplyr::mutate(withinCycGain=(soLastBest$gvOfBestCrit - genValMean) / (bsp$nStages + 1))
+  soF1mean <- soF1mean %>% dplyr::mutate(withinCycGain=(soLastBest$gvOfBestCrit - genValMean) / bsp$nStages)
   
   gains <- soF1mean %>% tidyr::pivot_longer(cols=ends_with("Gain"), names_to="gainType", values_to="gain")
   
