@@ -377,10 +377,10 @@ calcDerivedParms <- function(bsp){
   }
   
   # If usePolycrossNursery then one seed per cross
-  if (nv(bsp$nSeeds)){
-    bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
-  }
   if (bsp$usePolycrossNursery){
+    if (nv(bsp$nSeeds)){
+      bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
+    }
     bsp$nCrosses <- bsp$nSeeds
     bsp$nProgeny <- 1
   }
@@ -388,11 +388,12 @@ calcDerivedParms <- function(bsp){
   # Optimal contributions defaults
   if (bsp$useOptContrib){
     if (bsp$usePolycrossNursery) stop("Polycross nursery and optimal contributions cannot be used together")
+    bsp$nSeeds <- bsp$nCrosses * bsp$nProgeny
     if (nv(bsp$nCandOptCont)) bsp$nCandOptCont <- min(bsp$nEntries[1], bsp$nParents*10)
     if (nv(bsp$targetEffPopSize)) bsp$targetEffPopSize <- bsp$nParents
     # Don't want number of progeny to be too small
     if (bsp$nProgeny < bsp$nSeeds / bsp$targetEffPopSize / 2){
-      bsp$nProgeny <- round(bsp$nSeeds / bsp$targetEffPopSize / 2)
+      bsp$nProgeny <- ceiling(bsp$nSeeds / bsp$targetEffPopSize / 2)
       bsp$nCrosses <- round(bsp$nSeeds / bsp$nProgeny)
     }
   }
