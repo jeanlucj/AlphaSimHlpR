@@ -34,7 +34,7 @@
 optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, wgtPopImprov, tolerance, baseDir=NULL, maxNumBatches=10, initializeFunc, productPipeline, populationImprovement, bsp, randomSeed=NULL, nCores=1){
   on.exit(expr={print(traceback()); saveRDS(mget(ls()), file="~/optimizeByLOESS.rds")})
   require(parallel)
-  
+
   if (length(randomSeed) == batchSize * maxNumBatches){
     randSeeds <- randomSeed
   } else{
@@ -73,7 +73,7 @@ optimizeByLOESS <- function(batchSize, targetBudget, percentRanges, startCycle, 
     
     # Non-Parametric LOESS response
     loFormula <- paste0("response ~ ", paste0(bsp$stageNames, collapse=" + "))
-    loFM <- loess(loFormula, data=allBatches)
+    loFM <- loess(loFormula, data=allBatches, degree=1)
     loPred <- predict(loFM, se=T)
     whichBest <- which.max(loPred$fit)
     bestSE <- loPred$se.fit[whichBest]

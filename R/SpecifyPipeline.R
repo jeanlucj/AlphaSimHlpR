@@ -550,14 +550,24 @@ adjustEntriesToBudget <- function(bsp, targetBudget, fixedEntryStages=NULL, adju
 #' bsp <- sampleEntryNumbers(bsp, targetBudget=50000, percentRanges=percentRanges)
 #'
 #' @export
-sampleEntryNumbers <- function(bsp, targetBudget, percentRanges, nAttempts=5){
+sampleEntryNumbers <- function(bsp, targetBudget, percentRanges, nAttempts=50){
+  require(MCMCpack)
+  
   targetBudget <- targetBudget - max(bsp$nLocs) * bsp$perLocationCost
   if (targetBudget < 0) stop("Location costs are above the target budget")
   attemptNo <- 0
   samplingDone <- FALSE
   while (!samplingDone & attemptNo < nAttempts){
-    percentages <- apply(percentRanges, 1, function(r) runif(1, r[1], r[2]))
-    percentages <- percentages / sum(percentages)
+    spDone <- FALSE
+    while (!spDone){
+      percentages <- MCMCpack::rdirichlet(1, rep(1, bsp$nStages+1))
+      spDone <- TRUE
+      for (i in 1:(bsp$nStages+1)){
+        spDone <- spDone & 
+          percentRanges[i,1] < percentages[i] &
+          percentages[i] < percentRanges[i,2]
+      }
+    }
     names(percentages) <- c("F1", bsp$stageNames)
     whchStgGeno <- which(bsp$stageToGenotype == names(percentages)) - 1
     if (length(whchStgGeno) == 0) whchStgGeno <- -1
