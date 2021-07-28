@@ -204,7 +204,8 @@ grmPhenoEval <- function(phenoDF, grm){
              data=phenoDF,
              verbose=F,
              date.warning=F)
-  blup <- fm$U[[1]][[1]]}
+  blup <- fm$U[[1]][[1]]
+#}
   # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
