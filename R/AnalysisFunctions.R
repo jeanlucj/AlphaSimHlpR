@@ -189,19 +189,6 @@ grmPhenoEval <- function(phenoDF, grm){
                  data = phenoDF, na.method.X = "omit")
     blup <- summary(fm, coef = T)$coef.random$solution 
   } else {
-    require(sommer)
-    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-    phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    fm <- mmer(pheno ~ 1,
-               random= ~ vs(id, Gu=grm),
-               method="EMMA",
-               rcov= ~ units,
-               weights=wgt,
-               data=phenoDF,
-               verbose=F,
-               date.warning=F)
-    blup <- fm$U[[1]][[1]]}
-=======
   require(sommer)
   phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
   phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
@@ -215,7 +202,6 @@ grmPhenoEval <- function(phenoDF, grm){
              date.warning=F)
   blup <- fm$U[[1]][[1]]
 }
->>>>>>> 4817cb4bb30532961cf795d31b801b3c4f148c58
   # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
