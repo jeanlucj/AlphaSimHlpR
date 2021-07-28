@@ -1,3 +1,10 @@
+#' packages installed at the machine
+#' 
+
+ip <- as.data.frame(installed.packages())$Package
+
+#'
+#'
 #' mean_records function
 #'
 #' function to calculate the mean genotypic value at each cycle and stage
@@ -174,7 +181,18 @@ iidPhenoEval <- function(phenoDF){
 #' grmBLUPs <- grmPhenoEval(phenoDF, grm)
 #' 
 #' @export
+ 
+
 grmPhenoEval <- function(phenoDF, grm){
+  if("asreml"%in%ip) {
+    require(asreml)
+    asreml(pheno ~ 1,
+           random = ~ vm(id, grm),
+           residual = ~ units,
+           weights = wgt,
+           data = phenoDF, na.method.X = "omit")
+  blup <- summary(fm, coef = T)$coef.random$solution 
+  } else {
   require(sommer)
   phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
   phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
@@ -186,13 +204,13 @@ grmPhenoEval <- function(phenoDF, grm){
              data=phenoDF,
              verbose=F,
              date.warning=F)
-  blup <- fm$U[[1]][[1]]
+  blup <- fm$U[[1]][[1]]}
   # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
     blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
     names(blup) <- namesBlup
-  }
+    }
   return(blup)
 }
 
