@@ -177,7 +177,7 @@ iidPhenoEval <- function(phenoDF){
 #' @export
  
 
-debug(grmPhenoEval <- function(phenoDF, grm){
+grmPhenoEval <- function(phenoDF, grm){
   if("asreml"%in%installed.packages()) {
     require(asreml)
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
@@ -209,7 +209,7 @@ debug(grmPhenoEval <- function(phenoDF, grm){
     names(blup) <- namesBlup
     }
   return(blup)
-})
+}
 
 #' selCritIID function
 #'
