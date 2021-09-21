@@ -178,7 +178,8 @@ iidPhenoEval <- function(phenoDF){
  
 
 grmPhenoEval <- function(phenoDF, grm){
-  if("asreml"%in%installed.packages()) {
+  if(FALSE) {
+    #"asreml"%in%installed.packages()
     require(asreml)
     print("You decide to use asreml package")
     phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
