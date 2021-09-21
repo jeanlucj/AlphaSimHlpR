@@ -178,19 +178,18 @@ iidPhenoEval <- function(phenoDF){
  
 
 grmPhenoEval <- function(phenoDF, grm){
-  if(FALSE) {
-    #"asreml"%in%installed.packages()
-    require(asreml)
-    print("You decide to use asreml package")
-    phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
-    phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
-    fm <- asreml(pheno ~ 1,
-                 random = ~ vm(id, grm),
-                 residual = ~ units,
-                 weights = wgt,
-                 data = phenoDF, na.action = na.method("omit"))
-    blup <- summary(fm, coef = T)$coef.random$solution 
-  } else {
+#  if("asreml"%in%installed.packages()) {
+#    require(asreml)
+#    print("You decide to use asreml package")
+#    phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
+#    phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
+#    fm <- asreml(pheno ~ 1,
+#                 random = ~ vm(id, grm),
+#                 residual = ~ units,
+#                 weights = wgt,
+#                 data = phenoDF, na.action = na.method("omit"))
+#    blup <- summary(fm, coef = T)$coef.random$solution 
+#  } else {
   require(sommer)
   print("You decide to use sommer package")
   phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
@@ -204,7 +203,7 @@ grmPhenoEval <- function(phenoDF, grm){
              verbose = F,
              date.warning = F)
   blup <- fm$U[[1]][[1]]
-}
+#}
   # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
