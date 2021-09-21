@@ -185,9 +185,11 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(grm, "rowNames") <- as.character(phenoDF$id)
     attr(grm, "colNames") <- as.character(phenoDF$id)
     attr(grm, "INVERSE") <- TRUE
+    print(class(grm))
+    print(grm[1:10,1:10])
     phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
     fm <- asreml(fixed=pheno~1,
-                 random=~vm(id,grm),
+                 random=~vm(obj=id,source=grm),
                  residual=~units,
                  weights=wgt,
                  data=phenoDF,
