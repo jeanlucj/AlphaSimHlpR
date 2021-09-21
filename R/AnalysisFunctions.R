@@ -187,7 +187,7 @@ grmPhenoEval <- function(phenoDF, grm){
                  random = ~ vm(id, grm),
                  residual = ~ units,
                  weights = wgt,
-                 data = phenoDF, na.action = na.method("omit"))
+                 data = phenoDF)
     blup <- summary(fm, coef = T)$coef.random$solution 
 #  } else {
 #  require(sommer)
