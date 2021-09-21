@@ -183,18 +183,17 @@ grmPhenoEval <- function(phenoDF, grm){
     print("You decide to use asreml package")
     phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
     phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
-    id <- phenoDF$id; length(id)
-    pheno <- phenoDF$pheno; length(pheno)
-    wgt <- phenoDF$wgt; length(wgt)
-    attr(grm, "rowNames") <- as.character(id)
-    attr(grm, "colNames") <- as.character(id)
-    attr(grm, "INVERSE") <- TRUE; dim(grm)
+    attr(grm)$rowNames <- as.character(id)
+    attr(grm)$colNames <- as.character(id)
+    attr(grm)$INVERSE <- TRUE
     fm <- asreml(fixed=pheno~1,
-                 random=~vm(obj=id,source=grm),
+                 random=~ped(id),
+                 ginverse=list(id=Ginv),
                  residual=~units,
                  weights=wgt,
-#                 data=phenoDF,
-                 workspace=128e06)
+                 data=phenoDF,
+                 workspace=128e06,
+                 na.method.X="omit")
     blup <- summary(fm, coef = T)$coef.random$solution 
 #  } else {
 #  require(sommer)
