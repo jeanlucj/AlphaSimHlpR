@@ -181,7 +181,7 @@ grmPhenoEval <- function(phenoDF, grm){
 #  if("asreml"%in%installed.packages()) {
     require(asreml)
     print("You decide to use asreml package")
-    phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
+    phenoDF$id <- as.character(phenoDF$id) # Enable prediction
     phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
     attr(grm)$rowNames <- as.character(id)
     attr(grm)$colNames <- as.character(id)
@@ -193,7 +193,7 @@ grmPhenoEval <- function(phenoDF, grm){
                  weights=wgt,
                  data=phenoDF,
                  workspace=128e06,
-                 na.method.X="omit")
+                 na.method.X="include")
     blup <- summary(fm, coef = T)$coef.random$solution 
 #  } else {
 #  require(sommer)
