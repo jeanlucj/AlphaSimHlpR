@@ -181,6 +181,8 @@ grmPhenoEval <- function(phenoDF, grm){
 #  if("asreml"%in%installed.packages()) {
     require(asreml)
     print("You decide to use asreml package")
+    saveRDS(grm, "MatrixTest.rds")
+    saveRDS(phenoDF, "PhenoTest.rds")
     phenoDF$id <- as.character(phenoDF$id) # Enable prediction
     phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
     attr(grm)$rowNames <- as.character(id)
