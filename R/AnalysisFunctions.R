@@ -183,20 +183,20 @@ grmPhenoEval <- function(phenoDF, grm){
     print("You decide to use asreml package")
     saveRDS(grm, "MatrixTest.rds")
     saveRDS(phenoDF, "PhenoTest.rds")
-    phenoDF$id <- as.character(phenoDF$id) # Enable prediction
-    phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
-    attr(grm)$rowNames <- as.character(id)
-    attr(grm)$colNames <- as.character(id)
-    attr(grm)$INVERSE <- TRUE
-    fm <- asreml(fixed=pheno~1,
-                 random=~ped(id),
-                 ginverse=list(id=Ginv),
-                 residual=~units,
-                 weights=wgt,
-                 data=phenoDF,
-                 workspace=128e06,
-                 na.method.X="include")
-    blup <- summary(fm, coef = T)$coef.random$solution 
+ #   phenoDF$id <- as.character(phenoDF$id) # Enable prediction
+ #   phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights    
+ #   attr(grm)$rowNames <- as.character(id)
+ #   attr(grm)$colNames <- as.character(id)
+ #   attr(grm)$INVERSE <- TRUE
+ #   fm <- asreml(fixed=pheno~1,
+ #                random=~ped(id),
+ #                ginverse=list(id=Ginv),
+ #                residual=~units,
+ #                weights=wgt,
+ #                data=phenoDF,
+ #                workspace=128e06,
+ #                na.method.X="include")
+ #   blup <- summary(fm, coef = T)$coef.random$solution 
 #  } else {
 #  require(sommer)
 #  print("You decide to use sommer package")
@@ -213,12 +213,15 @@ grmPhenoEval <- function(phenoDF, grm){
 #  blup <- fm$U[[1]][[1]]
 #}
   # Ensure output has variation: needed for optimal contributions
-  if (sd(blup) == 0){
-    namesBlup <- names(blup)
-    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
-    names(blup) <- namesBlup
-    }
-  return(blup)
+#  if (sd(blup) == 0){
+#    namesBlup <- names(blup)
+#    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
+#    names(blup) <- namesBlup
+#    }
+#  return(blup)
+return(saveRDS(grm, "MatrixTest.rds"), saveRDS(phenoDF, "PhenoTest.rds"))
+       
+
 }
 
 #' selCritIID function
