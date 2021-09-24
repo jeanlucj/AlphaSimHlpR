@@ -186,13 +186,16 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(grm, "rowNames") <- rownames(grm)
     attr(grm, "colNames") <- rownames(grm)
     attr(grm, "INVERSE") <- TRUE
-    fm <- asreml(fixed=pheno[,1]~1,
+    fm <- asreml(fixed=pheno~1,
                  random=~vm(id,grm),
                  residual=~id(units),
                  weights=wgt,
                  data=phenoDF,
                  workspace=128e06)
-    blup <- summary(fm, coef = T)$coef.random[,"solution"] 
+    blup <- summary(fm, coef = T)$coef.random[,"solution"]
+    namesBlup <- names(blup)
+    namesBlup2 <- sapply(strsplit(namesBlup, split = '_', fixed = T), function(x) (x[2]))
+    names(blup) <- namesBlup2               
 #  } else {
 #  require(sommer)
 #  print("You decide to use sommer package")
