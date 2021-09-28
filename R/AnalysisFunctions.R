@@ -184,7 +184,7 @@ grmPhenoEval <- function(phenoDF, grm){
     phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    grm <- as(grm, "sparseMatrix")
+    #grm <- as(grm, "sparseMatrix")
 
     attr(grm, "INVERSE") <- FALSE
     
