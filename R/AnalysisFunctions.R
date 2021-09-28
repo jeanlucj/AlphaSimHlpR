@@ -180,7 +180,6 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
   if("asreml"%in%installed.packages()) {
     require(asreml)
-    print("You decide to use asreml package")
     phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
@@ -188,18 +187,16 @@ grmPhenoEval <- function(phenoDF, grm){
     dimnames(grm) <- list(rownames(grm),
                           colnames(grm))
     attr(grm, "INVERSE") <- FALSE
-    
-    fm <- asreml(pheno ~ 1,
-                 random = ~ vm(id, grm, singG = "PSD"),
-                 residual = ~ id(units),
-                 weights = wgt,
-                 data = phenoDF,
-                 workspace = 128e06,
-                 na.action = na.method(x = "omit", y = "include"))
+    suppressMessages(fm <- asreml(pheno ~ 1,
+                     random = ~ vm(id, grm, singG = "PSD"),
+                     residual = ~ id(units),
+                     weights = wgt,
+                     data = phenoDF,
+                     workspace = 128e06,
+                     na.action = na.method(x = "omit", y = "include")))
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
     blup <- blup[names(blup)!= "grm"]
-    print("IT WORKS")
   } else {
   require(sommer)
   print("You decide to use sommer package")
