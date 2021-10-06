@@ -198,13 +198,13 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(Ginv, "colNames") <- colnames(G)
     attr(Ginv, "INVERSE") <- TRUE
     print(head(Ginv))
-    suppressMessages(fm <- asreml(pheno ~ 1,
-                     random = ~ vm(id,Ginv),
-                     residual = ~ id(units),
-                     weights = wgt,
-                     data = phenoDF,
-                     workspace = 128e06,
-                     na.action = na.method(x="omit",y="include")))
+    fm <- asreml(pheno ~ 1,
+                 random = ~ vm(id,Ginv),
+                 residual = ~ id(units),
+                 weights = wgt,
+                 data = phenoDF,
+                 workspace = 128e06,
+                 na.action = na.method(x="omit",y="include"))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
