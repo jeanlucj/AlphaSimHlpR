@@ -199,12 +199,12 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(Ginv, "INVERSE") <- TRUE
     
     suppressMessages(fm <- asreml(pheno ~ 1,
-                     random = ~ vm(id, Ginv),
+                     random = ~ vm(id,Ginv),
                      residual = ~ id(units),
                      weights = wgt,
                      data = phenoDF,
                      workspace = 128e06,
-                     na.action = na.method(x = "omit", y = "include")))
+                     na.action = na.method(x="omit",y="include")))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
