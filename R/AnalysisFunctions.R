@@ -197,7 +197,7 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(Ginv, "rowNames") <- rownames(G)
     attr(Ginv, "colNames") <- colnames(G)
     attr(Ginv, "INVERSE") <- TRUE
-    print("Begin of ASReml prediction")
+    print(head(Ginv))
     suppressMessages(fm <- asreml(pheno ~ 1,
                      random = ~ vm(id,Ginv),
                      residual = ~ id(units),
