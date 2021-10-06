@@ -198,11 +198,11 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(Ginv, "colNames") <- colnames(G)
     attr(Ginv, "INVERSE") <- TRUE
     print(head(Ginv))
-    fm <- asreml(pheno ~ 1,
-                 random = ~ vm(id,Ginv),
+    fm <- asreml(fixed = phenoDF$pheno ~ 1,
+                 random = ~ vm(phenoDF$id,Ginv),
                  residual = ~ id(units),
-                 weights = wgt,
-                 data = phenoDF,
+                 weights = phenoDF$wgt,
+#                 data = phenoDF,
                  workspace = 128e06,
                  na.action = na.method(x="omit",y="include"))
     
