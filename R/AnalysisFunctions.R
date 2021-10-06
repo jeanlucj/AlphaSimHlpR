@@ -179,7 +179,7 @@ iidPhenoEval <- function(phenoDF){
 
 grmPhenoEval <- function(phenoDF, grm){
   if("asreml"%in%installed.packages()) {
-    require(asreml); require(Matrix); require(synbreed)
+    suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
     
     phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
@@ -197,7 +197,7 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(Ginv, "rowNames") <- rownames(G)
     attr(Ginv, "colNames") <- colnames(G)
     attr(Ginv, "INVERSE") <- TRUE
-    
+    print("Begin of ASReml prediction")
     suppressMessages(fm <- asreml(pheno ~ 1,
                      random = ~ vm(id,Ginv),
                      residual = ~ id(units),
