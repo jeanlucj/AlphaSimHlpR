@@ -203,8 +203,7 @@ grmPhenoEval <- function(phenoDF, grm){
                                   residual = ~ id(units),
                                   weights = wgt,
                                   data = phenoDF,
-                                  workspace = 128e06,
-                                  na.action = na.method(x="omit",y="omit")))
+                                  workspace = 128e06)
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
