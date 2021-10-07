@@ -192,6 +192,7 @@ grmPhenoEval <- function(phenoDF, grm){
                  data = phenoDF,
                  workspace = 128e06)
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
+    names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
   } else {
   require(sommer)
   phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
