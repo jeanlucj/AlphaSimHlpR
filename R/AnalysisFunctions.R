@@ -185,10 +185,10 @@ grmPhenoEval <- function(phenoDF, grm){
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     
-    grm <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
-    G <- matrix(grm[[1]]@x, nrow = grm[[1]]@Dim[1])
+    grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
+    G <- matrix(grmPD[[1]]@x, nrow = grmPD[[1]]@Dim[1])
     G <- G + diag(1e-6, nrow(G)) #
-    attr(G, "dimnames") <- grm[[1]]@Dimnames
+    attr(G, "dimnames") <- grmPD[[1]]@Dimnames
     class(G) <- "relationshipMatrix"
     G <- G[order(as.numeric(rownames(G))), order(as.numeric(colnames(G)))]
     Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
@@ -198,11 +198,11 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(Ginv, "colNames") <- colnames(G)
     attr(Ginv, "INVERSE") <- TRUE
     print(head(Ginv))
-    fm <- asreml(fixed = phenoDF$pheno ~ 1,
-                 random = ~ vm(phenoDF$id,Ginv),
+    fm <- asreml(pheno ~ 1,
+                 random = ~ vm(id,Ginv),
                  residual = ~ id(units),
-                 weights = phenoDF$wgt,
-#                 data = phenoDF,
+                 weights = wgt,
+                 data = phenoDF,
                  workspace = 128e06,
                  na.action = na.method(x="omit",y="include"))
     
