@@ -182,8 +182,6 @@ grmPhenoEval <- function(phenoDF, grm){
     suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
     
     phenoDF <- phenoDF[phenoDF$id%in%rownames(grm),]
-    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-    phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     
     grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
@@ -192,6 +190,10 @@ grmPhenoEval <- function(phenoDF, grm){
     attr(G, "dimnames") <- grmPD[[1]]@Dimnames
     class(G) <- "relationshipMatrix"
     G <- G[order(as.numeric(rownames(G))), order(as.numeric(colnames(G)))]
+    
+    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
+    phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
+    
     Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
                                      type = c("ginv"), digits = 10) # Invert the G matrix and change to a sparse matrix as required by ASReml package
     names(Ginv) <- c("row", "column", "coefficient")
@@ -204,7 +206,8 @@ grmPhenoEval <- function(phenoDF, grm){
                                   residual = ~ id(units),
                                   weights = wgt,
                                   data = phenoDF,
-                                  workspace = 128e06))
+                                  workspace = 128e06),
+                                  na.action = na.method(x = "omit",y = "omit"))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
