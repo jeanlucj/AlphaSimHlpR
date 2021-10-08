@@ -183,6 +183,7 @@ grmPhenoEval <- function(phenoDF, grm){
     
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
     phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
+    phenoDF[is.na(phenoDF$id),] <- NULL
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     
     grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
