@@ -1,7 +1,7 @@
 Package: AlphaSimHlpR_Luc
 Type: Package
 Title: Functions added to AlphaSimR to simplify simulating breeding schemes
-Version: 0.2.0
+Version: 0.1.0
 Date: 2021-10-8
 Author: Jean-Luc Jannink, Moshood Bakare, Marnin Wolfe, and Luciano de Andrade
 Maintainer: <jeanluc.work@gmail.com>
