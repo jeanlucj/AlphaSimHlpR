@@ -181,8 +181,8 @@ grmPhenoEval <- function(phenoDF, grm){
   if("asreml"%in%installed.packages()) {
     suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
     
+    phenoDF <- phenoDF[with(phenoDF, order(as.numeric(id), as.numeric(year))),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-    phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
     phenoDF$pheno[is.na(phenoDF$id)] <- NA
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     
@@ -204,7 +204,8 @@ grmPhenoEval <- function(phenoDF, grm){
                                   residual = ~ id(units),
                                   weights = wgt,
                                   data = phenoDF,
-                                  workspace = 28e06))
+                                  workspace = 28e06),
+                                  na.action = na.method(x = "omit",y = "omit"))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
