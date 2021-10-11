@@ -181,7 +181,7 @@ grmPhenoEval <- function(phenoDF, grm){
   if("asreml"%in%installed.packages()) {
     suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
     
-    phenoDF <- phenoDF[with(phenoDF, order(as.numeric(id), as.numeric(year))),]
+    phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
     phenoDF$pheno[is.na(phenoDF$id)] <- NA
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
@@ -191,7 +191,7 @@ grmPhenoEval <- function(phenoDF, grm){
     G <- G + diag(1e-6, nrow(G)) #
     attr(G, "dimnames") <- grmPD[[1]]@Dimnames
     class(G) <- "relationshipMatrix"
-    G <- G[order(as.numeric(rownames(G))), order(as.numeric(colnames(G)))]
+    G <- G[order(rownames(G)), order(colnames(G))]
     Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
                                      type = c("ginv"), digits = 10) # Invert the G matrix and change to a sparse matrix as required by ASReml package
     names(Ginv) <- c("row", "column", "coefficient")
