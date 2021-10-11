@@ -205,7 +205,7 @@ grmPhenoEval <- function(phenoDF, grm){
                                   weights = wgt,
                                   data = phenoDF,
                                   workspace = 128e06,
-                                  na.action = na.method(x = "omit",y = "include")))
+                                  na.action = na.method(x = "include",y = "include")))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
