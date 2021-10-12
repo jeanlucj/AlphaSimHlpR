@@ -178,39 +178,39 @@ iidPhenoEval <- function(phenoDF){
  
 
 grmPhenoEval <- function(phenoDF, grm){
-  if("asreml"%in%installed.packages()) {
-    suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
+#  if("asreml"%in%installed.packages()) {
+#    suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
     
-    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-    phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
-    phenoDF <- phenoDF[phenoDF$id%in%rownames(grm),]
-    phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    
-    grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
-    G <- matrix(grmPD[[1]]@x, nrow = grmPD[[1]]@Dim[1])
-    G <- G + diag(1e-6, nrow(G)) #
-    attr(G, "dimnames") <- grmPD[[1]]@Dimnames
-    class(G) <- "relationshipMatrix"
-    G <- G[order(rownames(G)), order(colnames(G))]
-    Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
-                                     type = c("ginv"), digits = 10) # Invert the G matrix and change to a sparse matrix as required by ASReml package
-    names(Ginv) <- c("row", "column", "coefficient")
-    attr(Ginv, "rowNames") <- rownames(G)
-    attr(Ginv, "colNames") <- colnames(G)
-    attr(Ginv, "INVERSE") <- TRUE
-    
-    suppressMessages(fm <- asreml(pheno ~ 1,
-                                  random = ~ vm(id,Ginv),
-                                  residual = ~ id(units),
-                                  weights = wgt,
-                                  data = phenoDF,
-                                  workspace = 128e06,
-                                  na.action = na.method(x = "omit",y = "include")))
-    
-    blup <- summary(fm, coef = T)$coef.random[,"solution"]
-    names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
-    blup <- blup[order(match(names(blup),rownames(grm)))]                  
-} else {
+#    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
+#    phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
+#    phenoDF <- phenoDF[phenoDF$id%in%rownames(grm),]
+#    phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
+#    
+#    grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
+#    G <- matrix(grmPD[[1]]@x, nrow = grmPD[[1]]@Dim[1])
+#    G <- G + diag(1e-6, nrow(G)) #
+#    attr(G, "dimnames") <- grmPD[[1]]@Dimnames
+#    class(G) <- "relationshipMatrix"
+#    G <- G[order(rownames(G)), order(colnames(G))]
+#    Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
+#                                     type = c("ginv"), digits = 10) # Invert the G matrix and change to a sparse matrix as required by ASReml package
+#    names(Ginv) <- c("row", "column", "coefficient")
+#    attr(Ginv, "rowNames") <- rownames(G)
+#    attr(Ginv, "colNames") <- colnames(G)
+#    attr(Ginv, "INVERSE") <- TRUE
+#    
+#    suppressMessages(fm <- asreml(pheno ~ 1,
+#                                  random = ~ vm(id,Ginv),
+#                                  residual = ~ id(units),
+#                                  weights = wgt,
+#                                  data = phenoDF,
+#                                  workspace = 128e06,
+#                                  na.action = na.method(x = "omit",y = "include")))
+#    
+#    blup <- summary(fm, coef = T)$coef.random[,"solution"]
+#    names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
+#    blup <- blup[order(match(names(blup),rownames(grm)))]                  
+#} else {
   require(sommer)
   print("You decide to use sommer package")
   
@@ -226,7 +226,7 @@ grmPhenoEval <- function(phenoDF, grm){
              verbose = F,
              date.warning = F)
   blup <- fm$U[[1]][[1]]
-}
+#}
   # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
