@@ -186,9 +186,9 @@ grmPhenoEval <- function(phenoDF, grm){
     G <- G + diag(1e-6, nrow(G)) #
     attr(G, "dimnames") <- grmPD[[1]]@Dimnames
     class(G) <- "relationshipMatrix"
-    G <- G[order(rownames(G)), order(colnames(G))]
+    G <- G[order(as.numeric(rownames(G))), order(as.numeric(colnames(G)))]
   
-    phenoDF <- phenoDF[order(match(phenoDF$id,rownames(G))),]
+    phenoDF <- phenoDF[with(phenoDF, order(as.numeric(id), year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(G)) # Enable prediction
 
 
@@ -209,7 +209,7 @@ grmPhenoEval <- function(phenoDF, grm){
                  weights = wgt,
                  data = phenoDF,
                  workspace = 128e06,
-                 na.action = na.method(x = "omit",y = "omit"))
+                 na.action = na.method(x = "include",y = "include"))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
