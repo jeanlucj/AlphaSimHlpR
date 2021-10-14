@@ -213,7 +213,7 @@ grmPhenoEval <- function(phenoDF, grm){
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
-    blup <- blup[order(match(names(blup),rownames(grm)))]                  
+#    blup <- blup[order(match(names(blup),rownames(grm)))]                  
 #} else {
 #  require(sommer)
 #  print("You decide to use sommer package")
