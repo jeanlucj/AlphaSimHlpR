@@ -180,6 +180,8 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
 #  if("asreml"%in%installed.packages()) {
     suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
+    saveRDS(grm, "MatrixTestFinal.rds")
+    saveRDS(phenoDF, "PhenoDataFinal.rds")
   
     grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
     G <- matrix(grmPD[[1]]@x, nrow = grmPD[[1]]@Dim[1])
@@ -193,8 +195,6 @@ grmPhenoEval <- function(phenoDF, grm){
 
 
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    saveRDS(G, "MatrixTestFinal.rds")
-    saveRDS(phenoDF, "PhenoDataFinal.rds")
     
     Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
                                      type = c("ginv"), digits = 10) # Invert the G matrix and change to a sparse matrix as required by ASReml package
