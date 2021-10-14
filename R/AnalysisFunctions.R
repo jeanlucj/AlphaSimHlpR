@@ -203,7 +203,7 @@ grmPhenoEval <- function(phenoDF, grm){
     
     fm <- asreml(pheno ~ 1,
                  random = ~ vm(id,Ginv),
-                 residual = ~ id(units),
+#                 residual = ~ id(units),
                  weights = wgt,
                  data = phenoDF,
                  workspace = 128e06,
