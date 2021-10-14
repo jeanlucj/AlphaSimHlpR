@@ -180,10 +180,11 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
 #  if("asreml"%in%installed.packages()) {
     suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
-   
-    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
+
     phenoDF <- phenoDF[with(phenoDF, order(id, year)),]
-    phenoDF <- phenoDF[phenoDF$id%in%rownames(grm),]
+    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
+
+#    phenoDF <- phenoDF[phenoDF$id%in%rownames(grm),]
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     
     grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
