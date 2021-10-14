@@ -183,17 +183,16 @@ grmPhenoEval <- function(phenoDF, grm){
     saveRDS(grm, "MatrixTestFinal.rds")
     saveRDS(phenoDF, "PhenoDataFinal.rds")
   
+    grm <- grm[order(as.numeric(rownames(grm))), order(as.numeric(colnames(grm)))]
+    phenoDF <- phenoDF[with(phenoDF,order(as.numeric(id), year)),]
+  
     grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
     G <- matrix(grmPD[[1]]@x, nrow = grmPD[[1]]@Dim[1])
     G <- G + diag(1e-6, nrow(G)) #
     attr(G, "dimnames") <- grmPD[[1]]@Dimnames
     class(G) <- "relationshipMatrix"
-    G <- G[order(as.numeric(rownames(G))), order(as.numeric(colnames(G)))]
   
-    phenoDF <- phenoDF[with(phenoDF, order(as.numeric(id), year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(G)) # Enable prediction
-
-
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     
     Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
@@ -209,7 +208,7 @@ grmPhenoEval <- function(phenoDF, grm){
                  weights = wgt,
                  data = phenoDF,
                  workspace = 128e06,
-                 na.action = na.method(x = "include",y = "include"))
+                 na.action = na.method(x = "omit",y = "include"))
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
