@@ -181,7 +181,7 @@ grmPhenoEval <- function(phenoDF, grm){
 #  if("asreml"%in%installed.packages()) {
     suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
 
-    phenoDF <- phenoDF %>% complete(id,nesting(stage, year))
+#    phenoDF <- phenoDF %>% complete(id,nesting(stage, year))
  
     grm <- grm[order(as.numeric(rownames(grm))), order(as.numeric(colnames(grm)))]
     phenoDF <- phenoDF[with(phenoDF,order(as.numeric(id), year)),]
