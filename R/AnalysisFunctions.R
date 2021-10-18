@@ -178,33 +178,18 @@ iidPhenoEval <- function(phenoDF){
  
 
 grmPhenoEval <- function(phenoDF, grm){
-#  if("asreml"%in%installed.packages()) {
-    suppressMessages(require(asreml)); suppressMessages(require(Matrix)); suppressMessages(require(synbreed))
-
-#    phenoDF <- phenoDF %>% complete(id,nesting(stage, year))
+  if("asreml"%in%installed.packages()) {
+    suppressMessages(require(asreml)); suppressMessages(require(ASRgenomics))
  
     grm <- grm[order(as.numeric(rownames(grm))), order(as.numeric(colnames(grm)))]
     phenoDF <- phenoDF[with(phenoDF,order(as.numeric(id), year)),]
-  
-    grmPD <- nearPD(grm, keepDiag = TRUE) # Compute the nearest positive definite matrix to an approximate one
-    G <- matrix(grmPD[[1]]@x, nrow = grmPD[[1]]@Dim[1])
-    G <- G + diag(1e-6, nrow(G)) #
-    attr(G, "dimnames") <- grmPD[[1]]@Dimnames
-    class(G) <- "relationshipMatrix"
-  
     phenoDF$id <- factor(phenoDF$id, levels=rownames(G)) # Enable prediction
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    
-    Ginv <- write.relationshipMatrix(G, file = NULL, sorting = "ASReml",
-                                     type = c("ginv"), digits = 10) # Invert the G matrix and change to a sparse matrix as required by ASReml package
-    names(Ginv) <- c("row", "column", "coefficient")
-    attr(Ginv, "rowNames") <- rownames(G)
-    attr(Ginv, "colNames") <- colnames(G)
-    attr(Ginv, "INVERSE") <- TRUE
+    suppressMessages(Ginv <- G.inverse(G = grm, sparseform = T, blend = T, bend = T)$Ginv)
     
     fm <- asreml(pheno ~ 1,
                  random = ~ vm(id,Ginv),
-                 residual = ~ id(units),
+                 residual = ~ idv(units),
                  weights = wgt,
                  data = phenoDF,
                  workspace = 128e06,
@@ -212,24 +197,23 @@ grmPhenoEval <- function(phenoDF, grm){
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
-#    blup <- blup[order(match(names(blup),rownames(grm)))]                  
-#} else {
-#  require(sommer)
-#  print("You decide to use sommer package")
-#  
-#  phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
-#  phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights
-#  
-#  fm <- mmer(pheno ~ 1,
-#             random = ~ vs(id, Gu = grm),
-#             method = "EMMA",
-#             rcov = ~ units,
-#             weights = wgt,
-#             data = phenoDF,
-#             verbose = F,
-#             date.warning = F)
-#  blup <- fm$U[[1]][[1]]
-#}
+} else {
+  require(sommer)
+  print("GP - sommer package")
+  
+  phenoDF$id <- factor(phenoDF$id, levels = rownames(grm)) # Enable prediction
+  phenoDF$wgt <- 1 / phenoDF$errVar # Make into weights
+  
+  fm <- mmer(pheno ~ 1,
+             random = ~ vs(id, Gu = grm),
+             method = "EMMA",
+             rcov = ~ units,
+             weights = wgt,
+             data = phenoDF,
+             verbose = F,
+             date.warning = F)
+  blup <- fm$U[[1]][[1]]
+}
   # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
