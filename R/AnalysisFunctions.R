@@ -185,7 +185,8 @@ grmPhenoEval <- function(phenoDF, grm){
     phenoDF <- phenoDF[with(phenoDF,order(as.numeric(id), year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(G)) # Enable prediction
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    suppressMessages(Ginv <- G.inverse(G = grm, sparseform = T, blend = T, bend = T)$Ginv)
+    grm <- grm + diag(1e-6, nrow = nrow(grm))
+    suppressMessages(Ginv <- G.inverse(G = grm, sparseform = T)$Ginv)
     saveRDS(grm, "GTestSing.rds")
             
     fm <- asreml(pheno ~ 1,
