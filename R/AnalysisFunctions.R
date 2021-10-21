@@ -180,7 +180,7 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
   blup <- try(grmPhenoEvalA(phenoDF, grm), silent = FALSE)
   if(inherits(t, "try-error")) {
-    alternativeFunction(grmPhenoEvalS(phenoDF, grm))
+  blup <- grmPhenoEvalS(phenoDF, grm)
   }
   return(blup)
 }
