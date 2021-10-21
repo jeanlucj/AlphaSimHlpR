@@ -180,7 +180,7 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
   blup <- try(grmPhenoEvalA(phenoDF, grm), silent = FALSE)
   if(inherits(t, "try-error")) {
-  blup <- grmPhenoEvalS(phenoDF, grm)
+  blup <- alternativeFunction(grmPhenoEvalS(phenoDF, grm))
   }
     # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
