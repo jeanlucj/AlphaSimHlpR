@@ -180,6 +180,9 @@ iidPhenoEval <- function(phenoDF){
 grmPhenoEval <- function(phenoDF, grm){
   if("asreml"%in%installed.packages()) {
     suppressMessages(require(asreml)); suppressMessages(require(ASRgenomics))
+    
+    saveRDS(grm, "GTestSing.rds")
+    saveRDS(phenoDF, "PhenoTestSing.rds")
  
     grm <- grm[order(as.numeric(rownames(grm))), order(as.numeric(colnames(grm)))]
     phenoDF <- phenoDF[with(phenoDF,order(as.numeric(id), year)),]
@@ -187,7 +190,7 @@ grmPhenoEval <- function(phenoDF, grm){
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
     grm <- grm + diag(1e-3, nrow = nrow(grm))
     suppressMessages(Ginv <- G.inverse(G = grm, sparseform = T, blend = T, pblend = 0.05, bend = T)$Ginv)
-    saveRDS(grm, "GTestSing.rds")
+    
             
     fm <- asreml(pheno ~ 1,
                  random = ~ vm(id,Ginv),
