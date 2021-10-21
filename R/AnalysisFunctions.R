@@ -182,6 +182,12 @@ grmPhenoEval <- function(phenoDF, grm){
   if(inherits(t, "try-error")) {
   blup <- grmPhenoEvalS(phenoDF, grm)
   }
+    # Ensure output has variation: needed for optimal contributions
+  if (sd(blup) == 0){
+    namesBlup <- names(blup)
+    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
+    names(blup) <- namesBlup
+  }
   return(blup)
 }
 
@@ -209,11 +215,6 @@ grmPhenoEvalA <- function(phenoDF, grm){
     
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
-    if (sd(blup) == 0){
-      namesBlup <- names(blup)
-      blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
-      names(blup) <- namesBlup
-    }
     return(blup)
 }
     
@@ -233,12 +234,6 @@ grmPhenoEvalS <- function(phenoDF, grm){
                verbose = F,
                date.warning = F)
     blup <- fm$U[[1]][[1]]
-  # Ensure output has variation: needed for optimal contributions
-  if (sd(blup) == 0){
-    namesBlup <- names(blup)
-    blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
-    names(blup) <- namesBlup
-  }
   return(blup)
 }
 
