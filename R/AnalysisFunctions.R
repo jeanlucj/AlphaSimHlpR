@@ -178,41 +178,50 @@ iidPhenoEval <- function(phenoDF){
  
 
 grmPhenoEval <- function(phenoDF, grm){
-  if("asreml"%in%installed.packages()) {
-    require(asreml)
+  if("asreml"%in%installed.packages() &
+     suppressMessages(asreml::asreml.license.status()$expiryDays>0)) {
+    suppressMessages(require(asreml)); suppressMessages(require(ASRgenomics))
+    
+    grm <- grm[order(as.numeric(rownames(grm))), order(as.numeric(colnames(grm)))]
+    phenoDF <- phenoDF[with(phenoDF,order(as.numeric(id), year)),]
     phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
     phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-    attr(grm, "rowNames") <- rownames(grm)
-    attr(grm, "colNames") <- rownames(grm)
-    attr(grm, "INVERSE") <- TRUE
-    fm <- asreml(pheno[,1] ~ 1,
-                 random = ~ vm(id, grm),
-                 residual = ~ units,
+
+    grm <- grm + diag(1e-6, nrow = nrow(grm))
+    suppressMessages(Ginv <<- G.inverse(G = grm, sparseform = T, bend = T)$Ginv)
+    fm <- asreml(pheno ~ 1,
+                 random = ~ vm(id,Ginv),
+                 residual = ~ idv(units),
                  weights = wgt,
                  data = phenoDF,
-                 workspace = 128e06)
+                 workspace = 128e06,
+                 na.action = na.method(x = "omit", y = "omit"),
+                 trace = F)
+    
     blup <- summary(fm, coef = T)$coef.random[,"solution"]
     names(blup) <- sapply(strsplit(names(blup), split = "_", fixed = T), function(x) (x[2]))
   } else {
-  require(sommer)
-  phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
-  phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
-  fm <- mmer(pheno ~ 1,
-             random= ~ vs(id, Gu=grm),
-             method="EMMA",
-             rcov= ~ units,
-             weights=wgt,
-             data=phenoDF,
-             verbose=F,
-             date.warning=F)
-  blup <- fm$U[[1]][[1]]
-}
-  # Ensure output has variation: needed for optimal contributions
+    require(sommer)
+    
+    phenoDF$id <- factor(phenoDF$id, levels=rownames(grm)) # Enable prediction
+    phenoDF$wgt <- 1/phenoDF$errVar # Make into weights
+    
+    fm <- mmer(pheno ~ 1,
+               random = ~ vs(id, Gu = grm),
+               method = "EMMA",
+               rcov = ~ units,
+               weights = wgt,
+               data = phenoDF,
+               verbose = F,
+               date.warning = F)
+    blup <- fm$U[[1]][[1]]
+  }
+    # Ensure output has variation: needed for optimal contributions
   if (sd(blup) == 0){
     namesBlup <- names(blup)
     blup <- tapply(phenoDF$pheno, phenoDF$id, mean)
     names(blup) <- namesBlup
-    }
+  }
   return(blup)
 }
 
